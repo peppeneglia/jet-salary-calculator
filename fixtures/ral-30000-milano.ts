@@ -442,6 +442,9 @@ const passi: readonly Passo[] = [
  * Elencate per id invece che riscritte: i testi hanno una sola sede. S-002 non
  * compare perché la RAL non supera il massimale; S-014 sì, perché il contratto
  * dichiarato non è un apprendistato.
+ *
+ * Il catalogo contiene solo voci `S-xxx` (D-039): D-015 è stata rimossa perché
+ * diceva la stessa cosa di S-004, che ora la assorbe.
  */
 const ID_APPLICABILI: readonly string[] = [
   'S-001',
@@ -457,7 +460,6 @@ const ID_APPLICABILI: readonly string[] = [
   'S-011',
   'S-013',
   'S-014',
-  'D-015',
 ]
 
 const assunzioni = catalogoAssunzioni

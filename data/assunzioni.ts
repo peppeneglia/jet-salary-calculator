@@ -1,9 +1,28 @@
 /**
  * Il catalogo delle assunzioni dichiarate.
  *
- * I testi vengono da *Semplificazioni* in Notion: qui non si riformulano, si
- * riportano. Se una voce di quella pagina cambia, cambia questo file — non il
- * contrario.
+ * ⚠️ **Ogni assunzione ha due testi, perché ha due pubblici** (D-039).
+ *
+ * Qui vive il testo **rivolto all'utente**: chi legge è un dipendente o chi
+ * gestisce il personale, e sta guardando il proprio stipendio. Frasi corte, si
+ * dà del tu, e ogni voce dice **da che parte il numero è impreciso** — che è
+ * l'informazione utile, non la giustificazione della scelta.
+ *
+ * La **versione argomentata** resta su *Semplificazioni* in Notion, collegata a
+ * questa per `id`. Quella parla a chi valuta il lavoro e deve restare
+ * argomentata; questa parla a chi legge il proprio netto. **Non sono due copie
+ * della stessa frase: sono due frasi diverse per due lettori diversi**, e
+ * costringerle a coincidere rompe la seconda.
+ *
+ * È la stessa doppia forma che `Passo` ha già: `regola` in linguaggio
+ * normativo, `spiegazione` in linguaggio da mostrare, e a nessuno è mai venuto
+ * in mente di fonderle. La differenza è che qui la versione argomentata vive in
+ * Notion e non nel tipo, perché serve al colloquio e non al prodotto.
+ *
+ * **Il collegamento è l'****`id`****, ed è il vincolo che tiene.** Se una voce
+ * cambia in *Semplificazioni* e non qui, la mappa di coerenza prima della
+ * consegna lo trova. Per la stessa ragione il catalogo contiene **solo voci
+ * `S-xxx`**: un id di altra famiglia risulterebbe spaiato alla verifica.
  *
  * Non stanno nel `Regime` perché **non sono parametri normativi**: sono
  * dichiarazioni di perimetro, cioè cosa questo calcolatore ha scelto di non
@@ -38,7 +57,7 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
     assunzione: {
       id: 'S-001',
       testo:
-        'Detrazioni per figli e per coniuge: nessun campo, nessuna formula. Il reddito familiare non passa dalla busta paga. Per i figli le detrazioni sono state in larga parte assorbite dall\'Assegno Unico, erogato dall\'INPS su base ISEE e non transitante dal cedolino; per il coniuge servirebbe il suo reddito. Sono inoltre detrazioni che il sostituto applica su richiesta del dipendente: non sono una proprietà automatica del reddito.',
+        'Non consideriamo coniuge e figli a carico. Le detrazioni per la famiglia dipendono dal reddito di altre persone, che dalla busta paga non si vede. Chi ha familiari a carico ha un netto più alto.',
       direzione: 'netto-reale-piu-alto',
       collocazione: 'blocco-semplificazioni',
       fonte: semplificazioni,
@@ -52,7 +71,7 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
     assunzione: {
       id: 'S-002',
       testo:
-        'Il tetto alla base contributiva e pensionabile, pari per il 2026 a 122.295,00 euro, non è modellato: si applica solo ai lavoratori iscritti a forme pensionistiche obbligatorie dopo il 31/12/1995, quindi dipende dalla data di prima iscrizione previdenziale, che l\'utente medio non conosce e non saprebbe dichiarare. Escludendolo, il calcolo assume un lavoratore iscritto prima del 1996. Sopra 122.295 sbaglia in due modi nella stessa direzione: applica l\'aliquota ordinaria su una base che dovrebbe essere tappata, e applica l\'1% aggiuntivo che dovrebbe essersi spento.',
+        'Sopra una certa retribuzione i contributi smettono di crescere, ma solo per chi ha iniziato a lavorare dal 1996 in poi. Non sappiamo quando hai cominciato, quindi abbiamo calcolato senza quel tetto. Se hai iniziato dopo il 1995, il tuo netto reale è più alto di quello che vedi.',
       direzione: 'netto-reale-piu-alto',
       collocazione: 'accanto-al-numero',
       fonte: massimaleContributivo,
@@ -63,18 +82,21 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
     assunzione: {
       id: 'S-003',
       testo:
-        'Restano fuori i contributi a carico del datore, il TFR e il contributo addizionale sui contratti a termine. La task chiede lo stipendio netto e il dettaglio delle trattenute: il costo azienda è un piano superiore, con parametri che variano per settore, dimensione e qualifica in modo molto più frastagliato del lato dipendente.',
+        'Calcoliamo quello che arriva a te, non quanto spende l\'azienda. Sopra il tuo lordo c\'è un altro livello — contributi a carico del datore, TFR — che non fa parte di questo strumento.',
       direzione: 'nessuna',
       collocazione: 'blocco-semplificazioni',
       fonte: semplificazioni,
     },
   },
   {
+    // Assorbe anche il confronto con la busta paga, che prima stava in una voce
+    // separata: due voci vicine con lo stesso contenuto, in pagina, si leggono
+    // come una svista.
     condizione: { tipo: 'sempre' },
     assunzione: {
       id: 'S-004',
       testo:
-        'Restano fuori conguaglio di fine anno, rate delle addizionali dell\'anno precedente, ritenute calcolate su proiezione e arrotondamenti sulla singola ritenuta mensile. Sono meccanismi di quando il denaro si muove, non di quanto spetta per l\'anno.',
+        'Questo è il netto di un anno intero. Una singola busta paga contiene voci che riguardano anni diversi: per esempio le addizionali dell\'anno scorso, trattenute quest\'anno un po\' per volta. Se confronti con la tua busta i numeri non coincideranno, e nessuno dei due è sbagliato: rispondono a due domande diverse.',
       direzione: 'nessuna',
       collocazione: 'accanto-al-numero',
       fonte: semplificazioni,
@@ -85,7 +107,7 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
     assunzione: {
       id: 'S-005',
       testo:
-        'Il calcolo assume un rapporto di lavoro per l\'intero anno e non chiede i giorni effettivamente lavorati. Il caso standard richiesto è un rapporto continuativo, e chiedere i giorni appesantirebbe l\'input per una casistica che il prototipo non deve coprire. Detrazioni e cuneo si ridurrebbero proporzionalmente per chi ha lavorato una frazione d\'anno.',
+        'Assumiamo che tu abbia lavorato tutto l\'anno. Chi ha lavorato solo alcuni mesi ha detrazioni e agevolazioni proporzionalmente più basse.',
       direzione: 'netto-reale-piu-basso',
       collocazione: 'blocco-semplificazioni',
       fonte: semplificazioni,
@@ -96,7 +118,7 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
     assunzione: {
       id: 'S-005-bis',
       testo:
-        'La retribuzione è assunta distribuita uniformemente nell\'anno. L\'aliquota aggiuntiva dell\'1% segue il criterio della mensilizzazione — si applica mese per mese sulla quota eccedente il dodicesimo della prima fascia — e con 13 o 14 mensilità la retribuzione non è uniforme. Si adotta l\'equivalente annuo, che è il risultato a cui il conguaglio di fine anno dovrebbe ricondurre.',
+        'Assumiamo che lo stipendio sia distribuito in modo uniforme nell\'anno. Su alcune trattenute il calcolo mese per mese può dare qualche euro di differenza, che di norma si sistema a fine anno.',
       direzione: 'nessuna',
       collocazione: 'blocco-semplificazioni',
       fonte: semplificazioni,
@@ -107,7 +129,7 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
     assunzione: {
       id: 'S-006',
       testo:
-        'Restano fuori le quote a carico del dipendente per fondi pensione, fondi sanitari e assistenziali previsti da CCNL. Dipendono dal CCNL applicato e da un\'adesione individuale: agirebbero prima dell\'imponibile, quindi con effetto a cascata, ma non sono derivabili dalla RAL.',
+        'Non consideriamo fondo pensione integrativo, casse sanitarie e fondi previsti dal contratto collettivo. Dipendono dal contratto applicato e da scelte tue. Chi vi aderisce paga meno tasse ma riceve meno in busta.',
       direzione: 'netto-reale-piu-basso',
       collocazione: 'blocco-semplificazioni',
       fonte: semplificazioni,
@@ -118,7 +140,7 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
     assunzione: {
       id: 'S-007',
       testo:
-        'Restano fuori buoni pasto, auto aziendale, beni e servizi. Sono individuali, e vanno chiariti nella direzione: la parte che supera la soglia di esenzione non è una trattenuta, è reddito imponibile in più. Confonderla con una trattenuta produce numeri sbagliati nella direzione opposta.',
+        'Non consideriamo buoni pasto, auto aziendale e altri benefit. Attenzione al verso: oltre una certa soglia non sono una trattenuta, sono reddito in più, e fanno salire le tasse.',
       direzione: 'netto-reale-piu-basso',
       collocazione: 'blocco-semplificazioni',
       fonte: semplificazioni,
@@ -129,7 +151,7 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
     assunzione: {
       id: 'S-008',
       testo:
-        'Restano fuori cessione del quinto, pignoramenti, quota sindacale, quote per mensa e trasporto, anticipi e prestiti aziendali. Non toccano il conto fiscale: sono destinazioni del netto, individuali e contrattuali.',
+        'Non consideriamo cessione del quinto, pignoramenti, quote sindacali, mensa o prestiti aziendali. Sono soldi che escono dal netto già calcolato, non tasse.',
       direzione: 'netto-reale-piu-basso',
       collocazione: 'blocco-semplificazioni',
       fonte: semplificazioni,
@@ -140,7 +162,7 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
     assunzione: {
       id: 'S-009',
       testo:
-        'Restano fuori le qualifiche diverse dall\'impiegato nel settore privato e le specificità dei singoli CCNL. È il caso standard indicato dalla consegna.',
+        'Il calcolo vale per un impiegato del settore privato. Contratti collettivi e qualifiche diverse hanno regole proprie.',
       direzione: 'nessuna',
       collocazione: 'blocco-semplificazioni',
       fonte: semplificazioni,
@@ -151,7 +173,7 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
     assunzione: {
       id: 'S-010',
       testo:
-        'Restano fuori i regimi agevolati legati alla persona — impatriati, ricercatori e simili. Dipendono da una condizione personale certificata, non dalla retribuzione.',
+        'Non consideriamo le agevolazioni per chi rientra dall\'estero o per i ricercatori. Dipendono da una condizione personale, non dallo stipendio.',
       direzione: 'netto-reale-piu-alto',
       collocazione: 'blocco-semplificazioni',
       fonte: semplificazioni,
@@ -162,7 +184,7 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
     assunzione: {
       id: 'S-011',
       testo:
-        'Resta fuori la verifica singola delle delibere di ottomila comuni. Milano e Lombardia sono verificate sulle delibere; il resto è importato dal MEF a una data dichiarata in pagina, che viene dal dato stesso e non da una costante scritta a mano. Alla domanda «come garantisci l\'aliquota di un comune qualsiasi?» la risposta è che non la si garantisce singolarmente: origine e data sono dichiarate.',
+        'Le aliquote di Regione e Comune vengono dagli elenchi del Ministero dell\'Economia, alla data indicata in fondo alla pagina. Milano e Lombardia le abbiamo controllate una per una; per gli altri comuni ci fidiamo dell\'elenco.',
       direzione: 'nessuna',
       collocazione: 'blocco-semplificazioni',
       fonte: semplificazioni,
@@ -173,7 +195,7 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
     assunzione: {
       id: 'S-013',
       testo:
-        'Restano fuori i quattro regimi di imposta sostitutiva introdotti dalla L. 199/2025: incrementi da rinnovo contrattuale (5%, sostituisce IRPEF e addizionali), premi di produttività (1%), lavoro notturno, festivo e indennità di turno (15%), trattamento integrativo speciale del turismo. Non escono perché dipendono da una dichiarazione individuale — sono automatici, salva espressa rinuncia scritta — ma perché non sono calcolabili dalla RAL da sola: servirebbe la composizione della retribuzione, e quell\'input non c\'è e non può esserci. Per chi nel 2026 ha ricevuto incrementi da rinnovo, premi o indennità di turno il netto reale è più alto di quello calcolato: su 1.000 euro di incremento da rinnovo, circa 205 euro di netto che il calcolatore non mostra, fino a circa 305 per chi sta fra 28.000 e 33.000.',
+        'Nel 2026 alcune parti dello stipendio pagano molto meno tasse del resto: gli aumenti da rinnovo del contratto nazionale, i premi di risultato, le maggiorazioni per lavoro notturno o a turni. Dal solo stipendio lordo non possiamo sapere quanto della tua retribuzione sia fatto di queste voci. Se ne hai, il tuo netto reale è più alto di quello che vedi, anche di duecento euro ogni mille euro di aumento contrattuale.',
       direzione: 'netto-reale-piu-alto',
       collocazione: 'accanto-al-numero',
       fonte: {
@@ -193,7 +215,7 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
     assunzione: {
       id: 'S-014',
       testo:
-        'Restano fuori i dodici mesi successivi al termine dell\'apprendistato, durante i quali l\'aliquota a carico del lavoratore resta al 5,84% anche a rapporto ormai a tempo indeterminato. Dall\'input risulta indeterminato, e il calcolatore non ha modo di sapere che quel rapporto proviene da un apprendistato concluso da meno di un anno: servirebbe la data di fine apprendistato, che non è una proprietà della retribuzione. Per chi si trova in quei dodici mesi il calcolo applica l\'aliquota piena invece di quella ridotta, quindi il netto reale è più alto di circa 3,35 punti di RAL.',
+        'Chi ha concluso un apprendistato da meno di un anno continua a pagare contributi ridotti, anche se il contratto è ormai a tempo indeterminato. Se sei in questa situazione, il tuo netto reale è più alto di circa mille euro l\'anno su uno stipendio di trentamila.',
       direzione: 'netto-reale-piu-alto',
       collocazione: 'blocco-semplificazioni',
       fonte: {
@@ -202,17 +224,6 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
         consultataIl: '2026-08-28',
         provenienza: 'verificata',
       },
-    },
-  },
-  {
-    condizione: { tipo: 'sempre' },
-    assunzione: {
-      id: 'D-015',
-      testo:
-        'Il risultato è il netto annuo corrispondente a una RAL percepita interamente nell\'anno, non l\'importo di una busta mensile. Una busta del 2026 contiene le rate delle addizionali del 2025 e non quelle del 2026, che si pagheranno nel 2027: nessuno dei due numeri è sbagliato, rispondono a due domande diverse.',
-      direzione: 'nessuna',
-      collocazione: 'accanto-al-numero',
-      fonte: semplificazioni,
     },
   },
 ]
