@@ -217,5 +217,15 @@ Next è alla versione 16: **API, convenzioni e struttura dei file possono differ
 appreso in training.** Prima di scrivere codice Next, leggere la guida pertinente in
 `node_modules/next/dist/docs/`.
 
-`next dev` rigenera automaticamente un `AGENTS.md` con questo stesso avviso. Il file è stato
-rimosso dal repo: se ricompare come modifica non committata, è quello.
+**La generazione automatica è spenta, e la riga in `.gitignore` non serve più.** Fino alla 16.2
+`next dev` rigenerava un `AGENTS.md` con questo stesso avviso, ed era la ragione per cui
+`AGENTS.md` sta in `.gitignore`. **Dalla 16.3.3 il file non viene più creato: il blocco viene
+appeso in coda a questo stesso `CLAUDE.md`**, che è documentazione di progetto e non un artefatto
+generato — quindi ricompariva come modifica non committata a ogni avvio del server.
+
+`agentRules: false` in `next.config.ts` disattiva il comportamento. Se un blocco delimitato da
+`<!-- BEGIN:nextjs-agent-rules -->` ricompare in fondo a questo file, è perché quella riga di
+configurazione è stata rimossa: va tolto il blocco, non il commento che lo spiega.
+
+La riga `AGENTS.md` in `.gitignore` è ora inerte. Resta perché toglierla non guadagna nulla e
+perché una versione futura di Next potrebbe tornare a generarlo.
