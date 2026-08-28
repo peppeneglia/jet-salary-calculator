@@ -47,12 +47,40 @@ import {
 
 const MENSILITA: readonly Mensilita[] = [12, 13, 14]
 
-/** Formattazione dei numeri dentro i testi della traccia. Non tocca i valori. */
+/**
+ * Formattazione dei numeri dentro i testi della traccia. Non tocca i valori.
+ *
+ * ⚠️ **Qui `core/` è legato alla lingua italiana, e la cosa è dichiarata, non
+ * subita** (D-038). I campi `regola`, `spiegazione` e `ragione` portano prosa —
+ * linguaggio normativo incluso — e i numeri che vi compaiono vanno formattati
+ * dove la frase si costruisce. L'alternativa, lasciare a `core/` i soli valori
+ * strutturati e comporre le frasi in `app/`, è stata valutata e scartata:
+ * ricreerebbe le due verità che D-003 esiste per impedire, con il testo da una
+ * parte e il numero dall'altra, liberi di divergere.
+ *
+ * La conseguenza accettata è che, se il calcolatore andasse tradotto, la prosa
+ * della traccia è esattamente il pezzo da spostare. Sapere **quale** pezzo è il
+ * valore di averlo scritto.
+ *
+ * Da qui discende il vincolo minimo: **una convenzione sola**. Un'aliquota e un
+ * importo nella stessa stringa non possono usare separatori decimali diversi,
+ * altrimenti la riga è incoerente con sé stessa.
+ */
 const formatta = new Intl.NumberFormat('it-IT', {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 })
 const f = (n: number): string => formatta.format(n)
+
+/**
+ * Le aliquote seguono la stessa convenzione degli importi, ma senza decimali
+ * imposti: `23%` e non `23,00%`, `1,23%` e non `1.23%`.
+ */
+const formattaAliquota = new Intl.NumberFormat('it-IT', {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
+})
+const p = (n: number): string => `${formattaAliquota.format(n)}%`
 
 /**
  * Troncamento, non arrotondamento. Il numero di cifre arriva dal regime
@@ -108,8 +136,8 @@ const valutaFormula = (formula: FormulaDetrazione, reddito: number, troncamento?
 /** Descrive una forma di aliquota in linguaggio da mostrare. */
 const descriviScaglione = (s: Scaglione): string =>
   s.a === null
-    ? `Oltre ${f(s.da)} — ${s.aliquota}%`
-    : `Da ${f(s.da)} a ${f(s.a)} — ${s.aliquota}%`
+    ? `Oltre ${f(s.da)} — ${p(s.aliquota)}`
+    : `Da ${f(s.da)} a ${f(s.a)} — ${p(s.aliquota)}`
 
 const esitoNeutro = (entra: number, esce: number): Esito => ({
   stato: 'applicato',
@@ -300,7 +328,7 @@ export function calcolaNetto(
       parametro: parametroSoglia,
       esito: {
         stato: 'nonDovuto',
-        ragione: `L'aliquota ordinaria a carico del lavoratore (${regime.contributi.aliquotaOrdinaria.valore}%) non è inferiore al limite del ${quotaAggiuntiva.aliquotaMassimaRegime.valore}% previsto dalla norma.`,
+        ragione: `L'aliquota ordinaria a carico del lavoratore (${p(regime.contributi.aliquotaOrdinaria.valore)}) non è inferiore al limite del ${p(quotaAggiuntiva.aliquotaMassimaRegime.valore)} previsto dalla norma.`,
       },
     })
   } else if (eccedenza <= 0) {
