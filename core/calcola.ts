@@ -605,7 +605,8 @@ export function calcolaNetto(
       etichetta: `Addizionale regionale — ${regionale.nome}`,
       natura: 'locale',
       regola: 'L\'addizionale regionale è dovuta se per lo stesso anno l\'IRPEF risulta dovuta.',
-      spiegazione: 'Non dipende solo dal tuo reddito. Se l\'IRPEF che devi risulta zero, l\'addizionale non si paga affatto — non si riduce: non è dovuta.',
+      spiegazione:
+        'Non dipende solo dal tuo reddito. Se l\'IRPEF che devi risulta zero, l\'addizionale non si paga affatto — non si riduce: non è dovuta.',
       fonti: regole['gate-addizionali'],
       esito: {
         stato: 'nonDovuto',
@@ -822,7 +823,8 @@ function costruisciAddizionaleComunale(
       etichetta,
       natura: 'locale',
       regola: 'L\'addizionale comunale è dovuta se per lo stesso anno risulta dovuta l\'IRPEF.',
-      spiegazione: 'Non dipende solo dal tuo reddito. Se l\'IRPEF che devi risulta zero, l\'addizionale non si paga affatto — non si riduce: non è dovuta.',
+      spiegazione:
+        'Non dipende solo dal tuo reddito. Se l\'IRPEF che devi risulta zero, l\'addizionale non si paga affatto — non si riduce: non è dovuta.',
       fonti: fontiGate,
       esito: {
         stato: 'nonDovuto',
