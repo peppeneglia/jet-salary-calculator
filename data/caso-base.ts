@@ -43,7 +43,7 @@ export const prospettoRegionaleMef: Fonte = {
   provenienza: 'importata',
   estrattoIl: '2026-08-28',
   nonVerificato:
-    'Il prospetto cita la legge regionale abilitante del 2003, non il provvedimento che fissa le aliquote 2026.',
+    'Su questa aliquota abbiamo una riserva. L\'elenco ministeriale indica la legge regionale che autorizza l\'addizionale, non l\'atto che ne ha fissato i valori per il 2026.',
 }
 
 /**

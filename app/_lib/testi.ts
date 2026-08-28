@@ -42,7 +42,7 @@ export const NATURE: Readonly<Record<Natura, EtichettaNatura>> = {
   },
   locale: {
     titolo: 'Addizionale regionale e comunale',
-    destinazione: 'a Regione e Comune',
+    destinazione: 'alla sanità regionale e al bilancio del tuo Comune',
     spiegazione:
       'Le stesse imposte, incassate da Regione e Comune. Si calcolano sullo stesso reddito dell’IRPEF, non su quello che resta dopo averla pagata. Le aliquote le decide ogni ente, quindi due persone con lo stesso stipendio in due comuni diversi pagano cifre diverse.',
   },
