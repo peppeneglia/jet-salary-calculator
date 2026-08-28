@@ -1,26 +1,71 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * Token visivi — D-035.
+ *
+ * Fondo bianco, verde d'accento #66C239, nessun angolo vivo. I valori stanno
+ * qui e non nei componenti: la direzione visiva è una decisione registrata nel
+ * Decision log, e cambiarla deve essere una modifica in un posto solo.
+ */
+@theme {
+  /* Neutri. Leggermente caldi: il grigio puro accanto al verde vira al freddo. */
+  --color-carta: #ffffff;
+  --color-fondo: #f6f7f4;
+  --color-inchiostro: #14181a;
+  --color-inchiostro-tenue: #5f6a63;
+  --color-bordo: #e4e8e1;
+  --color-bordo-forte: #cfd6cb;
+
+  /*
+   * Il verde ha un significato solo: quello che resta al dipendente.
+   * Nient'altro è verde.
+   *
+   * Due valori e non uno: #66C239 su bianco sta sotto il rapporto di contrasto
+   * richiesto per il testo, quindi riempie ma non scrive. Per le parole si usa
+   * lo stesso accento scurito.
+   */
+  --color-verde: #66c239;
+  --color-verde-scuro: #3d7a20;
+  --color-verde-velo: #f1f9ec;
+  --color-verde-bordo: #cfe9bd;
+
+  /*
+   * Un raggio coerente su tutti i livelli: voce, blocco, sezione. Tre gradini
+   * e non un valore unico, così l'annidamento resta leggibile senza che
+   * nessun angolo diventi vivo.
+   */
+  --radius-voce: 0.75rem;
+  --radius-blocco: 1.125rem;
+  --radius-sezione: 1.75rem;
+
+  --font-sans: var(--font-wix-madefor), ui-sans-serif, system-ui, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/*
+ * Nessun blocco `prefers-color-scheme`: D-035 fissa il fondo bianco, e una
+ * dark mode a metà è peggio della sua assenza.
+ */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-fondo);
+  color: var(--color-inchiostro);
+}
+
+/* Le cifre vanno incolonnate: importi diversi devono avere la stessa larghezza. */
+.cifre {
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-verde-scuro);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
