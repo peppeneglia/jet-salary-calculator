@@ -1,0 +1,381 @@
+/**
+ * Test a prova di regressione sul motore.
+ *
+ * ⚠️ I parametri usati qui sono **sintetici**, scelti tondi e diversi da quelli
+ * reali proprio perché nessuno li scambi per parametri normativi: `core/` non
+ * deve contenerne, nemmeno nei test. Questi casi verificano **invarianti di
+ * struttura**, non numeri di legge — i valori attesi derivati dalla norma sono
+ * lavoro dei casi di test, che si costruiscono sulle discontinuità.
+ */
+
+import { readdirSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { describe, expect, test } from 'vitest'
+
+import { calcolaNetto } from './calcola'
+import {
+  aliquota,
+  annoImposta,
+  euro,
+  type AssunzioneDichiarata,
+  type EnteRisolto,
+  type EntiRisolti,
+  type Fonte,
+  type FontiRegola,
+  type Input,
+  type Mensilita,
+  type ParametriComunali,
+  type ParametriRegionali,
+  type Regime,
+} from './types'
+
+// ---------------------------------------------------------------------------
+// Regime sintetico
+// ---------------------------------------------------------------------------
+
+const fonte: Fonte = {
+  atto: 'Regime sintetico di test — nessun valore reale',
+  consultataIl: '2026-01-01',
+  provenienza: 'verificata',
+}
+
+// Scritta per esteso e non generata: se `IdRegola` acquista una voce, questo
+// oggetto smette di compilare — che è il punto del `Record` pieno.
+const fontiRegola: FontiRegola = {
+  'base-contributiva': [fonte],
+  'aliquota-ivs': [fonte],
+  'quota-aggiuntiva': [fonte],
+  'esclusione-contributi-dal-reddito': [fonte],
+  'scaglioni-irpef': [fonte],
+  'detrazione-lavoro-dipendente': [fonte],
+  'troncamento-rapporti': [fonte],
+  'detrazione-cuneo': [fonte],
+  'pavimento-imposta-netta': [fonte],
+  'gate-addizionali': [fonte],
+  'soglia-esenzione-comunale': [fonte],
+  'somma-cuneo': [fonte],
+  'trattamento-integrativo': [fonte],
+}
+
+const regime: Regime = {
+  anno: annoImposta(2026),
+  fontiRegola,
+  contributi: {
+    aliquotaOrdinaria: { valore: aliquota(10), fonte },
+    aliquotaApprendista: { valore: aliquota(6), fonte },
+    quotaAggiuntiva: {
+      aliquota: { valore: aliquota(2), fonte },
+      sogliaPrimaFascia: { valore: euro(50_000), fonte },
+      aliquotaMassimaRegime: { valore: aliquota(20), fonte },
+    },
+  },
+  irpef: {
+    scaglioni: {
+      fonte,
+      valore: [
+        { da: euro(0), a: euro(20_000), aliquota: aliquota(20) },
+        { da: euro(20_000), a: null, aliquota: aliquota(40) },
+      ],
+    },
+  },
+  troncamentoRapportiDetrazione: { valore: 4, fonte },
+  detrazioneLavoroDipendente: {
+    fasce: {
+      fonte,
+      valore: [
+        { redditoDa: euro(0), redditoA: euro(10_000), formula: { forma: 'costante', importo: euro(2_000) } },
+        {
+          redditoDa: euro(10_000),
+          redditoA: euro(30_000),
+          formula: {
+            forma: 'lineare-decrescente',
+            base: euro(0),
+            quota: euro(2_000),
+            riferimento: euro(30_000),
+            ampiezza: euro(20_000),
+            espressione: '2.000 × (30.000 − RC) / 20.000',
+          },
+        },
+        { redditoDa: euro(30_000), redditoA: null, formula: { forma: 'costante', importo: euro(0) } },
+      ],
+    },
+    incrementoFasciaIntermedia: {
+      fonte,
+      valore: { importo: euro(100), redditoDa: euro(15_000), redditoA: euro(25_000) },
+    },
+    minimi: { fonte, valore: { generale: euro(500), tempoDeterminato: euro(1_000) } },
+  },
+  cuneo: {
+    somma: {
+      sogliaAccesso: { valore: euro(12_000), fonte },
+      fasce: {
+        fonte,
+        valore: [
+          { redditoDa: euro(0), redditoA: euro(5_000), percentuale: aliquota(8) },
+          { redditoDa: euro(5_000), redditoA: euro(12_000), percentuale: aliquota(6) },
+          { redditoDa: euro(12_000), redditoA: null, percentuale: aliquota(4) },
+        ],
+      },
+    },
+    detrazione: {
+      fasce: {
+        fonte,
+        valore: [
+          { redditoDa: euro(12_000), redditoA: euro(20_000), formula: { forma: 'costante', importo: euro(800) } },
+          { redditoDa: euro(20_000), redditoA: null, formula: { forma: 'costante', importo: euro(0) } },
+        ],
+      },
+    },
+  },
+  trattamentoIntegrativo: {
+    importo: { valore: euro(1_000), fonte },
+    sogliaRedditoComplessivo: { valore: euro(9_000), fonte },
+    scartoSulGate: { valore: euro(50), fonte },
+  },
+}
+
+// ---------------------------------------------------------------------------
+// Enti sintetici, costruiti a mano: nessun CSV, nessun import di dati
+// ---------------------------------------------------------------------------
+
+const regioneScaglioni: EnteRisolto<ParametriRegionali> = {
+  stato: 'deliberato',
+  nome: 'Regione di test',
+  annoDelibera: 2026,
+  fonte,
+  parametri: {
+    aliquota: {
+      forma: 'scaglioni-previgenti',
+      scaglioni: [
+        { da: euro(0), a: euro(15_000), aliquota: aliquota(1) },
+        { da: euro(15_000), a: null, aliquota: aliquota(2) },
+      ],
+    },
+    detrazioni: [],
+  },
+}
+
+const comuneEreditato: EnteRisolto<ParametriComunali> = {
+  stato: 'ereditato',
+  nome: 'Comune di test',
+  annoDiProvenienza: 2025,
+  normaDiFallback: fonte,
+  fonte,
+  parametri: { aliquota: { forma: 'unica', aliquota: aliquota(0.5) }, sogliaEsenzione: euro(11_000) },
+}
+
+const comuneNonIstituito: EnteRisolto<ParametriComunali> = {
+  stato: 'nonIstituito',
+  nome: 'Comune senza addizionale',
+}
+
+const regioneNonIstituita: EnteRisolto<ParametriRegionali> = {
+  stato: 'nonIstituito',
+  nome: 'Ente senza addizionale',
+}
+
+/** Esercita D-033: l'ente prevede detrazioni proprie che il motore non applica. */
+const regioneConDetrazioni: EnteRisolto<ParametriRegionali> = {
+  stato: 'deliberato',
+  nome: 'Regione con detrazioni',
+  annoDelibera: 2026,
+  fonte,
+  parametri: {
+    aliquota: { forma: 'unica', aliquota: aliquota(1.5) },
+    detrazioni: [
+      { importo: euro(150), redditoDa: euro(10_000), redditoA: euro(20_000), fonte },
+      { importo: euro(60), redditoDa: euro(20_000), redditoA: null, fonte },
+    ],
+  },
+}
+
+/** Catalogo sintetico: una voce per ciascuna forma di condizione. */
+const assunzioni: readonly AssunzioneDichiarata[] = [
+  {
+    condizione: { tipo: 'sempre' },
+    assunzione: {
+      id: 'T-sempre',
+      testo: 'Incondizionata.',
+      direzione: 'nessuna',
+      collocazione: 'blocco-semplificazioni',
+    },
+  },
+  {
+    condizione: { tipo: 'ral-supera', soglia: { valore: euro(60_000), fonte } },
+    assunzione: {
+      id: 'T-soglia',
+      testo: 'Vale solo oltre una soglia di RAL.',
+      direzione: 'netto-reale-piu-alto',
+      collocazione: 'accanto-al-numero',
+    },
+  },
+  {
+    condizione: { tipo: 'contratto-diverso-da', contratto: 'apprendistato' },
+    assunzione: {
+      id: 'T-non-apprendista',
+      testo: 'Vale per chi non ha dichiarato un apprendistato.',
+      direzione: 'netto-reale-piu-alto',
+      collocazione: 'blocco-semplificazioni',
+    },
+  },
+]
+
+const entiStandard: EntiRisolti = { regionale: regioneScaglioni, comunale: comuneEreditato }
+const entiAssenti: EntiRisolti = { regionale: regioneNonIstituita, comunale: comuneNonIstituito }
+const entiConDetrazioni: EntiRisolti = { regionale: regioneConDetrazioni, comunale: comuneEreditato }
+
+// ---------------------------------------------------------------------------
+// Scenari
+// ---------------------------------------------------------------------------
+
+const input = (ral: number, extra: Partial<Input> = {}): Input => ({
+  ral: euro(ral),
+  codiceCatastale: 'X000',
+  tipoContratto: 'indeterminato',
+  ...extra,
+})
+
+const scenari: readonly { nome: string; input: Input; enti: EntiRisolti }[] = [
+  { nome: 'incapiente, gate chiuso', input: input(5_000), enti: entiStandard },
+  { nome: 'trattamento integrativo spettante', input: input(10_000), enti: entiStandard },
+  { nome: 'sotto la soglia di esenzione comunale', input: input(12_000), enti: entiStandard },
+  { nome: 'somma del cuneo, sopra l\'esenzione', input: input(13_000), enti: entiStandard },
+  { nome: 'detrazione da cuneo', input: input(20_000), enti: entiStandard },
+  { nome: 'fascia alta, quota aggiuntiva 1%', input: input(70_000), enti: entiStandard },
+  { nome: 'apprendistato', input: input(20_000, { tipoContratto: 'apprendistato' }), enti: entiStandard },
+  { nome: 'mensilità assente', input: input(30_000, { mensilita: undefined }), enti: entiStandard },
+  { nome: 'enti non istituiti', input: input(30_000), enti: entiAssenti },
+  { nome: 'esattamente alla soglia di accesso al cuneo', input: input(12_000 / 0.9), enti: entiStandard },
+  { nome: 'ente con detrazioni regionali proprie', input: input(25_000), enti: entiConDetrazioni },
+]
+
+// ---------------------------------------------------------------------------
+// 1. L'invariante del netto
+// ---------------------------------------------------------------------------
+
+describe('il netto è derivato dalla traccia', () => {
+  test.each(scenari)('$nome: RAL più la somma degli effetti torna al netto', ({ input: i, enti }) => {
+    const r = calcolaNetto(i, regime, enti, assunzioni)
+    const somma = r.passi.reduce(
+      (acc, p) => acc + (p.esito.stato === 'applicato' ? p.esito.effettoSulNetto : 0),
+      i.ral as number,
+    )
+    expect(somma).toBeCloseTo(r.nettoAnnuo, 10)
+  })
+
+  test('i passi annidati non contribuiscono al netto', () => {
+    const r = calcolaNetto(input(30_000), regime, entiStandard, assunzioni)
+    const annidati = r.passi.flatMap((p) => p.dettaglio ?? [])
+    expect(annidati.length).toBeGreaterThan(0)
+    for (const p of annidati) {
+      if (p.esito.stato === 'applicato') expect(p.esito.effettoSulNetto).toBe(0)
+    }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 2. Le tre divisioni mensili
+// ---------------------------------------------------------------------------
+
+describe('le mensilità sono viste della stessa grandezza', () => {
+  const mensilita: readonly Mensilita[] = [12, 13, 14]
+
+  test.each(scenari)('$nome: ogni divisione moltiplicata torna al netto annuo', ({ input: i, enti }) => {
+    const r = calcolaNetto(i, regime, enti, assunzioni)
+    for (const m of mensilita) expect(r.nettoMensile[m] * m).toBeCloseTo(r.nettoAnnuo, 10)
+  })
+
+  test('il netto annuo non dipende dalle mensilità scelte', () => {
+    const dodici = calcolaNetto(input(30_000, { mensilita: 12 }), regime, entiStandard, assunzioni)
+    const quattordici = calcolaNetto(input(30_000, { mensilita: 14 }), regime, entiStandard, assunzioni)
+    expect(dodici.nettoAnnuo).toBe(quattordici.nettoAnnuo)
+  })
+
+  test('la mensilità assente vale 13', () => {
+    expect(calcolaNetto(input(30_000, { mensilita: undefined }), regime, entiStandard, assunzioni).mensilita).toBe(13)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 3. La separazione dei livelli
+// ---------------------------------------------------------------------------
+
+describe('core/ non conosce i livelli sopra di sé', () => {
+  test('nessun file di core/ importa da data/, app/ o fixtures/', () => {
+    const cartella = join(process.cwd(), 'core')
+    const violazioni: string[] = []
+
+    for (const file of readdirSync(cartella).filter((n) => n.endsWith('.ts'))) {
+      const sorgente = readFileSync(join(cartella, file), 'utf8')
+      for (const [, specifier] of sorgente.matchAll(/from\s+['"]([^'"]+)['"]/g)) {
+        if (/(^|\/)(data|app|fixtures)(\/|$)/.test(specifier)) {
+          violazioni.push(`${file} importa ${specifier}`)
+        }
+      }
+    }
+
+    expect(violazioni).toEqual([])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 4. Le assunzioni applicabili
+// ---------------------------------------------------------------------------
+
+describe('il motore restituisce solo le assunzioni che si applicano', () => {
+  test('le incondizionate ci sono sempre', () => {
+    const r = calcolaNetto(input(30_000), regime, entiStandard, assunzioni)
+    expect(r.assunzioni.map((a) => a.id)).toContain('T-sempre')
+  })
+
+  test('quella con soglia compare solo sopra la soglia', () => {
+    const sotto = calcolaNetto(input(30_000), regime, entiStandard, assunzioni)
+    const sopra = calcolaNetto(input(90_000), regime, entiStandard, assunzioni)
+    expect(sotto.assunzioni.map((a) => a.id)).not.toContain('T-soglia')
+    expect(sopra.assunzioni.map((a) => a.id)).toContain('T-soglia')
+  })
+
+  test('quella sul contratto sparisce in apprendistato', () => {
+    const indeterminato = calcolaNetto(input(30_000), regime, entiStandard, assunzioni)
+    const apprendista = calcolaNetto(
+      input(30_000, { tipoContratto: 'apprendistato' }),
+      regime,
+      entiStandard,
+      assunzioni,
+    )
+    expect(indeterminato.assunzioni.map((a) => a.id)).toContain('T-non-apprendista')
+    expect(apprendista.assunzioni.map((a) => a.id)).not.toContain('T-non-apprendista')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 5. Ciò che il motore non modella non sparisce in silenzio (D-033)
+// ---------------------------------------------------------------------------
+
+describe('le detrazioni regionali non applicate sono visibili', () => {
+  test('un ente con detrazioni proprie produce un passo nonDovuto con la ragione', () => {
+    const r = calcolaNetto(input(25_000), regime, entiConDetrazioni, assunzioni)
+    const passo = r.passi.find((p) => p.id === 'detrazioni-regionali-non-applicate')
+
+    expect(passo).toBeDefined()
+    expect(passo!.esito.stato).toBe('nonDovuto')
+    if (passo!.esito.stato === 'nonDovuto') {
+      expect(passo!.esito.ragione).toContain('non le applica')
+      expect(passo!.esito.ragione).toContain('più alta del reale')
+    }
+  })
+
+  test('non compare per un ente senza detrazioni proprie', () => {
+    const r = calcolaNetto(input(25_000), regime, entiStandard, assunzioni)
+    expect(r.passi.find((p) => p.id === 'detrazioni-regionali-non-applicate')).toBeUndefined()
+  })
+
+  test('il passo non muove il netto', () => {
+    const r = calcolaNetto(input(25_000), regime, entiConDetrazioni, assunzioni)
+    const somma = r.passi.reduce(
+      (acc, p) => acc + (p.esito.stato === 'applicato' ? p.esito.effettoSulNetto : 0),
+      25_000,
+    )
+    expect(somma).toBeCloseTo(r.nettoAnnuo, 10)
+  })
+})
