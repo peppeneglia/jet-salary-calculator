@@ -289,7 +289,7 @@ export function calcolaNetto(
         regola:
           'Le somme si assumono al lordo di qualsiasi contributo e trattenuta: la base è la retribuzione lorda.',
         spiegazione:
-          'Nel caso standard coincide con la RAL, e non per approssimazione: tutte le voci che la legge esclude sono già fuori dal perimetro del calcolatore.',
+          'Nel caso standard coincide con la RAL, e non per approssimazione: le voci che la legge esclude non rientrano in questo calcolo.',
         fonti: regole['base-contributiva'],
         esito: esitoNeutro(ral, retribuzioneImponibile),
       },
@@ -339,7 +339,7 @@ export function calcolaNetto(
       regola:
         'Aliquota aggiuntiva di un punto percentuale sulle quote di retribuzione eccedenti il limite della prima fascia di retribuzione pensionabile.',
       spiegazione:
-        'È l\'unica soglia del ramo contributivo. Sotto la prima fascia non si applica.',
+        'È l\'unica soglia sui contributi. Sotto la prima fascia non si applica.',
       fonti: regole['quota-aggiuntiva'],
       parametro: parametroSoglia,
       esito: {
@@ -605,7 +605,7 @@ export function calcolaNetto(
       etichetta: `Addizionale regionale — ${regionale.nome}`,
       natura: 'locale',
       regola: 'L\'addizionale regionale è dovuta se per lo stesso anno l\'IRPEF risulta dovuta.',
-      spiegazione: 'Il presupposto dipende dall\'esito del ramo IRPEF, non dalla sua base.',
+      spiegazione: 'Non dipende solo dal tuo reddito. Se l\'IRPEF che devi risulta zero, l\'addizionale non si paga affatto — non si riduce: non è dovuta.',
       fonti: regole['gate-addizionali'],
       esito: {
         stato: 'nonDovuto',
@@ -822,7 +822,7 @@ function costruisciAddizionaleComunale(
       etichetta,
       natura: 'locale',
       regola: 'L\'addizionale comunale è dovuta se per lo stesso anno risulta dovuta l\'IRPEF.',
-      spiegazione: 'Il presupposto dipende dall\'esito del ramo IRPEF, non dalla sua base.',
+      spiegazione: 'Non dipende solo dal tuo reddito. Se l\'IRPEF che devi risulta zero, l\'addizionale non si paga affatto — non si riduce: non è dovuta.',
       fonti: fontiGate,
       esito: {
         stato: 'nonDovuto',
@@ -864,7 +864,7 @@ function costruisciAddizionaleComunale(
       natura: 'locale',
       regola: 'L\'addizionale non è dovuta al di sotto della soglia di esenzione deliberata dal comune.',
       spiegazione:
-        'Il secondo gate è indipendente dal primo: l\'IRPEF è dovuta, ma il comune esenta i redditi sotto una certa soglia.',
+        'Sono due condizioni distinte. Qui l\'IRPEF è dovuta, ma il tuo Comune non fa pagare l\'addizionale a chi resta sotto una certa soglia di reddito.',
       fonti: fontiEsenzione,
       esito: {
         stato: 'nonDovuto',
