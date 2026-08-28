@@ -28,7 +28,6 @@ import {
   redditoComplessivo,
   redditoLavoroDipendente,
   retribuzionePrevidenziale,
-  type Assunzione,
   type Passo,
   type Risultato,
 } from '../core/types'
@@ -41,10 +40,10 @@ import {
   prospettoRegionaleMef,
   sogliaEsenzioneMilano,
 } from '../data/caso-base'
+import { assunzioni as catalogoAssunzioni } from '../data/assunzioni'
 import {
   detrazioneArt13Fascia15000a28000,
   detrazioneCuneoPiena,
-  fonteGateRegionale,
   regime2026,
 } from '../data/regime-2026'
 
@@ -437,51 +436,33 @@ const passi: readonly Passo[] = [
 // Assunzioni
 // ---------------------------------------------------------------------------
 
-const assunzioni: readonly Assunzione[] = [
-  {
-    id: 'S-005',
-    testo:
-      'Rapporto di lavoro per l\'intero anno. Detrazioni e cuneo si ridurrebbero proporzionalmente per chi ha lavorato una frazione d\'anno.',
-    direzione: 'nessuna',
-    collocazione: 'blocco-semplificazioni',
-  },
-  {
-    id: 'S-002',
-    testo:
-      'Lavoratore iscritto a forme pensionistiche obbligatorie prima del 1996, per il quale il massimale contributivo non opera. Sopra 122.295,00 il calcolo sbaglierebbe in due modi.',
-    direzione: 'nessuna',
-    collocazione: 'accanto-al-numero',
-  },
-  {
-    id: 'S-011',
-    testo:
-      'Aliquote comunali e regionali importate dal MEF alla data di estrazione dichiarata, non verificate delibera per delibera.',
-    direzione: 'nessuna',
-    collocazione: 'blocco-semplificazioni',
-  },
-  {
-    id: 'S-013',
-    testo:
-      'Nel 2026 gli incrementi da rinnovo contrattuale, i premi di produttività e le indennità di turno scontano un\'imposta sostitutiva che sostituisce IRPEF e addizionali, ed è attiva salvo rinuncia scritta. Non è calcolabile dalla RAL da sola: servirebbe la composizione della retribuzione.',
-    direzione: 'netto-reale-piu-alto',
-    collocazione: 'accanto-al-numero',
-  },
-  {
-    id: 'D-015',
-    testo:
-      'Il risultato è il netto annuo per una RAL percepita interamente nell\'anno. Una busta paga contiene voci riferite ad anni diversi: nessuno dei due numeri è sbagliato.',
-    direzione: 'nessuna',
-    collocazione: 'blocco-semplificazioni',
-  },
-  {
-    id: 'D.Lgs. 446/1997 art. 50',
-    testo:
-      'Residenza e domicilio fiscale al 1° gennaio coincidono. Le due norme usano criteri diversi: l\'aliquota regionale segue la residenza, il gettito il domicilio fiscale.',
-    direzione: 'nessuna',
-    collocazione: 'blocco-semplificazioni',
-    fonte: fonteGateRegionale,
-  },
+/**
+ * Le assunzioni applicabili a questo calcolo, prese dal catalogo di `data/`.
+ *
+ * Elencate per id invece che riscritte: i testi hanno una sola sede. S-002 non
+ * compare perché la RAL non supera il massimale; S-014 sì, perché il contratto
+ * dichiarato non è un apprendistato.
+ */
+const ID_APPLICABILI: readonly string[] = [
+  'S-001',
+  'S-003',
+  'S-004',
+  'S-005',
+  'S-005-bis',
+  'S-006',
+  'S-007',
+  'S-008',
+  'S-009',
+  'S-010',
+  'S-011',
+  'S-013',
+  'S-014',
+  'D-015',
 ]
+
+const assunzioni = catalogoAssunzioni
+  .filter((a) => ID_APPLICABILI.includes(a.assunzione.id))
+  .map((a) => a.assunzione)
 
 // ---------------------------------------------------------------------------
 // Il risultato
