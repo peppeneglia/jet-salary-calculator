@@ -423,6 +423,19 @@ export interface ParametriComunali {
  *   parametri**. Diverso da un'aliquota deliberata pari a zero: sono due modi
  *   diversi di non pagare nulla, e il file MEF li distingue (Fonti §15.b).
  */
+/**
+ * I due enti impositori, già risolti.
+ *
+ * Il motore li **riceve**: trovare il comune nel dataset, applicare il fallback
+ * all'anno precedente e distinguere `0*` da un'aliquota deliberata a zero è
+ * lettura di dati, non calcolo fiscale, e sta a monte. Così `core/` resta puro
+ * e i test costruiscono un ente a mano senza passare dal CSV.
+ */
+export interface EntiRisolti {
+  readonly regionale: EnteRisolto<ParametriRegionali>
+  readonly comunale: EnteRisolto<ParametriComunali>
+}
+
 export type EnteRisolto<P> =
   | {
       readonly stato: 'deliberato'
@@ -541,6 +554,29 @@ export interface Passo {
  * Il segno conta quanto l'assunzione stessa: dire da che parte sbaglia la
  * trasforma da lacuna in limite conosciuto.
  */
+/**
+ * La condizione che rende un'assunzione applicabile a un calcolo.
+ *
+ * È **dato dichiarativo, non un predicato**: `data/` dice *quando* un'assunzione
+ * vale, `core/` sa *come* valutarla. Una funzione nel catalogo sarebbe logica in
+ * `data/`, e renderebbe la condizione impossibile da leggere senza eseguirla.
+ *
+ * La maggior parte delle assunzioni è incondizionata. Le due che non lo sono
+ * esistono perché *Semplificazioni* lo impone: S-002 va mostrata solo quando la
+ * RAL supera il massimale, e S-014 riguarda solo chi non ha dichiarato un
+ * apprendistato.
+ */
+export type CondizioneAssunzione =
+  | { readonly tipo: 'sempre' }
+  | { readonly tipo: 'ral-supera'; readonly soglia: Citato<Euro> }
+  | { readonly tipo: 'contratto-diverso-da'; readonly contratto: TipoContratto }
+
+/** Una voce del catalogo: l'assunzione più la condizione che la rende applicabile. */
+export interface AssunzioneDichiarata {
+  readonly assunzione: Assunzione
+  readonly condizione: CondizioneAssunzione
+}
+
 export interface Assunzione {
   /** Riferimento alla voce in Notion: «S-002», «S-005-bis», «D-023». */
   readonly id: string
@@ -573,10 +609,7 @@ export interface Risultato {
     readonly retribuzionePrevidenziale: RetribuzionePrevidenziale
   }
 
-  readonly enti: {
-    readonly regionale: EnteRisolto<ParametriRegionali>
-    readonly comunale: EnteRisolto<ParametriComunali>
-  }
+  readonly enti: EntiRisolti
 
   readonly passi: readonly Passo[]
 
