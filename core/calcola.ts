@@ -32,7 +32,7 @@ import {
   type FasciaDetrazione,
   type FasciaSuIntero,
   type Fonte,
-  type FormaAliquota,
+  type FormaAliquotaRegionale,
   type FormulaDetrazione,
   type IdTesto,
   type Input,
@@ -179,7 +179,10 @@ const esitoSottrae = (entra: number, esce: number): Esito => ({
   stato: 'applicato',
   entra: euro(entra),
   esce: euro(esce),
-  effettoSulNetto: euro(-esce),
+  // ⚠️ `esce === 0` va reso `0` e non `-0`: sono lo stesso numero per
+  // JavaScript ma non per `Intl`, che stampa `−0,00`. Un'addizionale azzerata
+  // da una detrazione capiente (D-061) passa esattamente di qui.
+  effettoSulNetto: euro(esce === 0 ? 0 : -esce),
   segno: 'sottrae',
 })
 
@@ -219,20 +222,35 @@ const effetto = (passo: Passo): number =>
 // Addizionali: la parte che dipende dall'ente risolto
 // ---------------------------------------------------------------------------
 
-const totaleAddizionale = (base: number, forma: FormaAliquota): number =>
-  forma.forma === 'unica' ? (base * forma.aliquota) / 100 : applicaScaglioni(base, forma.scaglioni)
+/**
+ * ⚠️ **Tre forme, e la terza non è una progressione** (D-062). L'aliquota per
+ * **fascia intera** si applica all'**intero** imponibile e cambia per soglia:
+ * al confine c'è un salto secco, non un cambio di pendenza. È la stessa
+ * meccanica delle fasce percentuali della somma del cuneo, che il motore
+ * calcola già — e infatti riusa `trovaFascia` e `FasciaSuIntero`.
+ *
+ * `progressioneOltre` serve agli enti **ibridi**: la fascia intera vale sotto
+ * una soglia, e sopra si torna agli scaglioni pubblicati.
+ */
+const totaleAddizionale = (base: number, forma: FormaAliquotaRegionale): number => {
+  if (forma.forma === 'unica') return (base * forma.aliquota) / 100
+  if (forma.forma !== 'fasce-intere') return applicaScaglioni(base, forma.scaglioni)
+  const fascia = trovaFascia(forma.fasce, base)
+  if (fascia) return (base * fascia.percentuale) / 100
+  return forma.progressioneOltre === null ? 0 : applicaScaglioni(base, forma.progressioneOltre)
+}
 
 /** Il dettaglio per scaglione, che esiste solo se l'ente non è ad aliquota unica. */
 const dettaglioScaglioni = (
   base: number,
-  forma: FormaAliquota,
+  scaglioni: readonly Scaglione[] | undefined,
   idPrefisso: string,
   fonte: Fonte,
   prosa: Prosa,
 ): readonly Passo[] | undefined => {
-  if (forma.forma === 'unica') return undefined
+  if (scaglioni === undefined) return undefined
   const passi: Passo[] = []
-  forma.scaglioni.forEach((s, i) => {
+  scaglioni.forEach((s, i) => {
     const da: number = s.da
     const a: number = s.a ?? Number.POSITIVE_INFINITY
     if (base <= da) return
@@ -442,7 +460,7 @@ export function calcolaNetto(
       esito: esitoNeutro(rc, lorda),
       dettaglio: dettaglioScaglioni(
         rc,
-        { forma: 'scaglioni-vigenti', scaglioni: regime.irpef.scaglioni.valore },
+        regime.irpef.scaglioni.valore,
         'irpef-lorda',
         regime.irpef.scaglioni.fonte,
         prosa,
@@ -636,7 +654,8 @@ export function calcolaNetto(
     })
   } else {
     const forma = regionale.parametri.aliquota
-    const sogliaRegionale = regionale.parametri.sogliaEsenzione
+    const citataSoglia = regionale.parametri.sogliaEsenzione
+    const sogliaRegionale = citataSoglia === null ? null : citataSoglia.valore
     const esenteRegionale = sogliaRegionale !== null && rc <= sogliaRegionale
 
     /**
@@ -645,13 +664,19 @@ export function calcolaNetto(
      * Stessa meccanica della comunale, e stessa forma nella traccia: la soglia
      * è una **verifica con la sua ragione**, non una voce a zero.
      *
-     * ⚠️ **Nessuna ****`fonti`**** sul passo, ed è deliberato.** Il gate delle
-     * addizionali e la soglia comunale citano una norma statale; qui quella
-     * norma **non esiste o non è stata reperita** — l'art. 50 non prevede la
-     * soglia, ed è proprio l'argomento dal silenzio che questo campo ha
-     * falsificato. La base è il provvedimento dell'ente, che il `parametro`
-     * porta con sé nella propria `fonte`. Scrivere qui un articolo per
-     * simmetria con la comunale sarebbe inventare una citazione.
+     * ⚠️ **La citazione c'è, ed è l'atto dell'ente — con la sua riserva**
+     * (D-059). Il gate delle addizionali e la soglia comunale citano una norma
+     * statale; qui quella norma non risulta — l'art. 50 non prevede la soglia,
+     * ed è proprio l'argomento dal silenzio che questo campo ha falsificato per
+     * la terza volta. Scrivere quell'articolo per simmetria sarebbe inventare
+     * una citazione; **lasciare il passo senza fonti aggirerebbe D-029**, che ha
+     * reso `fontiRegola` un `Record` pieno perché una regola non potesse entrare
+     * senza citazione.
+     *
+     * La stessa `Fonte` sta **due volte**, e non è una ripetizione: sul
+     * `parametro` dice *da dove viene il valore*, sul passo dice *chi stabilisce
+     * la regola*. Che siano lo stesso atto **è l'accertamento** — questa è una
+     * regola la cui unica base è la deliberazione dell'ente.
      */
     const passoSogliaRegionale: Passo | undefined =
       sogliaRegionale === null
@@ -660,10 +685,11 @@ export function calcolaNetto(
             id: 'soglia-esenzione-regionale',
             etichetta: t('soglia-esenzione.etichetta', { soglia: f(sogliaRegionale) }),
             regola: t('soglia-esenzione-regionale.regola'),
+            fonti: [citataSoglia!.fonte],
             spiegazione: esenteRegionale
               ? t('soglia-esenzione.spiegazione.esente', { soglia: f(sogliaRegionale) })
               : t('soglia-esenzione.spiegazione.dovuta'),
-            parametro: { tipo: 'soglia', valore: sogliaRegionale, fonte: regionale.fonte },
+            parametro: { tipo: 'soglia', valore: sogliaRegionale, fonte: citataSoglia!.fonte },
             esito: {
               stato: 'verifica',
               superata: !esenteRegionale,
@@ -681,6 +707,7 @@ export function calcolaNetto(
         natura: 'locale',
         regola: t('regionale.regola.esente'),
         spiegazione: t('regionale.spiegazione.esente'),
+        fonti: [citataSoglia!.fonte],
         esito: {
           stato: 'nonDovuto',
           ragione: t('regionale.ragione.esente', {
@@ -692,11 +719,76 @@ export function calcolaNetto(
         dettaglio: [passoSogliaRegionale!],
       })
     } else {
-      const importo = totaleAddizionale(rc, forma)
+      const lorda = totaleAddizionale(rc, forma)
       const dettaglioRegionale: Passo[] = []
       if (passoSogliaRegionale) dettaglioRegionale.push(passoSogliaRegionale)
-      const perScaglione = dettaglioScaglioni(rc, forma, 'addizionale-regionale', regionale.fonte, prosa)
-      if (perScaglione) dettaglioRegionale.push(...perScaglione)
+
+      // ⚠️ **La fascia intera non è uno scaglione, e il dettaglio deve dirlo**
+      // (D-062). Un solo passo che dichiara l'aliquota applicata all'intero
+      // imponibile: renderla come una riga di scaglione racconterebbe una
+      // progressione che non c'è, ed è esattamente l'errore che la variante
+      // esiste per chiudere.
+      const fasciaIntera =
+        forma.forma === 'fasce-intere' ? trovaFascia(forma.fasce, rc) : undefined
+      if (fasciaIntera) {
+        dettaglioRegionale.push({
+          id: 'addizionale-regionale-fascia-intera',
+          etichetta: t('regionale.fascia-intera.etichetta', { aliquota: p(fasciaIntera.percentuale) }),
+          regola: t('regionale.fascia-intera.regola'),
+          spiegazione: t('regionale.fascia-intera.spiegazione'),
+          parametro: { tipo: 'aliquota', valore: fasciaIntera.percentuale, fonte: regionale.fonte },
+          esito: esitoNeutro(rc, lorda),
+        })
+      } else {
+        const scaglioni =
+          forma.forma === 'unica'
+            ? undefined
+            : forma.forma === 'fasce-intere'
+              ? (forma.progressioneOltre ?? undefined)
+              : forma.scaglioni
+        const perScaglione = dettaglioScaglioni(rc, scaglioni, 'addizionale-regionale', regionale.fonte, prosa)
+        if (perScaglione) dettaglioRegionale.push(...perScaglione)
+      }
+
+      /*
+       * Le detrazioni regionali, con il **pavimento a zero** (D-061).
+       *
+       * ⚠️ **È il quarto pavimento del sistema, e va reso come tale.** Se la
+       * detrazione supera l'addizionale il risultato è zero, **mai un credito**:
+       * lo scrivono la Provincia di Trento — *«se l'imposta dovuta risulta
+       * minore della detrazione non sorge alcun credito d'imposta»* — e
+       * Bolzano. Un passo che mostrasse la detrazione piena quando solo una
+       * parte è stata usata direbbe una cosa falsa.
+       *
+       * Sono **cumulabili**: un ente può prevederne più d'una sulla stessa fascia.
+       */
+      const spettanti = regionale.parametri.detrazioni.filter(
+        (d) => rc > d.redditoDa && (d.redditoA === null || rc <= d.redditoA),
+      )
+      const dovuta = spettanti.reduce((tot, d) => tot + d.importo, 0)
+      const usata = Math.min(dovuta, lorda)
+      const netta = lorda - usata
+
+      if (spettanti.length > 0) {
+        const quante =
+          spettanti.length === 1
+            ? t('detrazioni-regionali.una')
+            : t('detrazioni-regionali.molte', { n: String(spettanti.length) })
+        dettaglioRegionale.push({
+          id: 'detrazioni-regionali',
+          etichetta: t('detrazioni-regionali.etichetta'),
+          regola: t('detrazioni-regionali.regola'),
+          spiegazione:
+            usata < dovuta
+              ? t('detrazioni-regionali.spiegazione.pavimento', {
+                  dovuta: f(dovuta),
+                  usata: f(usata),
+                })
+              : t('detrazioni-regionali.spiegazione', { quante, ente: regionale.nome }),
+          parametro: { tipo: 'importo', valore: euro(usata), fonte: spettanti[0].fonte },
+          esito: esitoNeutro(lorda, netta),
+        })
+      }
 
       passi.push({
         id: 'addizionale-regionale',
@@ -708,47 +800,11 @@ export function calcolaNetto(
           forma.forma === 'unica'
             ? { tipo: 'aliquota', valore: forma.aliquota, fonte: regionale.fonte }
             : { tipo: 'scaglioni', valore: forma, fonte: regionale.fonte },
-        esito: esitoSottrae(rc, importo),
+        esito: esitoSottrae(rc, netta),
         dettaglio: dettaglioRegionale.length > 0 ? dettaglioRegionale : undefined,
       })
     }
 
-    // ⚠️ Ciò che il motore non modella non sparisce in silenzio (D-033).
-    //
-    // Il tipo ammette detrazioni regionali proprie e i dati MEF le mostrano, ma
-    // la norma statale che le autorizza è un punto aperto: senza, restano
-    // indecise tre cose — se abbiano un pavimento proprio, se siano a cliff o
-    // continue, e come interagiscano con il gate. Il motore non le applica, e
-    // deve dirlo: un numero mancante senza spiegazione è la forma peggiore di
-    // errore, perché è plausibile.
-    //
-    // ⚠️ **E non si emette quando l'esenzione ha già azzerato l'addizionale.**
-    // Il passo dice *stai pagando più del reale*; sopra una soglia che ha già
-    // portato il tributo a zero non ci sarebbe niente da pagare di meno, e
-    // l'avviso direbbe una cosa falsa.
-    if (!esenteRegionale && regionale.parametri.detrazioni.length > 0) {
-      const totaleDetrazioni = regionale.parametri.detrazioni.reduce((tot, d) => tot + d.importo, 0)
-      const quante =
-        regionale.parametri.detrazioni.length === 1
-          ? t('detrazioni-regionali.una')
-          : t('detrazioni-regionali.molte', { n: String(regionale.parametri.detrazioni.length) })
-      passi.push({
-        id: 'detrazioni-regionali-non-applicate',
-        etichetta: t('detrazioni-regionali.etichetta'),
-        natura: 'locale',
-        regola: t('detrazioni-regionali.regola'),
-        spiegazione: t('detrazioni-regionali.spiegazione', { ente: regionale.nome }),
-        parametro: { tipo: 'importo', valore: euro(totaleDetrazioni), fonte: regionale.fonte },
-        esito: {
-          stato: 'nonDovuto',
-          ragione: t('detrazioni-regionali.ragione', {
-            ente: regionale.nome,
-            quante,
-            totale: f(totaleDetrazioni),
-          }),
-        },
-      })
-    }
   }
 
   // Addizionale comunale: due gate in cascata, non uno.
@@ -982,7 +1038,13 @@ function costruisciAddizionaleComunale(
   const importo = totaleAddizionale(rc, forma)
   const dettaglio: Passo[] = []
   if (passoSoglia) dettaglio.push(passoSoglia)
-  const perScaglione = dettaglioScaglioni(rc, forma, 'addizionale-comunale', ente.fonte, prosa)
+  const perScaglione = dettaglioScaglioni(
+    rc,
+    forma.forma === 'unica' ? undefined : forma.scaglioni,
+    'addizionale-comunale',
+    ente.fonte,
+    prosa,
+  )
   if (perScaglione) dettaglio.push(...perScaglione)
 
   return {

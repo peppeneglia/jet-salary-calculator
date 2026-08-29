@@ -167,10 +167,13 @@ export type IdTesto =
   | 'regionale.spiegazione.esente'
   | 'regionale.ragione.esente'
   | 'soglia-esenzione-regionale.regola'
+  | 'regionale.fascia-intera.etichetta'
+  | 'regionale.fascia-intera.regola'
+  | 'regionale.fascia-intera.spiegazione'
   | 'detrazioni-regionali.etichetta'
   | 'detrazioni-regionali.regola'
   | 'detrazioni-regionali.spiegazione'
-  | 'detrazioni-regionali.ragione'
+  | 'detrazioni-regionali.spiegazione.pavimento'
   | 'detrazioni-regionali.una'
   | 'detrazioni-regionali.molte'
   // Addizionale comunale
@@ -349,7 +352,7 @@ export type Parametro =
   | { readonly tipo: 'aliquota'; readonly valore: Aliquota; readonly fonte: Fonte }
   | { readonly tipo: 'importo'; readonly valore: Euro; readonly fonte: Fonte }
   | { readonly tipo: 'soglia'; readonly valore: Euro; readonly fonte: Fonte }
-  | { readonly tipo: 'scaglioni'; readonly valore: FormaAliquota; readonly fonte: Fonte }
+  | { readonly tipo: 'scaglioni'; readonly valore: FormaAliquotaRegionale; readonly fonte: Fonte }
   | {
       readonly tipo: 'formula'
       /** La formula come sta nella norma: «1.910 + 1.190 × (28.000 − RC) / 13.000». */
@@ -578,12 +581,56 @@ export interface Regime {
  * regionale`: per il Trentino-Alto Adige l'addizionale «regionale» la fissano
  * le due province autonome, separatamente (Fonti §11, §15.a).
  */
+/**
+ * La forma dell'aliquota regionale ha **una variante in più** di quella comunale
+ * (D-062): oltre a `unica` e agli scaglioni progressivi, esiste l'aliquota **per
+ * fascia intera**, che si applica all'**intero** imponibile e cambia per soglia.
+ *
+ * ⚠️ **La conclusione «progressiva e non per fascia intera» era stata accertata
+ * sul file comunale ed estesa a entrambi i livelli senza verifica.** Sul
+ * regionale è falsa per tre enti, e la differenza è di 80–165 euro a imponibile
+ * 20.000. È la terza volta che morde la stessa regola: *il parsing segue il
+ * testo, mai la posizione della colonna*. Non è una trappola del file, è una
+ * proprietà del modello dati del ministero, che espone in colonne numeriche una
+ * struttura che le colonne non sanno rappresentare e la spiega in prosa accanto.
+ *
+ * ⚠️ **Non si aggiunge una meccanica: se ne riusa una che il dominio aveva già
+ * su un altro ramo.** `FasciaSuIntero` è il tipo delle fasce percentuali della
+ * somma del cuneo — percentuale sull'intero reddito, salto secco al confine — e
+ * `core/` le calcola già.
+ *
+ * `progressioneOltre` esiste perché due enti su tre sono **ibridi**: la fascia
+ * intera vale sotto una soglia, e sopra si torna agli scaglioni pubblicati.
+ * `null` per chi resta a fascia intera su tutto l'arco.
+ */
+export type FormaAliquotaRegionale =
+  | FormaAliquota
+  | {
+      readonly forma: 'fasce-intere'
+      readonly fasce: readonly FasciaSuIntero[]
+      readonly progressioneOltre: readonly Scaglione[] | null
+    }
+
 export interface ParametriRegionali {
-  readonly aliquota: FormaAliquota
+  readonly aliquota: FormaAliquotaRegionale
   /**
-   * Le detrazioni regionali esistono (Fonti §15.a) e hanno un pavimento a zero
-   * dichiarato dall'ente. Solo quelle legate al solo reddito sono in perimetro;
-   * quelle per carichi di famiglia restano fuori.
+   * Le detrazioni regionali **legate al solo reddito**, applicate dal motore con
+   * **pavimento a zero** — se superano l'addizionale il risultato è zero, mai un
+   * credito d'imposta (D-061). Quelle **per carichi di famiglia** restano fuori
+   * perimetro, coerentemente con D-019: non sono derivabili dagli input.
+   *
+   * ⚠️ **È il quarto pavimento a zero del sistema**, e la Provincia di Trento lo
+   * scrive per esteso — *«se l'imposta dovuta risulta minore della detrazione non
+   * sorge alcun credito d'imposta»* — con Bolzano che lo replica. Si aggiunge
+   * all'IRPEF netta (art. 11 c. 3) e alla detrazione dell'art. 13 (c. 6): **il
+   * pavimento a zero è una proprietà del sistema, non di un istituto.**
+   *
+   * ⚠️ **Il campo era il punto aperto più vecchio del progetto**, bloccato dalla
+   * domanda *quale norma statale autorizza le regioni a concedere detrazioni*.
+   * A sbloccarlo non è stata una risposta ma D-059: sono regole la cui unica base
+   * è l'atto dell'ente, e il modo di tenerle oneste è **dichiararlo**. Il valore
+   * una fonte ce l'ha — la legge regionale, esposta per ente nella colonna
+   * `NORME`; è il livello statale che non risulta, e la `fonte` lo dice.
    */
   readonly detrazioni: readonly DetrazioneLocale[]
   /**
@@ -606,8 +653,29 @@ export interface ParametriRegionali {
    * numero è misurato sul prospetto: il testo dichiara l'esenzione fino a
    * 15.000 e aggiunge che oltre *«si applica l'aliquota ordinaria sull'intero
    * imponibile»*, che è la definizione del cliff.
+   *
+   * ---------------------------------------------------------------------
+   * ⚠️ **`Citato<Euro>` e non `Euro`, ed è D-059 che lo impone.**
+   *
+   * La comunale cita l'art. 1 c. 3-bis del D.Lgs. 360/1998 tramite
+   * `fontiRegola`. Questa **non ha una norma statale**: l'art. 50 non la
+   * prevede. Citarlo per simmetria sarebbe inventare una citazione, ma
+   * lasciare il passo con un array di fonti vuoto **aggirerebbe D-029** — quel
+   * tipo è `Record` pieno e non `Partial` proprio perché il compilatore
+   * rifiutasse una regola senza citazione, e un array vuoto soddisfa il tipo
+   * svuotandone lo scopo.
+   *
+   * La soglia porta quindi **la propria fonte**, che è l'atto dell'ente, con
+   * dentro la **riserva dichiarata** su ciò che manca: non *quale* atto fissa
+   * il valore — quella è la riserva già usata per la Lombardia — ma **se
+   * esista** un atto statale che attribuisce all'ente quella facoltà.
+   *
+   * **Non è un caso isolato, è una categoria**, e la stessa forma serve alle
+   * `DetrazioneLocale` quando entreranno: anche quelle hanno base in una legge
+   * regionale e nessuna norma statale accertata che le autorizzi. Il campo
+   * `fonte` che già portano è il posto dove va la stessa riserva.
    */
-  readonly sogliaEsenzione: Euro | null
+  readonly sogliaEsenzione: Citato<Euro> | null
 }
 
 export interface DetrazioneLocale {

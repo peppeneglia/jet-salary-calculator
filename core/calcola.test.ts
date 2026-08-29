@@ -143,12 +143,15 @@ const lingua: Lingua = {
     'regionale.regola.gate': 'Dovuta se l’IRPEF risulta dovuta.',
     'regionale.regola': 'Aliquota deliberata dall’ente impositore.',
     'regionale.spiegazione': 'Stessa base dell’IRPEF.',
-    'detrazioni-regionali.etichetta': 'Detrazioni regionali non applicate',
-    'detrazioni-regionali.regola': 'L’ente prevede detrazioni proprie.',
-    'detrazioni-regionali.spiegazione': '{ente} prevede detrazioni che non applichiamo.',
-    // ⚠️ Le due frasi che i test leggono. Senza, l'asserzione non direbbe nulla.
-    'detrazioni-regionali.ragione':
-      '{ente} prevede {quante}, per un massimo di {totale}. Il calcolatore non le applica: l’addizionale qui calcolata è più alta del reale.',
+    'regionale.fascia-intera.etichetta': 'Aliquota {aliquota} sull’intero imponibile',
+    'regionale.fascia-intera.regola': 'Aliquota per fascia, applicata all’intero imponibile.',
+    'regionale.fascia-intera.spiegazione': 'Non cambia pendenza al confine: cambia tutta.',
+    'detrazioni-regionali.etichetta': 'Detrazione regionale',
+    'detrazioni-regionali.regola': 'Detrazione fino a concorrenza dell’imposta dovuta.',
+    'detrazioni-regionali.spiegazione': '{ente} prevede {quante} in questa fascia.',
+    // ⚠️ La frase che i test leggono. Senza, l'asserzione non direbbe nulla.
+    'detrazioni-regionali.spiegazione.pavimento':
+      'Spettano {dovuta}, ma se ne usa {usata}: l’addizionale si ferma a zero e il residuo non diventa un credito.',
     'detrazioni-regionali.una': 'una detrazione propria',
     'detrazioni-regionali.molte': '{n} detrazioni proprie',
     'comunale.etichetta': 'Addizionale comunale — {ente}',
@@ -293,7 +296,7 @@ const regioneConSoglia: EnteRisolto<ParametriRegionali> = {
   parametri: {
     aliquota: { forma: 'unica', aliquota: aliquota(1.23) },
     detrazioni: [],
-    sogliaEsenzione: euro(25_000),
+    sogliaEsenzione: { valore: euro(25_000), fonte },
   },
 }
 
@@ -367,6 +370,44 @@ const entiStandard: EntiRisolti = { regionale: regioneScaglioni, comunale: comun
 const entiSogliaRegionale: EntiRisolti = { regionale: regioneConSoglia, comunale: comuneEreditato }
 const entiAssenti: EntiRisolti = { regionale: regioneNonIstituita, comunale: comuneNonIstituito }
 const entiConDetrazioni: EntiRisolti = { regionale: regioneConDetrazioni, comunale: comuneEreditato }
+
+/** Esercita il pavimento a zero: la detrazione supera l'addizionale. */
+const regioneDetrazioneCapiente: EnteRisolto<ParametriRegionali> = {
+  stato: 'deliberato',
+  nome: 'Regione con detrazione capiente',
+  annoDelibera: 2026,
+  fonte,
+  parametri: {
+    aliquota: { forma: 'unica', aliquota: aliquota(1) },
+    detrazioni: [{ importo: euro(5_000), redditoDa: euro(0), redditoA: null, fonte }],
+    sogliaEsenzione: null,
+  },
+}
+const entiDetrazioneCapiente: EntiRisolti = {
+  regionale: regioneDetrazioneCapiente,
+  comunale: comuneEreditato,
+}
+
+/** Esercita D-062: aliquota per fascia intera, con progressione oltre l'ultima. */
+const regioneFasceIntere: EnteRisolto<ParametriRegionali> = {
+  stato: 'deliberato',
+  nome: 'Regione a fasce intere',
+  annoDelibera: 2026,
+  fonte,
+  parametri: {
+    aliquota: {
+      forma: 'fasce-intere',
+      fasce: [{ redditoDa: euro(0), redditoA: euro(20_000), percentuale: aliquota(1.23) }],
+      progressioneOltre: [
+        { da: euro(0), a: euro(15_000), aliquota: aliquota(1.73) },
+        { da: euro(15_000), a: null, aliquota: aliquota(3.33) },
+      ],
+    },
+    detrazioni: [],
+    sogliaEsenzione: null,
+  },
+}
+const entiFasceIntere: EntiRisolti = { regionale: regioneFasceIntere, comunale: comuneEreditato }
 
 // ---------------------------------------------------------------------------
 // Scenari
@@ -587,30 +628,78 @@ describe('anche l’ente regionale può avere una soglia di esenzione', () => {
 // 5. Ciò che il motore non modella non sparisce in silenzio (D-033)
 // ---------------------------------------------------------------------------
 
-describe('le detrazioni regionali non applicate sono visibili', () => {
-  test('un ente con detrazioni proprie produce un passo nonDovuto con la ragione', () => {
+describe('le detrazioni regionali si applicano, con il pavimento a zero (D-061)', () => {
+  test('spettano nella loro banda di reddito e riducono l’addizionale', () => {
     const r = calcolaNetto(input(25_000), regime, entiConDetrazioni, assunzioni, lingua)
-    const passo = r.passi.find((p) => p.id === 'detrazioni-regionali-non-applicate')
+    const regionale = r.passi.find((p) => p.id === 'addizionale-regionale')!
+    const detrazione = regionale.dettaglio?.find((d) => d.id === 'detrazioni-regionali')
+    expect(detrazione).toBeDefined()
+    expect(detrazione!.esito.stato).toBe('applicato')
+  })
 
-    expect(passo).toBeDefined()
-    expect(passo!.esito.stato).toBe('nonDovuto')
-    if (passo!.esito.stato === 'nonDovuto') {
-      expect(passo!.esito.ragione).toContain('non le applica')
-      expect(passo!.esito.ragione).toContain('più alta del reale')
-    }
+  test('il pavimento è a zero: la detrazione non produce mai un credito', () => {
+    const r = calcolaNetto(input(15_000), regime, entiDetrazioneCapiente, assunzioni, lingua)
+    const regionale = r.passi.find((p) => p.id === 'addizionale-regionale')!
+    expect(regionale.esito.stato).toBe('applicato')
+    if (regionale.esito.stato !== 'applicato') return
+    expect(regionale.esito.esce).toBe(0)
+    expect(regionale.esito.effettoSulNetto).toBe(0)
+    const detrazione = regionale.dettaglio?.find((d) => d.id === 'detrazioni-regionali')
+    expect(detrazione?.spiegazione).toContain('non diventa un credito')
   })
 
   test('non compare per un ente senza detrazioni proprie', () => {
     const r = calcolaNetto(input(25_000), regime, entiStandard, assunzioni, lingua)
-    expect(r.passi.find((p) => p.id === 'detrazioni-regionali-non-applicate')).toBeUndefined()
+    const regionale = r.passi.find((p) => p.id === 'addizionale-regionale')!
+    expect(regionale.dettaglio?.some((d) => d.id === 'detrazioni-regionali')).not.toBe(true)
   })
 
-  test('il passo non muove il netto', () => {
+  test('il netto resta la somma degli effetti dei passi di primo livello', () => {
     const r = calcolaNetto(input(25_000), regime, entiConDetrazioni, assunzioni, lingua)
     const somma = r.passi.reduce(
       (acc, p) => acc + (p.esito.stato === 'applicato' ? p.esito.effettoSulNetto : 0),
       25_000,
     )
     expect(somma).toBeCloseTo(r.nettoAnnuo, 10)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 7. L'aliquota regionale per fascia intera non e' una progressione (D-062)
+// ---------------------------------------------------------------------------
+
+describe('l’aliquota regionale per fascia intera', () => {
+  const reg = (r: ReturnType<typeof calcolaNetto>) => {
+    const p = r.passi.find((x) => x.id === 'addizionale-regionale')!
+    return p.esito.stato === 'applicato' ? p.esito.esce : 0
+  }
+
+  test('si applica all’intero imponibile, non alla sola parte in fascia', () => {
+    const r = calcolaNetto(input(20_000), regime, entiFasceIntere, assunzioni, lingua)
+    const rcPasso = r.passi.find((p) => p.id === 'reddito-complessivo')!
+    if (rcPasso.esito.stato !== 'applicato') return
+    // 1,23% sull'intero, non 1,73% sui primi 15.000 piu' 3,33% sul resto.
+    expect(reg(r)).toBeCloseTo((rcPasso.esito.esce * 1.23) / 100, 8)
+    const regionale = r.passi.find((p) => p.id === 'addizionale-regionale')!
+    expect(regionale.dettaglio?.some((d) => d.id === 'addizionale-regionale-fascia-intera')).toBe(true)
+  })
+
+  test('oltre l’ultima fascia intera torna alla progressione dichiarata', () => {
+    const r = calcolaNetto(input(40_000), regime, entiFasceIntere, assunzioni, lingua)
+    const rcPasso = r.passi.find((p) => p.id === 'reddito-complessivo')!
+    if (rcPasso.esito.stato !== 'applicato') return
+    const rc = rcPasso.esito.esce
+    expect(reg(r)).toBeCloseTo((15_000 * 1.73) / 100 + ((rc - 15_000) * 3.33) / 100, 8)
+    const regionale = r.passi.find((p) => p.id === 'addizionale-regionale')!
+    expect(regionale.dettaglio?.some((d) => d.id === 'addizionale-regionale-fascia-intera')).not.toBe(true)
+    expect(regionale.dettaglio?.some((d) => d.id.startsWith('addizionale-regionale-scaglione'))).toBe(true)
+  })
+
+  test('il confine fra fascia intera e progressione e’ un gradino, non una pendenza', () => {
+    const sotto = calcolaNetto(input(22_220), regime, entiFasceIntere, assunzioni, lingua)
+    const sopra = calcolaNetto(input(22_230), regime, entiFasceIntere, assunzioni, lingua)
+    // Dieci euro di RAL in piu' non possono spiegare un salto di questa taglia:
+    // con i contributi sintetici al 10% il confine di RC 20.000 cade a RAL 22.222.
+    expect(reg(sopra) - reg(sotto)).toBeGreaterThan(100)
   })
 })

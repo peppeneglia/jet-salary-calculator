@@ -293,13 +293,21 @@ function parametriDa2026(voce) {
   // ---------------------------------------------------------------------
   // Asse 2 — la soglia di esenzione
   //
-  // ⚠️ **`IMPORTO_ESENTE` non è sempre compilata, e da sola perde 96 comuni.**
-  // La colonna esiste ed è il posto giusto dove guardare per primo, ma 138
-  // righe del file 2026 descrivono un'esenzione — «Esenzione per redditi
+  // ⚠️ **`IMPORTO_ESENTE` non è sempre compilata, e da sola perde 136 comuni.**
+  // La colonna esiste ed è il posto giusto dove guardare per primo, ma **138
+  // righe** del file 2026 descrivono un'esenzione — «Esenzione per redditi
   // imponibili fino a euro 10.000,00», senza condizioni — con la colonna a
   // zero. Fermarsi alla colonna significherebbe far pagare l'addizionale a chi
   // il comune ha esentato, cioè un numero plausibile e sbagliato nella
   // direzione peggiore, contro il contribuente.
+  //
+  // ⚠️ **138 letture, 136 comuni, e i due che mancano non sono un errore.**
+  // La lettura avviene mentre si analizza la riga 2026; il rifiuto della riga
+  // arriva dopo, se le fasce non reggono. **BENTIVOGLIO** (fascia duplicata) e
+  // **MARNATE** (confine a 55.000) hanno la soglia letta dal testo e poi la
+  // delibera scartata: ricadono sul c. 752 e prendono la soglia dalla colonna
+  // dell'annuale 2025. Il rapporto conta le **letture**, `origineSoglia` conta
+  // i **comuni**, e sono due grandezze diverse che devono restare tali.
   //
   // Vale qui la stessa regola già stabilita per le aliquote: **il parsing è
   // guidato dal testo della colonna `FASCIA`**. La colonna resta la sorgente
@@ -629,6 +637,119 @@ function sogliaEsenzioneRegionale(ente, provvedimento) {
   return soglia
 }
 
+// ---------------------------------------------------------------------------
+// Letture dal testo di `DISPOSIZIONE` — D-061 e D-062
+//
+// ⚠️ **Perché una tavola dichiarativa e non un'espressione regolare.**
+//
+// Le colonne numeriche del prospetto regionale **non sanno rappresentare** né
+// l'aliquota per fascia intera né le detrazioni: espongono quattro aliquote su
+// tre confini e basta. La struttura vera sta nella prosa di `DISPOSIZIONE`, e
+// la prosa non è uniforme — il FVG scrive «sull'intero importo», il Lazio «è
+// determinata in misura pari all'1,73%», l'Umbria «le maggiorazioni non
+// trovano applicazione». Tre modi di dire la stessa cosa, su tre enti.
+//
+// Un'espressione regolare che li coprisse tutti e tre coprirebbe anche cose che
+// non sono quelle, ed è esattamente ciò che la disciplina di questo import
+// vieta: **non si estrae dalla prosa nulla che la prosa non dichiari da sé**.
+//
+// Quindi la lettura è **fatta a mano, una volta, e citata**: ogni voce porta la
+// frase esatta su cui si fonda, e l'import **verifica che quella frase sia
+// ancora nel file** prima di applicarla. Se il ministero riscrive il testo, la
+// voce non si applica più e finisce nel rapporto — invece di applicare in
+// silenzio un parametro che nessuno ha più confermato.
+//
+// È lo stesso patto della soglia valdostana: si accetta solo ciò che il testo
+// dichiara, e la prova che lo dichiara sta accanto al dato.
+// ---------------------------------------------------------------------------
+
+const LETTURE_DAL_TESTO = {
+  'REGIONE FRIULI VENEZIA GIULIA': {
+    fasceIntere: {
+      prova: "l'aliquota e' pari a 1,23 per cento sull'intero importo",
+      fasce: [
+        { redditoDa: 0, redditoA: 15_000, percentuale: 0.7 },
+        { redditoDa: 15_000, redditoA: null, percentuale: 1.23 },
+      ],
+      progressioneOltre: null,
+      nota: "il testo dice «sull'intero importo», ed è l'unico dei tre a dichiarare la fascia intera con queste parole",
+    },
+  },
+  'REGIONE UMBRIA': {
+    fasceIntere: {
+      prova: 'non trovano applicazione nei confronti dei soggetti con un reddito imponibile complessivo',
+      // Sospese le maggiorazioni, i primi due scaglioni valgono entrambi 1,23:
+      // applicati progressivamente danno lo stesso di 1,23 sull'intero. La
+      // fascia intera è quindi il modo giusto **e** il numero giusto.
+      fasce: [{ redditoDa: 0, redditoA: 28_000, percentuale: 1.23 }],
+      progressioneOltre: 'pubblicata',
+      nota: 'sotto 28.000 le maggiorazioni sono sospese e i due scaglioni collassano su 1,23; sopra si torna alla progressione pubblicata',
+    },
+    detrazioni: [
+      {
+        prova: "detrazione dall'addizionale regionale all'irpef pari a 150,00 euro",
+        importo: 150,
+        redditoDa: 28_000,
+        redditoA: 50_000,
+      },
+    ],
+  },
+  'REGIONE LAZIO': {
+    fasceIntere: {
+      prova: "e' determinata in misura pari all'1,73%",
+      fasce: [{ redditoDa: 0, redditoA: 28_000, percentuale: 1.73 }],
+      progressioneOltre: 'pubblicata',
+      nota: 'sotto 28.000 il testo fissa una sola aliquota per il soggetto; sopra si torna alla progressione pubblicata',
+    },
+    detrazioni: [
+      { prova: 'detrazione pari a 60,00 euro', importo: 60, redditoDa: 28_000, redditoA: 30_000 },
+    ],
+  },
+  'PROVINCIA AUTONOMA DI BOLZANO': {
+    detrazioni: [
+      {
+        prova: "non superiore a 90.000,00 euro spetta una detrazione d'imposta di 430,50 euro",
+        importo: 430.5,
+        redditoDa: 0,
+        redditoA: 90_000,
+      },
+    ],
+    // ⚠️ La seconda detrazione di Bolzano — «125,00 euro moltiplicato per il
+    // rapporto fra il reddito diminuito di 50.000 e 25.000», con massimo 125 —
+    // è **continua, non a cliff**, e `DetrazioneLocale` non sa esprimere una
+    // formula: ha un importo fisso entro una banda. Resta fuori, dichiarata.
+    // L'effetto è al più 125 euro e va nella direzione che si conosce.
+    detrazioniNonModellate: [
+      {
+        prova: "detrazione determinata dall'importo di 125,00 euro moltiplicato per il rapporto",
+        perche: 'è una formula lineare crescente, e DetrazioneLocale esprime solo un importo fisso entro una banda di reddito',
+        massimo: 125,
+      },
+    ],
+  },
+}
+
+/** Normalizza per il confronto: minuscole, spazi singoli, apostrofi uniformi. */
+const perConfronto = (t) =>
+  normalizzaTesto(t)
+    .toLowerCase()
+    .replace(/[‘’ʼ]/g, "'")
+    .replace(/\s+/g, ' ')
+
+/**
+ * Applica una lettura **solo se la frase che la fonda è ancora nel file**.
+ * Se non c'è, la lettura non si applica e finisce nel rapporto.
+ */
+function provaPresente(ente, testo, prova, cosa) {
+  if (perConfronto(testo).includes(perConfronto(prova))) return true
+  segnala(
+    'lettura-dal-testo-non-confermata',
+    ente,
+    `${cosa}: la frase su cui si fonda la lettura non è più nel testo di DISPOSIZIONE («${prova}») — la lettura non è stata applicata, e l'ente ricade sulle colonne numeriche`,
+  )
+  return false
+}
+
 function leggiRegionale2026() {
   const righe = leggiCsvComeOggetti(join(FONTI, 'addreg2026.csv'))
   const perEnte = new Map()
@@ -684,8 +805,49 @@ function leggiRegionale2026() {
     const scelto = ordinati[0]
     const scartati = ordinati.slice(1)
 
-    const forma = formaRegionale(ente, scelto)
-    if (!forma) continue
+    const progressiva = formaRegionale(ente, scelto)
+    if (!progressiva) continue
+
+    const lettura = LETTURE_DAL_TESTO[ente]
+    const testoDisposizione = scelto.disposizione ?? ''
+
+    // D-062 — la fascia intera, se il testo la dichiara e la frase c'è ancora.
+    let forma = progressiva
+    if (
+      lettura?.fasceIntere &&
+      provaPresente(ente, testoDisposizione, lettura.fasceIntere.prova, 'aliquota per fascia intera')
+    ) {
+      forma = {
+        forma: 'fasce-intere',
+        fasce: lettura.fasceIntere.fasce,
+        progressioneOltre:
+          lettura.fasceIntere.progressioneOltre === 'pubblicata' ? (progressiva.scaglioni ?? null) : null,
+      }
+      segnala(
+        'aliquota-per-fascia-intera',
+        ente,
+        `${lettura.fasceIntere.nota} — letta dal testo di DISPOSIZIONE e non dalle colonne numeriche`,
+      )
+    }
+
+    // D-061 — le detrazioni legate al solo reddito, a cliff entro una banda.
+    const detrazioni = []
+    for (const d of lettura?.detrazioni ?? []) {
+      if (!provaPresente(ente, testoDisposizione, d.prova, 'detrazione regionale')) continue
+      detrazioni.push({ importo: d.importo, redditoDa: d.redditoDa, redditoA: d.redditoA })
+      segnala(
+        'detrazione-regionale-applicata',
+        ente,
+        `${d.importo} euro per reddito imponibile fra ${d.redditoDa} e ${d.redditoA ?? 'oltre'} — a cliff, letta dal testo e citata sulla legge regionale`,
+      )
+    }
+    for (const d of lettura?.detrazioniNonModellate ?? []) {
+      segnala(
+        'detrazione-regionale-non-modellata',
+        ente,
+        `${d.perche}; massimo ${d.massimo} euro, e dove spetta l'addizionale mostrata resta più alta del reale di al più quella cifra`,
+      )
+    }
 
     // ⚠️ Art. 50 c. 3 terzo periodo — una maggiorazione **più favorevole** al
     // contribuente può applicarsi retroattivamente all'anno in corso. Oggi non
@@ -709,12 +871,15 @@ function leggiRegionale2026() {
       }
     }
 
-    const testoLibero = [scelto.disposizione, scelto.note, scelto.norme].filter(Boolean).join(' ')
-    if (/detrazion/i.test(testoLibero)) {
+    // Le detrazioni **per carichi di famiglia** restano fuori perimetro (D-019),
+    // e non hanno bisogno di un passo proprio: le copre già S-001, che dichiara
+    // che coniuge e figli a carico non entrano nel calcolo.
+    const testoLibero = [scelto.disposizione, scelto.note].filter(Boolean).join(' ')
+    if (/detrazion/i.test(testoLibero) && /figli|carico|handicap|minorenn|disabil/i.test(testoLibero)) {
       segnala(
-        'detrazione-regionale-non-modellata',
+        'detrazione-regionale-per-carichi',
         ente,
-        'il testo libero del prospetto descrive una detrazione regionale; non viene estratta perché ricavarne importo e banda dal testo sarebbe un parametro senza fonte (D-033)',
+        'prevede detrazioni per carichi di famiglia: fuori perimetro come le detrazioni statali dell’art. 12 TUIR, già dichiarate in S-001',
       )
     }
 
@@ -725,9 +890,7 @@ function leggiRegionale2026() {
       norme: scelto.norme,
       note: scelto.note,
       aliquota: forma,
-      // Le detrazioni esistono nel testo libero ma non vengono inferite: il
-      // motore le dichiarerà mancanti invece di applicarle a caso (D-033).
-      detrazioni: [],
+      detrazioni,
       sogliaEsenzione: sogliaEsenzioneRegionale(ente, scelto),
       provvedimentiScartati: scartati.map((p) => ({ numero: p.numero, dataPubblicazione: p.pubblicazione })),
     })
@@ -756,7 +919,18 @@ function formaRegionale(ente, provvedimento, silenzioso = false) {
   return null
 }
 
-const aliquoteDi = (forma) => (forma.forma === 'unica' ? [forma.aliquota] : forma.scaglioni.map((s) => s.aliquota))
+const aliquoteDi = (forma) => {
+  if (forma.forma === 'unica') return [forma.aliquota]
+  if (forma.forma === 'fasce-intere') {
+    // Il tetto va misurato su **tutte** le aliquote che l'ente può applicare:
+    // quelle per fascia intera e quelle della progressione oltre l'ultima.
+    return [
+      ...forma.fasce.map((f) => f.percentuale),
+      ...(forma.progressioneOltre ?? []).map((s) => s.aliquota),
+    ]
+  }
+  return forma.scaglioni.map((s) => s.aliquota)
+}
 
 /** Più favorevole = nessuna aliquota superiore, almeno una inferiore. */
 function piuFavorevole(candidata, corrente) {
@@ -1179,6 +1353,53 @@ const rapporto = [
   '| --- | --- |',
   ...Object.entries(conteggi).map(([k, v]) => `| ${k} | ${v} |`),
   '',
+  '## Le tre forme dell’aliquota regionale (D-062)',
+  '',
+  "La conclusione *«progressiva e non per fascia intera»* era stata accertata sul file **comunale** ed estesa a entrambi i livelli senza verifica. Sul regionale è falsa per tre enti, e la lettura si fa dal testo di `DISPOSIZIONE`, mai dalle colonne numeriche.",
+  '',
+  '| Forma | Enti | Quali |',
+  '| --- | --- | --- |',
+  ...['unica', 'fasce-intere'].map((f) => {
+    const q = entiRegionali.filter((e) => e.aliquota.forma === f)
+    return `| ${f === 'unica' ? 'aliquota unica' : '**fascia intera**'} | ${q.length} | ${q.map((e) => e.nome).join(', ')} |`
+  }),
+  (() => {
+    const q = entiRegionali.filter((e) => e.aliquota.forma.startsWith('scaglioni'))
+    return `| scaglioni progressivi | ${q.length} | ${q.map((e) => e.nome).join(', ')} |`
+  })(),
+  '',
+  `> ⚠️ **La progressione è certa solo dove non c'è prosa che la smentisca.** ${entiRegionali.filter((e) => e.aliquota.forma.startsWith('scaglioni')).length} enti risultano a scaglioni, ma per **${entiRegionali.filter((e) => e.aliquota.forma.startsWith('scaglioni')).length - 6} di loro la forma è letta**, non presunta: gli unici multifascia privi di \`DISPOSIZIONE\`, e quindi con la progressione fuori discussione, sono sei — Abruzzo, Emilia-Romagna, Liguria, Lombardia, Molise, Toscana. **Il caso base non è toccato: la Lombardia è fra i sei.**`,
+  '',
+  '### Le discontinuità che questo apre',
+  '',
+  "Umbria e Lazio applicano una sola aliquota sull'intero imponibile fino a 28.000 e tornano alla progressione sopra: al confine c'è un **gradino**, non un cambio di pendenza. Con la detrazione di fascia già scontata, il salto vale circa **−157,70** in Umbria e **−148,00** nel Lazio.",
+  '',
+  "> **L'inventario delle discontinuità dipende ora anche dall'ente regionale**, non soltanto dal comune, e va calcolato **a runtime su entrambi**. Era già vero per la soglia di esenzione comunale, che è un cliff per comune; adesso lo è due volte.",
+  '',
+  '## Le detrazioni regionali (D-061)',
+  '',
+  (() => {
+    const conRedditoSolo = entiRegionali.filter((e) => e.detrazioni.length > 0)
+    const perCarichi = (perCategoria.get('detrazione-regionale-per-carichi') ?? []).length
+    return `La stringa *detrazion* compare nel testo libero di **otto enti**. Di questi, **${conRedditoSolo.length} hanno detrazioni legate al solo reddito** — ${conRedditoSolo.map((e) => e.nome).join(', ')} — e **${perCarichi} le prevedono per carichi di famiglia**, che restano fuori perimetro per D-019 e sono già dichiarate in S-001. Bolzano sta in entrambi gli insiemi.`
+  })(),
+  '',
+  '| Ente | Importo | Banda di reddito imponibile | Forma |',
+  '| --- | --- | --- | --- |',
+  ...entiRegionali.flatMap((e) =>
+    e.detrazioni.map(
+      (d) => `| ${e.nome} | ${d.importo} € | da ${d.redditoDa} a ${d.redditoA ?? '—'} | **cliff** |`,
+    ),
+  ),
+  '',
+  "**Sono tutte a cliff**: importo fisso entro una banda, quindi un salto secco ai confini. Producono discontinuità nuove per ciascun ente che le prevede, e vanno nello stesso inventario a runtime.",
+  '',
+  "⚠️ **Il caso che rende il difetto attivo è Bolzano, e l'abbiamo aperto noi.** 430,50 € è esattamente **1,23% × 35.000**: sotto quel reddito imponibile la detrazione **azzera l'intera addizionale regionale**. Finché i 116 comuni altoatesini erano non calcolabili nessuno la vedeva; dichiarandoli calcolabili, D-056 ha reso il difetto visibile. Non è un argomento per revocare D-056 — è l'argomento per cui questo campo andava chiuso.",
+  '',
+  "⚠️ **Una detrazione resta fuori, ed è continua.** La seconda di Bolzano — *«125,00 euro moltiplicato per il rapporto tra il reddito imponibile diminuito di 50.000,00 euro e l'importo di 25.000,00 euro»* — è una **formula lineare crescente**, e `DetrazioneLocale` esprime solo un importo fisso entro una banda. Non è stata modellata: l'effetto è al più **125 euro**, in una direzione nota — dove spetta, l'addizionale mostrata è più alta del reale.",
+  '',
+  "⚠️ **E una che non è una detrazione.** La Provincia di Trento concede una **deduzione** di 30.000 euro a chi ha imponibile fino a 30.000 — riduce la base, non l'imposta, ed è un meccanismo diverso da quello che D-061 ha modellato. Non è stata toccata, e va guardata a parte.",
+  '',
   '## La mappatura provincia → ente impositore — cosa è verificato e cosa no',
   '',
   "**Nessuno dei tre file MEF lega una sigla di provincia a un ente impositore.** Il file comunale porta la sigla, il prospetto regionale il nome dell'ente, e in mezzo non c'è nulla: la tabella delle 107 province in `scripts/importa-mef.mjs` **non è derivabile da questi dati, quindi non è verificabile con questi dati**. Resta marcata *non verificata* dentro `regioni-2026.json`.",
@@ -1215,6 +1436,20 @@ const rapporto = [
   '| Categoria | Occorrenze |',
   '| --- | --- |',
   ...[...perCategoria.entries()].sort((a, b) => b[1].length - a[1].length).map(([c, v]) => `| \`${c}\` | ${v.length} |`),
+  '',
+  '### Riconciliazione — perché `esenzione-letta-dal-testo` conta più dei comuni',
+  '',
+  `Il rapporto elenca **${(perCategoria.get('esenzione-letta-dal-testo') ?? []).length} letture** della soglia dal testo della fascia, ma i comuni che la portano davvero sono **${conteggi.sogliaDallaDescrizione}**. Non è una discrepanza: sono **due grandezze diverse**, e vanno lette come tali.`,
+  '',
+  "La soglia si legge mentre si analizza la riga 2026; il rifiuto della riga arriva **dopo**, se le fasce non reggono la validazione sui due set autorizzati. Due comuni cadono in mezzo — **BENTIVOGLIO** (fascia duplicata) e **MARNATE** (confine a 55.000): la loro soglia viene letta dal testo, poi la delibera è scartata, e ricadono sul c. 752 prendendo la soglia dalla **colonna** dell'elenco annuale 2025. Il terzo comune scartato, **AIRUNO**, non ha alcuna esenzione e non compare.",
+  '',
+  `> Quindi: **${(perCategoria.get('esenzione-letta-dal-testo') ?? []).length} letture − 2 delibere scartate = ${conteggi.sogliaDallaDescrizione} comuni** con \`origineSoglia: 'descrizione'\`. Le **${(perCategoria.get('esenzione-condizionata') ?? []).length}** esenzioni condizionate sono una categoria a parte e non entrano in nessuno dei due numeri: non producono mai una soglia.`,
+  '',
+  '### Formulazioni provvisorie',
+  '',
+  "**La ragione di Castegnero Nanto è provvisoria (D-060).** Oggi dice che i due predecessori avevano aliquote diverse e che sceglierne una non spetta al calcolatore: è corretto, ma è **un'ammissione di ignoranza**, la più debole delle due formulazioni possibili.",
+  '',
+  "La fusione di comuni è un istituto con disciplina propria, e verosimilmente prevede questo caso: la pista è la **L. 56/2014**, che dovrebbe consentire al comune fuso di applicare aliquote differenziate per i territori degli enti preesistenti per un periodo transitorio. **Non è in cartella e non è stata letta: è una pista, non una conclusione.** Se regge, la ragione diventa *la legge ammette due aliquote sullo stesso comune, quale si applica dipende dal territorio, e il calcolatore non chiede l'indirizzo* — cioè passa da lacuna a **limite conosciuto con input mancante**, la stessa forma di S-002 e S-013.",
   '',
   ...[...perCategoria.entries()]
     .sort((a, b) => a[0].localeCompare(b[0]))

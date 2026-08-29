@@ -196,7 +196,13 @@
      }
     ]
    },
-   "detrazioni": [],
+   "detrazioni": [
+    {
+     "importo": 430.5,
+     "redditoDa": 0,
+     "redditoA": 90000
+    }
+   ],
    "sogliaEsenzione": null,
    "provvedimentiScartati": []
   },
@@ -370,29 +376,20 @@
    "norme": "Art. 50 D.Lgs. 446/1997 - Art. 1, comma 5, L.R. 25 luglio 2012, n. 14 - Art. 1, comma 727,Legge 30 dicembre 2024, n. 207 (Bilancio di previsione dello Stato per l'anno finanziario 2025).",
    "note": null,
    "aliquota": {
-    "forma": "scaglioni-previgenti",
-    "scaglioni": [
+    "forma": "fasce-intere",
+    "fasce": [
      {
-      "da": 0,
-      "a": 15000,
-      "aliquota": 0.7
+      "redditoDa": 0,
+      "redditoA": 15000,
+      "percentuale": 0.7
      },
      {
-      "da": 15000,
-      "a": 28000,
-      "aliquota": 1.23
-     },
-     {
-      "da": 28000,
-      "a": 50000,
-      "aliquota": 1.23
-     },
-     {
-      "da": 50000,
-      "a": null,
-      "aliquota": 1.23
+      "redditoDa": 15000,
+      "redditoA": null,
+      "percentuale": 1.23
      }
-    ]
+    ],
+    "progressioneOltre": null
    },
    "detrazioni": [],
    "sogliaEsenzione": null,
@@ -405,8 +402,15 @@
    "norme": "Legge regionale n. 20 del 31 dicembre 2025",
    "note": null,
    "aliquota": {
-    "forma": "scaglioni-previgenti",
-    "scaglioni": [
+    "forma": "fasce-intere",
+    "fasce": [
+     {
+      "redditoDa": 0,
+      "redditoA": 28000,
+      "percentuale": 1.73
+     }
+    ],
+    "progressioneOltre": [
      {
       "da": 0,
       "a": 15000,
@@ -429,7 +433,13 @@
      }
     ]
    },
-   "detrazioni": [],
+   "detrazioni": [
+    {
+     "importo": 60,
+     "redditoDa": 28000,
+     "redditoA": 30000
+    }
+   ],
    "sogliaEsenzione": null,
    "provvedimentiScartati": []
   },
@@ -718,8 +728,15 @@
    "norme": "Art. 1 - Legge regionale 11 aprile 2025, n. 2",
    "note": "Le disposizioni agevolative non generano il riconoscimento di alcun credito d'imposta",
    "aliquota": {
-    "forma": "scaglioni-previgenti",
-    "scaglioni": [
+    "forma": "fasce-intere",
+    "fasce": [
+     {
+      "redditoDa": 0,
+      "redditoA": 28000,
+      "percentuale": 1.23
+     }
+    ],
+    "progressioneOltre": [
      {
       "da": 0,
       "a": 15000,
@@ -742,7 +759,13 @@
      }
     ]
    },
-   "detrazioni": [],
+   "detrazioni": [
+    {
+     "importo": 150,
+     "redditoDa": 28000,
+     "redditoA": 50000
+    }
+   ],
    "sogliaEsenzione": null,
    "provvedimentiScartati": []
   },

@@ -69,6 +69,42 @@ I 176 coincidono esattamente con le righe `FLAG_NUOVA = 0`, i *casi specifici* c
 | deliberaNonUtilizzabile | 3 |
 | senzaEnteRegionale | 0 |
 
+## Le tre forme dell’aliquota regionale (D-062)
+
+La conclusione *«progressiva e non per fascia intera»* era stata accertata sul file **comunale** ed estesa a entrambi i livelli senza verifica. Sul regionale è falsa per tre enti, e la lettura si fa dal testo di `DISPOSIZIONE`, mai dalle colonne numeriche.
+
+| Forma | Enti | Quali |
+| --- | --- | --- |
+| aliquota unica | 6 | REGIONE BASILICATA, REGIONE CALABRIA, REGIONE SARDEGNA, REGIONE SICILIA, REGIONE VALLE D'AOSTA, REGIONE VENETO |
+| **fascia intera** | 3 | REGIONE FRIULI VENEZIA GIULIA, REGIONE LAZIO, REGIONE UMBRIA |
+| scaglioni progressivi | 12 | PROVINCIA AUTONOMA DI BOLZANO, PROVINCIA AUTONOMA DI TRENTO, REGIONE ABRUZZO, REGIONE CAMPANIA, REGIONE EMILIA-ROMAGNA, REGIONE LIGURIA, REGIONE LOMBARDIA, REGIONE MARCHE, REGIONE MOLISE, REGIONE PIEMONTE, REGIONE PUGLIA, REGIONE TOSCANA |
+
+> ⚠️ **La progressione è certa solo dove non c'è prosa che la smentisca.** 12 enti risultano a scaglioni, ma per **6 di loro la forma è letta**, non presunta: gli unici multifascia privi di `DISPOSIZIONE`, e quindi con la progressione fuori discussione, sono sei — Abruzzo, Emilia-Romagna, Liguria, Lombardia, Molise, Toscana. **Il caso base non è toccato: la Lombardia è fra i sei.**
+
+### Le discontinuità che questo apre
+
+Umbria e Lazio applicano una sola aliquota sull'intero imponibile fino a 28.000 e tornano alla progressione sopra: al confine c'è un **gradino**, non un cambio di pendenza. Con la detrazione di fascia già scontata, il salto vale circa **−157,70** in Umbria e **−148,00** nel Lazio.
+
+> **L'inventario delle discontinuità dipende ora anche dall'ente regionale**, non soltanto dal comune, e va calcolato **a runtime su entrambi**. Era già vero per la soglia di esenzione comunale, che è un cliff per comune; adesso lo è due volte.
+
+## Le detrazioni regionali (D-061)
+
+La stringa *detrazion* compare nel testo libero di **otto enti**. Di questi, **3 hanno detrazioni legate al solo reddito** — PROVINCIA AUTONOMA DI BOLZANO, REGIONE LAZIO, REGIONE UMBRIA — e **6 le prevedono per carichi di famiglia**, che restano fuori perimetro per D-019 e sono già dichiarate in S-001. Bolzano sta in entrambi gli insiemi.
+
+| Ente | Importo | Banda di reddito imponibile | Forma |
+| --- | --- | --- | --- |
+| PROVINCIA AUTONOMA DI BOLZANO | 430.5 € | da 0 a 90000 | **cliff** |
+| REGIONE LAZIO | 60 € | da 28000 a 30000 | **cliff** |
+| REGIONE UMBRIA | 150 € | da 28000 a 50000 | **cliff** |
+
+**Sono tutte a cliff**: importo fisso entro una banda, quindi un salto secco ai confini. Producono discontinuità nuove per ciascun ente che le prevede, e vanno nello stesso inventario a runtime.
+
+⚠️ **Il caso che rende il difetto attivo è Bolzano, e l'abbiamo aperto noi.** 430,50 € è esattamente **1,23% × 35.000**: sotto quel reddito imponibile la detrazione **azzera l'intera addizionale regionale**. Finché i 116 comuni altoatesini erano non calcolabili nessuno la vedeva; dichiarandoli calcolabili, D-056 ha reso il difetto visibile. Non è un argomento per revocare D-056 — è l'argomento per cui questo campo andava chiuso.
+
+⚠️ **Una detrazione resta fuori, ed è continua.** La seconda di Bolzano — *«125,00 euro moltiplicato per il rapporto tra il reddito imponibile diminuito di 50.000,00 euro e l'importo di 25.000,00 euro»* — è una **formula lineare crescente**, e `DetrazioneLocale` esprime solo un importo fisso entro una banda. Non è stata modellata: l'effetto è al più **125 euro**, in una direzione nota — dove spetta, l'addizionale mostrata è più alta del reale.
+
+⚠️ **E una che non è una detrazione.** La Provincia di Trento concede una **deduzione** di 30.000 euro a chi ha imponibile fino a 30.000 — riduce la base, non l'imposta, ed è un meccanismo diverso da quello che D-061 ha modellato. Non è stata toccata, e va guardata a parte.
+
 ## La mappatura provincia → ente impositore — cosa è verificato e cosa no
 
 **Nessuno dei tre file MEF lega una sigla di provincia a un ente impositore.** Il file comunale porta la sigla, il prospetto regionale il nome dell'ente, e in mezzo non c'è nulla: la tabella delle 107 province in `scripts/importa-mef.mjs` **non è derivabile da questi dati, quindi non è verificabile con questi dati**. Resta marcata *non verificata* dentro `regioni-2026.json`.
@@ -124,7 +160,7 @@ Codice, nome, provincia e calcolabilità per 7897 voci — **nessuna aliquota, n
 
 ## Anomalie
 
-Totale: **1482** in 12 categorie.
+Totale: **1487** in 15 categorie.
 
 | Categoria | Occorrenze |
 | --- | --- |
@@ -132,14 +168,37 @@ Totale: **1482** in 12 categorie.
 | `esenzione-letta-dal-testo` | 138 |
 | `esenzione-2025-rinviata-a-nota` | 112 |
 | `esenzione-condizionata` | 42 |
-| `detrazione-regionale-non-modellata` | 8 |
+| `detrazione-regionale-per-carichi` | 6 |
+| `aliquota-per-fascia-intera` | 3 |
+| `detrazione-regionale-applicata` | 3 |
 | `ricaduta-sul-fallback` | 3 |
 | `secondo-provvedimento-scartato` | 2 |
 | `fascia-duplicata` | 2 |
 | `esenzione-2025-non-normalizzabile` | 1 |
 | `esenzione-regionale-applicata` | 1 |
+| `detrazione-regionale-non-modellata` | 1 |
 | `confini-fuori-dai-due-set` | 1 |
 | `assente-dall-annuale-2025` | 1 |
+
+### Riconciliazione — perché `esenzione-letta-dal-testo` conta più dei comuni
+
+Il rapporto elenca **138 letture** della soglia dal testo della fascia, ma i comuni che la portano davvero sono **136**. Non è una discrepanza: sono **due grandezze diverse**, e vanno lette come tali.
+
+La soglia si legge mentre si analizza la riga 2026; il rifiuto della riga arriva **dopo**, se le fasce non reggono la validazione sui due set autorizzati. Due comuni cadono in mezzo — **BENTIVOGLIO** (fascia duplicata) e **MARNATE** (confine a 55.000): la loro soglia viene letta dal testo, poi la delibera è scartata, e ricadono sul c. 752 prendendo la soglia dalla **colonna** dell'elenco annuale 2025. Il terzo comune scartato, **AIRUNO**, non ha alcuna esenzione e non compare.
+
+> Quindi: **138 letture − 2 delibere scartate = 136 comuni** con `origineSoglia: 'descrizione'`. Le **42** esenzioni condizionate sono una categoria a parte e non entrano in nessuno dei due numeri: non producono mai una soglia.
+
+### Formulazioni provvisorie
+
+**La ragione di Castegnero Nanto è provvisoria (D-060).** Oggi dice che i due predecessori avevano aliquote diverse e che sceglierne una non spetta al calcolatore: è corretto, ma è **un'ammissione di ignoranza**, la più debole delle due formulazioni possibili.
+
+La fusione di comuni è un istituto con disciplina propria, e verosimilmente prevede questo caso: la pista è la **L. 56/2014**, che dovrebbe consentire al comune fuso di applicare aliquote differenziate per i territori degli enti preesistenti per un periodo transitorio. **Non è in cartella e non è stata letta: è una pista, non una conclusione.** Se regge, la ragione diventa *la legge ammette due aliquote sullo stesso comune, quale si applica dipende dal territorio, e il calcolatore non chiede l'indirizzo* — cioè passa da lacuna a **limite conosciuto con input mancante**, la stessa forma di S-002 e S-013.
+
+### `aliquota-per-fascia-intera` — 3
+
+- **REGIONE UMBRIA** — sotto 28.000 le maggiorazioni sono sospese e i due scaglioni collassano su 1,23; sopra si torna alla progressione pubblicata — letta dal testo di DISPOSIZIONE e non dalle colonne numeriche
+- **REGIONE FRIULI VENEZIA GIULIA** — il testo dice «sull'intero importo», ed è l'unico dei tre a dichiarare la fascia intera con queste parole — letta dal testo di DISPOSIZIONE e non dalle colonne numeriche
+- **REGIONE LAZIO** — sotto 28.000 il testo fissa una sola aliquota per il soggetto; sopra si torna alla progressione pubblicata — letta dal testo di DISPOSIZIONE e non dalle colonne numeriche
 
 ### `assente-dall-annuale-2025` — 1
 
@@ -149,16 +208,24 @@ Totale: **1482** in 12 categorie.
 
 - **E965** — MARNATE: confini [15000,28000,55000] — né previgenti né vigenti
 
-### `detrazione-regionale-non-modellata` — 8
+### `detrazione-regionale-applicata` — 3
 
-- **REGIONE UMBRIA** — il testo libero del prospetto descrive una detrazione regionale; non viene estratta perché ricavarne importo e banda dal testo sarebbe un parametro senza fonte (D-033)
-- **PROVINCIA AUTONOMA DI TRENTO** — il testo libero del prospetto descrive una detrazione regionale; non viene estratta perché ricavarne importo e banda dal testo sarebbe un parametro senza fonte (D-033)
-- **REGIONE LAZIO** — il testo libero del prospetto descrive una detrazione regionale; non viene estratta perché ricavarne importo e banda dal testo sarebbe un parametro senza fonte (D-033)
-- **REGIONE PUGLIA** — il testo libero del prospetto descrive una detrazione regionale; non viene estratta perché ricavarne importo e banda dal testo sarebbe un parametro senza fonte (D-033)
-- **PROVINCIA AUTONOMA DI BOLZANO** — il testo libero del prospetto descrive una detrazione regionale; non viene estratta perché ricavarne importo e banda dal testo sarebbe un parametro senza fonte (D-033)
-- **REGIONE SARDEGNA** — il testo libero del prospetto descrive una detrazione regionale; non viene estratta perché ricavarne importo e banda dal testo sarebbe un parametro senza fonte (D-033)
-- **REGIONE PIEMONTE** — il testo libero del prospetto descrive una detrazione regionale; non viene estratta perché ricavarne importo e banda dal testo sarebbe un parametro senza fonte (D-033)
-- **REGIONE CAMPANIA** — il testo libero del prospetto descrive una detrazione regionale; non viene estratta perché ricavarne importo e banda dal testo sarebbe un parametro senza fonte (D-033)
+- **REGIONE UMBRIA** — 150 euro per reddito imponibile fra 28000 e 50000 — a cliff, letta dal testo e citata sulla legge regionale
+- **REGIONE LAZIO** — 60 euro per reddito imponibile fra 28000 e 30000 — a cliff, letta dal testo e citata sulla legge regionale
+- **PROVINCIA AUTONOMA DI BOLZANO** — 430.5 euro per reddito imponibile fra 0 e 90000 — a cliff, letta dal testo e citata sulla legge regionale
+
+### `detrazione-regionale-non-modellata` — 1
+
+- **PROVINCIA AUTONOMA DI BOLZANO** — è una formula lineare crescente, e DetrazioneLocale esprime solo un importo fisso entro una banda di reddito; massimo 125 euro, e dove spetta l'addizionale mostrata resta più alta del reale di al più quella cifra
+
+### `detrazione-regionale-per-carichi` — 6
+
+- **PROVINCIA AUTONOMA DI TRENTO** — prevede detrazioni per carichi di famiglia: fuori perimetro come le detrazioni statali dell’art. 12 TUIR, già dichiarate in S-001
+- **REGIONE PUGLIA** — prevede detrazioni per carichi di famiglia: fuori perimetro come le detrazioni statali dell’art. 12 TUIR, già dichiarate in S-001
+- **PROVINCIA AUTONOMA DI BOLZANO** — prevede detrazioni per carichi di famiglia: fuori perimetro come le detrazioni statali dell’art. 12 TUIR, già dichiarate in S-001
+- **REGIONE SARDEGNA** — prevede detrazioni per carichi di famiglia: fuori perimetro come le detrazioni statali dell’art. 12 TUIR, già dichiarate in S-001
+- **REGIONE PIEMONTE** — prevede detrazioni per carichi di famiglia: fuori perimetro come le detrazioni statali dell’art. 12 TUIR, già dichiarate in S-001
+- **REGIONE CAMPANIA** — prevede detrazioni per carichi di famiglia: fuori perimetro come le detrazioni statali dell’art. 12 TUIR, già dichiarate in S-001
 
 ### `esenzione-2025-non-normalizzabile` — 1
 

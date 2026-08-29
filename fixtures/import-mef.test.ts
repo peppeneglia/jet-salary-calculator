@@ -32,8 +32,30 @@ import { aliquoteLombardia, aliquotaComunaleMilano, sogliaEsenzioneMilano } from
 import datiComuni from '../data/mef/comuni-2026.json'
 import datiRegioni from '../data/mef/regioni-2026.json'
 
-const massimo = (a: { forma: string; aliquota?: number; scaglioni?: readonly { aliquota: number }[] }): number =>
-  a.forma === 'unica' ? (a.aliquota ?? 0) : Math.max(...(a.scaglioni ?? []).map((s) => s.aliquota))
+interface FormaJson {
+  readonly forma: string
+  readonly aliquota?: number
+  readonly scaglioni?: readonly { readonly aliquota: number }[]
+  readonly fasce?: readonly { readonly percentuale: number }[]
+  readonly progressioneOltre?: readonly { readonly aliquota: number }[] | null
+}
+
+/**
+ * Il massimo va misurato su **tutte** le aliquote che l'ente può applicare.
+ * Con la fascia intera (D-062) sono due insiemi: quelle per fascia e quelle
+ * della progressione oltre l'ultima — e ignorare le seconde farebbe sparire
+ * dal conteggio del tetto proprio gli enti che lo superano di più.
+ */
+const massimo = (a: FormaJson): number => {
+  if (a.forma === 'unica') return a.aliquota ?? 0
+  if (a.forma === 'fasce-intere') {
+    return Math.max(
+      ...(a.fasce ?? []).map((f) => f.percentuale),
+      ...(a.progressioneOltre ?? []).map((s) => s.aliquota),
+    )
+  }
+  return Math.max(...(a.scaglioni ?? []).map((s) => s.aliquota))
+}
 
 // ---------------------------------------------------------------------------
 
@@ -188,7 +210,14 @@ describe('la soglia di esenzione regionale (D-057)', () => {
     expect(aosta?.stato).toBe('calcolabile')
     if (aosta?.stato !== 'calcolabile') return
     const regionale = aosta.enti.regionale
-    expect(regionale.stato === 'deliberato' && regionale.parametri.sogliaEsenzione).toBe(15_000)
+    expect(regionale.stato === 'deliberato' && regionale.parametri.sogliaEsenzione?.valore).toBe(15_000)
+    // D-059: la soglia porta la propria riserva, e non e' quella del prospetto.
+    const riserva =
+      regionale.stato === 'deliberato' ? regionale.parametri.sogliaEsenzione?.fonte.nonVerificato : undefined
+    expect(riserva?.it).toContain('non risulta')
+    expect(riserva?.it).not.toBe(
+      regionale.stato === 'deliberato' ? regionale.fonte.nonVerificato?.it : undefined,
+    )
   })
 
   /**
@@ -232,6 +261,117 @@ describe('la soglia di esenzione regionale (D-057)', () => {
     if (regionale.esito.stato !== 'applicato' || rcPasso.esito.stato !== 'applicato') return
     // 1,23% sull'intero reddito complessivo, non sulla parte oltre 15.000.
     expect(regionale.esito.esce).toBeCloseTo((rcPasso.esito.esce * 1.23) / 100, 6)
+  })
+})
+
+// ---------------------------------------------------------------------------
+
+describe('l’aliquota regionale per fascia intera (D-062)', () => {
+  const regionale = (codice: string, ral: number) => {
+    const e = eseguiCalcolo({ ral, codiceCatastale: codice, tipoContratto: 'indeterminato', mensilita: 13 })
+    if (e.stato !== 'ok') throw new Error(`calcolo fallito per ${codice}`)
+    const passo = e.risultato.passi.find((x) => x.id === 'addizionale-regionale')!
+    const rc = e.risultato.passi.find((x) => x.id === 'reddito-complessivo')!
+    return {
+      importo: passo.esito.stato === 'applicato' ? passo.esito.esce : 0,
+      rc: rc.esito.stato === 'applicato' ? rc.esito.esce : 0,
+      passo,
+    }
+  }
+
+  it('tre enti su ventuno, e sono quelli il cui testo lo dichiara', () => {
+    const fasceIntere = datiRegioni.enti.filter((e) => e.aliquota.forma === 'fasce-intere')
+    expect(fasceIntere.map((e) => e.nome).sort()).toEqual([
+      'REGIONE FRIULI VENEZIA GIULIA',
+      'REGIONE LAZIO',
+      'REGIONE UMBRIA',
+    ])
+    // Le tre varianti coprono tutti e ventuno gli enti, senza residui.
+    const perForma = datiRegioni.enti.reduce<Record<string, number>>((acc, e) => {
+      const k = e.aliquota.forma === 'unica' || e.aliquota.forma === 'fasce-intere' ? e.aliquota.forma : 'scaglioni'
+      acc[k] = (acc[k] ?? 0) + 1
+      return acc
+    }, {})
+    expect(perForma).toEqual({ unica: 6, 'fasce-intere': 3, scaglioni: 12 })
+  })
+
+  /**
+   * ⚠️ I tre numeri sono quelli che D-062 ha misurato a mano sul testo. Se il
+   * motore ne producesse altri, la lettura della prosa sarebbe sbagliata.
+   */
+  it('a imponibile 20.000 dà il numero del testo, non quello delle colonne', () => {
+    // La RAL che porta il reddito complessivo esattamente a 20.000.
+    const ral = 20_000 / 0.9081
+    for (const [codice, atteso] of [
+      ['L424', 1.23],
+      ['G478', 1.23],
+      ['H501', 1.73],
+    ] as const) {
+      const { importo, rc } = regionale(codice, ral)
+      expect(rc).toBeCloseTo(20_000, 0)
+      expect(importo).toBeCloseTo((rc * atteso) / 100, 2)
+    }
+  })
+
+  it('Umbria e Lazio producono un gradino a 28.000, non una pendenza', () => {
+    for (const codice of ['G478', 'H501']) {
+      const sotto = regionale(codice, 27_900 / 0.9081)
+      const sopra = regionale(codice, 28_100 / 0.9081)
+      // Duecento euro di imponibile in più non spiegano un salto di questa taglia.
+      expect(sopra.importo - sotto.importo).toBeGreaterThan(100)
+    }
+  })
+})
+
+// ---------------------------------------------------------------------------
+
+describe('le detrazioni regionali (D-061)', () => {
+  it('tre enti su ventuno le hanno legate al solo reddito, e sono tutte a cliff', () => {
+    const con = datiRegioni.enti.filter((e) => e.detrazioni.length > 0)
+    expect(con.map((e) => e.nome).sort()).toEqual([
+      'PROVINCIA AUTONOMA DI BOLZANO',
+      'REGIONE LAZIO',
+      'REGIONE UMBRIA',
+    ])
+    // Cliff = importo fisso entro una banda, che è ciò che il tipo esprime.
+    for (const e of con) {
+      for (const d of e.detrazioni) {
+        expect(typeof d.importo).toBe('number')
+        expect(d.redditoA === null || d.redditoA > d.redditoDa).toBe(true)
+      }
+    }
+  })
+
+  /**
+   * ⚠️ **È il difetto che D-056 aveva reso attivo.** 430,50 = 1,23% × 35.000
+   * esatti: sotto quel reddito la detrazione azzera l'intera addizionale
+   * regionale, e prima di D-061 i 116 comuni altoatesini la pagavano.
+   */
+  it('a Bolzano sotto i 35.000 la detrazione azzera l’addizionale regionale', () => {
+    const e = eseguiCalcolo({ ral: 33_000, codiceCatastale: 'A952', tipoContratto: 'indeterminato', mensilita: 13 })
+    expect(e.stato).toBe('ok')
+    if (e.stato !== 'ok') return
+    const passo = e.risultato.passi.find((x) => x.id === 'addizionale-regionale')!
+    expect(passo.esito.stato).toBe('applicato')
+    if (passo.esito.stato !== 'applicato') return
+    expect(passo.esito.esce).toBe(0)
+    // Il pavimento è a zero, non un credito: l'effetto sul netto è nullo.
+    expect(passo.esito.effettoSulNetto).toBe(0)
+    const detrazione = passo.dettaglio?.find((d) => d.id === 'detrazioni-regionali')
+    expect(detrazione).toBeDefined()
+  })
+
+  it('ogni detrazione cita la legge regionale, con la riserva sul meccanismo (D-059)', () => {
+    const bolzano = risolviComune('A952')
+    expect(bolzano?.stato).toBe('calcolabile')
+    if (bolzano?.stato !== 'calcolabile') return
+    const reg = bolzano.enti.regionale
+    if (reg.stato !== 'deliberato') return
+    const d = reg.parametri.detrazioni[0]
+    expect(d).toBeDefined()
+    // Il valore ha una fonte; è il livello statale che non risulta.
+    expect(d.fonte.nonVerificato?.it).toContain('non risulta')
+    expect(d.fonte.nonVerificato?.en).toBeTruthy()
   })
 })
 

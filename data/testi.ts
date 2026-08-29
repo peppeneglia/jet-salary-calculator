@@ -163,13 +163,18 @@ const it: TestiTraccia = {
     'Aliquota deliberata dall’ente impositore, applicata al reddito complessivo al netto degli oneri deducibili.',
   'regionale.spiegazione':
     'Si calcola sulla stessa base dell’IRPEF, non su quello che resta dopo averla pagata. E le detrazioni non la toccano.',
-  'detrazioni-regionali.etichetta': 'Detrazioni regionali non applicate',
+  'regionale.fascia-intera.etichetta': 'Aliquota {aliquota} sull’intero imponibile',
+  'regionale.fascia-intera.regola':
+    'Aliquota deliberata dall’ente per fascia di reddito e applicata all’intero imponibile, non per scaglioni.',
+  'regionale.fascia-intera.spiegazione':
+    'Qui l’aliquota non cambia pendenza al confine della fascia: cambia tutta. Superata la soglia si applica la nuova aliquota all’intero reddito, non solo alla parte eccedente.',
+  'detrazioni-regionali.etichetta': 'Detrazione regionale',
   'detrazioni-regionali.regola':
-    'L’ente impositore prevede detrazioni proprie dall’addizionale regionale, con base giuridica in legge regionale.',
+    'Detrazione dall’addizionale regionale spettante per fascia di reddito, fino a concorrenza dell’imposta dovuta e senza dare luogo a credito.',
   'detrazioni-regionali.spiegazione':
-    '{ente} prevede detrazioni dall’addizionale regionale che questo calcolatore non applica. L’addizionale mostrata è quindi più alta di quella reale per chi vi ha diritto.',
-  'detrazioni-regionali.ragione':
-    '{ente} prevede {quante} dall’addizionale regionale, per un massimo di {totale}. Il calcolatore non le applica: la norma statale che autorizza le regioni a concederle non è stata reperita, e senza di essa non è determinato se abbiano un pavimento proprio, se spettino per intero entro una banda di reddito o in modo continuo, e come si combinino con il presupposto dell’addizionale. Dove spettano, l’addizionale regionale qui calcolata è più alta del reale.',
+    '{ente} prevede {quante} dall’addizionale regionale per chi sta in questa fascia di reddito, e si sottraggono dall’imposta già calcolata.',
+  'detrazioni-regionali.spiegazione.pavimento':
+    'La detrazione spettante è di {dovuta}, ma l’addizionale dovuta è minore: se ne usa {usata} e l’addizionale si ferma a zero. Il residuo non diventa un credito — lo dice l’ente stesso.',
   'detrazioni-regionali.una': 'una detrazione propria',
   'detrazioni-regionali.molte': '{n} detrazioni proprie',
 
@@ -372,13 +377,18 @@ const en: TestiTraccia = {
     'Rate set by the levying authority, applied to total taxable income net of deductible charges.',
   'regionale.spiegazione':
     'It is computed on the same income as IRPEF, not on what is left after paying it. And the tax credits do not touch it.',
-  'detrazioni-regionali.etichetta': 'Regional tax credits not applied',
+  'regionale.fascia-intera.etichetta': 'Rate of {aliquota} on the whole taxable income',
+  'regionale.fascia-intera.regola':
+    'Rate set by the authority per income band and applied to the whole taxable income, not bracket by bracket.',
+  'regionale.fascia-intera.spiegazione':
+    'Here the rate does not change slope at the band edge: it changes entirely. Once you cross the threshold the new rate applies to your whole income, not only to the part above it.',
+  'detrazioni-regionali.etichetta': 'Regional tax credit',
   'detrazioni-regionali.regola':
-    'The levying authority grants its own credits against the addizionale regionale, on a legal basis in regional law.',
+    'Credit against the addizionale regionale, due by income band, up to the amount of tax owed and never giving rise to a refund.',
   'detrazioni-regionali.spiegazione':
-    '{ente} grants credits against the addizionale regionale that this calculator does not apply. The figure shown is therefore higher than the real one for anyone entitled to them.',
-  'detrazioni-regionali.ragione':
-    '{ente} grants {quante} against the addizionale regionale, up to {totale}. The calculator does not apply them: we have not traced the national rule that authorises regions to grant them, and without it three things stay undecided — whether they have a floor of their own, whether they are due in full inside an income band or taper continuously, and how they combine with the condition on the addizionale. Where they are due, the addizionale regionale computed here is higher than the real one.',
+    '{ente} grants {quante} against the addizionale regionale for this income band, and they come off the tax already computed.',
+  'detrazioni-regionali.spiegazione.pavimento':
+    'The credit due is {dovuta}, but the addizionale owed is smaller: {usata} of it is used and the addizionale stops at zero. The remainder does not become a refund — the authority says so itself.',
   'detrazioni-regionali.una': 'one credit of its own',
   'detrazioni-regionali.molte': '{n} credits of its own',
 

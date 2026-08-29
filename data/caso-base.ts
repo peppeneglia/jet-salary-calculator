@@ -121,7 +121,9 @@ export const lombardia: EnteRisolto<ParametriRegionali> = {
     // Lombardia non ne prevede. L'array vuoto è un dato, non un segnaposto.
     detrazioni: [],
     // Stessa cosa per la soglia: **un ente su ventuno** ne ha una, ed è la
-    // Valle d'Aosta (D-057). Il `null` è misurato sul prospetto, non assunto.
+    // Valle d'Aosta (D-057). Il `null` è misurato sul prospetto, non assunto —
+    // e quando c'è porta la propria fonte con la riserva di D-059, perché è una
+    // regola la cui sola base è l'atto dell'ente.
     sogliaEsenzione: null,
   },
 }

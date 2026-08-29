@@ -33,7 +33,19 @@
  * leggera — codice, nome, provincia, calcolabilità — mai un'aliquota.
  */
 
-import { aliquota, euro, type EnteRisolto, type EntiRisolti, type Fonte, type FormaAliquota, type Multilingua, type ParametriComunali, type ParametriRegionali } from '../../core/types'
+import {
+  aliquota,
+  euro,
+  type DetrazioneLocale,
+  type EnteRisolto,
+  type EntiRisolti,
+  type Fonte,
+  type FormaAliquota,
+  type FormaAliquotaRegionale,
+  type Multilingua,
+  type ParametriComunali,
+  type ParametriRegionali,
+} from '../../core/types'
 import { lombardia, milano } from '../../data/caso-base'
 import datiComuni from '../../data/mef/comuni-2026.json'
 import datiRegioni from '../../data/mef/regioni-2026.json'
@@ -128,6 +140,42 @@ const setInferito: Multilingua = {
  * l'anno. Finché quei provvedimenti non sono reperiti uno per uno, i valori
  * sono citati sul prospetto ministeriale.
  */
+/**
+ * ⚠️ **La riserva di D-059, ed è più profonda di quella sulla fonte.**
+ *
+ * Quella sul prospetto dice *non sappiamo quale atto fissi questo valore*.
+ * Questa dice **se esista** un atto statale che dia all'ente la facoltà di
+ * prevedere il meccanismo: l'art. 50 istituisce l'addizionale regionale e non
+ * nomina la soglia di esenzione. L'ente la delibera, il calcolatore la applica,
+ * e la norma che gliene attribuisce il potere non risulta.
+ *
+ * ⚠️ **Le parole sono di esistenza, non di quantità, e non è uno stile.** Le
+ * altre riserve del progetto dicono *più alto del reale* perché lì il numero c'è
+ * e potrebbe essere sbagliato. Qui la soglia è un **presupposto binario**: da
+ * essa dipende *se* l'addizionale sia dovuta, non *di quanto*. Una riserva che
+ * parlasse di misura descriverebbe un meccanismo diverso da quello che c'è.
+ *
+ * Come vuole D-040, dice anche cosa la chiuderebbe.
+ */
+const facoltaSenzaNormaStatale: Multilingua = {
+  it: 'Su questa esenzione abbiamo una riserva, e non riguarda il valore: riguarda il potere di stabilirla. L’articolo statale che istituisce l’addizionale regionale non prevede alcuna soglia di esenzione — l’ente la delibera comunque, e noi la applichiamo come la applica lui. La norma statale che gliene attribuisce la facoltà non risulta, e da questa esenzione dipende se l’addizionale sia dovuta o no. La chiuderebbe quella norma.',
+  en: 'We have a caveat on this exemption, and it is not about the figure: it is about the power to set it. The national article creating the regional addizionale provides for no exemption threshold at all — the authority sets one regardless, and we apply it as it does. The national provision granting it that power does not appear to exist, and whether the addizionale is owed at all turns on this exemption. That provision would settle it.',
+}
+
+/**
+ * La stessa riserva di `facoltaSenzaNormaStatale`, sulle detrazioni (D-059).
+ *
+ * ⚠️ **Non è una copia per pigrizia: è la stessa categoria.** D-059 l'ha
+ * istituita proprio perché la soglia di esenzione e le detrazioni regionali
+ * pongono la stessa domanda — *quale norma statale abilita l'ente a fare
+ * questo* — e hanno la stessa risposta: nessuna che risulti, e il potere si
+ * esercita comunque. Cambia solo su cosa incide, e la frase lo dice.
+ */
+const detrazioneSenzaNormaStatale: Multilingua = {
+  it: 'Su questa detrazione abbiamo una riserva, e non riguarda l’importo: riguarda il potere di concederla. L’importo lo fissa una legge regionale, che citiamo. Ma l’articolo statale che istituisce l’addizionale regionale non prevede alcuna detrazione — l’ente la delibera comunque, e noi la applichiamo come la applica lui. La norma statale che gliene attribuisce la facoltà non risulta. La chiuderebbe quella norma.',
+  en: 'We have a caveat on this credit, and it is not about the amount: it is about the power to grant it. The amount is set by a regional law, which we cite. But the national article creating the regional addizionale provides for no credit at all — the authority grants one regardless, and we apply it as it does. The national provision granting it that power does not appear to exist. That provision would settle it.',
+}
+
 const riservaProspettoRegionale: Multilingua = {
   it: 'Su questa aliquota abbiamo una riserva. L’elenco ministeriale indica la legge regionale che autorizza l’addizionale, non sempre l’atto che ne ha fissato i valori per il 2026.',
   en: 'We have a caveat on this rate. The ministerial list points to the regional law that authorises the addizionale, not always to the act that set its 2026 figures.',
@@ -143,11 +191,26 @@ const riservaProspettoRegionale: Multilingua = {
 // che non si vede.
 // ---------------------------------------------------------------------------
 
+interface ScaglioneJson {
+  readonly da: number
+  readonly a: number | null
+  readonly aliquota: number
+}
+
 interface FormaAliquotaJson {
   readonly forma: string
   readonly aliquota?: number
-  readonly scaglioni?: readonly { readonly da: number; readonly a: number | null; readonly aliquota: number }[]
+  readonly scaglioni?: readonly ScaglioneJson[]
+  readonly fasce?: readonly { readonly redditoDa: number; readonly redditoA: number | null; readonly percentuale: number }[]
+  readonly progressioneOltre?: readonly ScaglioneJson[] | null
 }
+
+const scaglioniDa = (j: readonly ScaglioneJson[]) =>
+  j.map((s) => ({
+    da: euro(s.da),
+    a: s.a === null ? null : euro(s.a),
+    aliquota: aliquota(s.aliquota),
+  }))
 
 function formaAliquota(j: FormaAliquotaJson, dove: string): FormaAliquota {
   if (j.forma === 'unica') {
@@ -156,16 +219,33 @@ function formaAliquota(j: FormaAliquotaJson, dove: string): FormaAliquota {
   }
   if (j.forma === 'scaglioni-vigenti' || j.forma === 'scaglioni-previgenti') {
     if (!j.scaglioni) throw new Error(`${dove}: forma «${j.forma}» senza scaglioni`)
-    return {
-      forma: j.forma,
-      scaglioni: j.scaglioni.map((s) => ({
-        da: euro(s.da),
-        a: s.a === null ? null : euro(s.a),
-        aliquota: aliquota(s.aliquota),
-      })),
-    }
+    return { forma: j.forma, scaglioni: scaglioniDa(j.scaglioni) }
   }
   throw new Error(`${dove}: forma di aliquota sconosciuta «${j.forma}»`)
+}
+
+/**
+ * ⚠️ **La forma regionale ha una variante in più di quella comunale** (D-062).
+ *
+ * L'aliquota per **fascia intera** si applica all'intero imponibile e cambia
+ * per soglia: al confine c'è un salto secco, non un cambio di pendenza. La
+ * conversione sta qui e non nella funzione comunale perché il comunale quella
+ * variante **non ce l'ha** — il file dice «applicabile a scaglione», e un tipo
+ * che ammettesse la fascia intera anche lì racconterebbe un dominio più largo
+ * di quello vero.
+ */
+function formaAliquotaRegionale(j: FormaAliquotaJson, dove: string): FormaAliquotaRegionale {
+  if (j.forma !== 'fasce-intere') return formaAliquota(j, dove)
+  if (!j.fasce) throw new Error(`${dove}: forma «fasce-intere» senza fasce`)
+  return {
+    forma: 'fasce-intere',
+    fasce: j.fasce.map((f) => ({
+      redditoDa: euro(f.redditoDa),
+      redditoA: f.redditoA === null ? null : euro(f.redditoA),
+      percentuale: aliquota(f.percentuale),
+    })),
+    progressioneOltre: j.progressioneOltre ? scaglioniDa(j.progressioneOltre) : null,
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -189,17 +269,61 @@ const entiRegionali = new Map<string, EnteRisolto<ParametriRegionali>>(
         nonVerificato: riservaProspettoRegionale,
       },
       parametri: {
-        aliquota: formaAliquota(e.aliquota, e.nome),
-        // Le detrazioni regionali esistono nel testo libero del prospetto per
-        // otto enti, ma ricavarne importo e banda da quella prosa sarebbe un
-        // parametro senza fonte. L'array resta vuoto e il motore dichiara la
-        // mancanza in traccia invece di applicare un numero inventato (D-033).
-        detrazioni: [],
+        aliquota: formaAliquotaRegionale(e.aliquota, e.nome),
+        /*
+         * Le detrazioni **legate al solo reddito**, applicate con pavimento a
+         * zero (D-061). Tre enti su ventuno: Bolzano, Lazio, Umbria.
+         *
+         * ⚠️ **Il valore ha una fonte, il meccanismo ha una riserva.** La legge
+         * regionale che istituisce la detrazione è esposta per ente nella
+         * colonna `NORME`, quindi il numero è citabile; è la norma **statale**
+         * che autorizza le regioni a concederle a non risultare — ed è la
+         * categoria che D-059 ha istituito, non un caso isolato.
+         *
+         * Le detrazioni **per carichi di famiglia** non sono qui e non devono
+         * esserci: sei enti le prevedono, e stanno fuori perimetro per D-019
+         * come le detrazioni statali dell'art. 12 TUIR, già dichiarate in S-001.
+         */
+        detrazioni: e.detrazioni.map(
+          (d): DetrazioneLocale => ({
+            importo: euro(d.importo),
+            redditoDa: euro(d.redditoDa),
+            redditoA: d.redditoA === null ? null : euro(d.redditoA),
+            fonte: {
+              atto: e.norme ?? `MEF, ${regionale2026.descrizione}`,
+              riferimento: `${e.nome} — detrazione dall'addizionale regionale`,
+              url: 'https://www1.finanze.gov.it/finanze/index_addreg.php',
+              consultataIl: regionale2026.estrattoIl,
+              provenienza: 'importata',
+              estrattoIl: regionale2026.estrattoIl,
+              nonVerificato: detrazioneSenzaNormaStatale,
+            },
+          }),
+        ),
         // ⚠️ **Un ente su ventuno**, e il numero è misurato sul prospetto, non
         // assunto (D-057). La Valle d'Aosta esenta i redditi fino a 15.000, e
         // il suo stesso testo dichiara che sopra si applica l'aliquota
         // sull'intero imponibile — cioè un cliff, non una franchigia.
-        sogliaEsenzione: e.sogliaEsenzione === null ? null : euro(e.sogliaEsenzione),
+        //
+        // Porta **la propria fonte**, distinta da quella dell'ente, perché la
+        // riserva che deve dichiarare è un'altra: non quale atto fissi il
+        // valore, ma se esista un atto statale che autorizzi il meccanismo
+        // (D-059).
+        sogliaEsenzione:
+          e.sogliaEsenzione === null
+            ? null
+            : {
+                valore: euro(e.sogliaEsenzione),
+                fonte: {
+                  atto: e.norme ?? `MEF, ${regionale2026.descrizione}`,
+                  riferimento: `${e.nome} — soglia di esenzione dall'addizionale regionale`,
+                  url: 'https://www1.finanze.gov.it/finanze/index_addreg.php',
+                  consultataIl: regionale2026.estrattoIl,
+                  provenienza: 'importata',
+                  estrattoIl: regionale2026.estrattoIl,
+                  nonVerificato: facoltaSenzaNormaStatale,
+                },
+              },
       },
     } satisfies EnteRisolto<ParametriRegionali>,
   ]),
