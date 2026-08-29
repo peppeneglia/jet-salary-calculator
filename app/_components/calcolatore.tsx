@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Risultato } from '../../core/types'
 import { useTraduzione } from '../_i18n/provider'
 import {
@@ -10,6 +10,7 @@ import {
   type RispostaCalcolo,
 } from '../_lib/api'
 import type { ComuneSelezionabile } from '../_lib/comuni'
+import { perLaPagina } from '../_lib/arrotonda'
 import { messaggioErrore } from '../_lib/errori'
 import { Avviso } from './avviso'
 import { Sezione } from './sezione'
@@ -73,6 +74,14 @@ export function Calcolatore({
   const { t, lingua } = useTraduzione()
 
   const [risultato, setRisultato] = useState<Risultato | null>(risultatoIniziale)
+
+  /*
+   * Il risultato come la pagina lo scrive: stessi passi, stesso ordine, importi
+   * arrotondati in modo che ogni totale sia la somma di ciò che gli sta sotto.
+   * Il `risultato` grezzo resta quello del motore, ed è quello che l'handler
+   * restituisce a chi chiama l'API.
+   */
+  const mostrabile = useMemo(() => (risultato === null ? null : perLaPagina(risultato)), [risultato])
   const [errore, setErrore] = useState<Errore | null>(erroreIniziale)
   const [inCorso, setInCorso] = useState(false)
   const [mostrato, setMostrato] = useState(false)
@@ -171,10 +180,18 @@ export function Calcolatore({
           </Sezione>
         ) : null}
 
-        {mostrato && risultato ? (
+        {/*
+          ⚠️ **L'arrotondamento si applica qui, una volta sola** (D-066).
+
+          Le due sezioni devono leggere gli **stessi** numeri: se ciascuna
+          arrotondasse per conto proprio, il netto della testata e le voci del
+          dettaglio potrebbero divergere di un centesimo — che è esattamente il
+          difetto che D-066 chiude, riprodotto un livello più in basso.
+        */}
+        {mostrato && mostrabile ? (
           <>
-            <SezioneRisultato risultato={risultato} />
-            <SezioneDettaglio risultato={risultato} />
+            <SezioneRisultato risultato={mostrabile} />
+            <SezioneDettaglio risultato={mostrabile} />
           </>
         ) : null}
       </div>

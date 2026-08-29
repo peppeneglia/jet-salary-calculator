@@ -45,11 +45,32 @@ const cache = new Map<CodiceLingua, Formato>()
 const monta = (lingua: CodiceLingua): Formato => {
   const tag = TAG[lingua]
 
+/**
+   * ⚠️ **`useGrouping: 'always'`, e non è una preferenza tipografica.**
+   *
+   * Il valore predefinito è `'auto'`, che delega la scelta a
+   * `minimumGroupingDigits` del CLDR: per l'italiano quel valore è **2** nelle
+   * versioni recenti, quindi `1952,12` si scrive senza il punto delle migliaia
+   * e `12.345,00` con. Ma la versione di CLDR è quella **compilata dentro
+   * l'ICU del runtime**, e non è la stessa fra il Node che rende la pagina e il
+   * browser che la riprende: lo stesso numero può uscire scritto in due modi
+   * nello stesso documento.
+   *
+   * Un numero il cui aspetto dipende da come è stato compilato Node non è una
+   * scelta di presentazione: è un difetto che si manifesta solo in produzione.
+   * `'always'` lo rende deterministico.
+   *
+   * ⚠️ **E chiude un'asimmetria che nessuno aveva deciso.** In inglese
+   * `minimumGroupingDigits` vale 1, quindi `1,952.12` il separatore lo ha
+   * sempre avuto. Le due lingue si comportavano diversamente per un default,
+   * non per una scelta.
+   */
   const importo = new Intl.NumberFormat(tag, {
     style: 'currency',
     currency: 'EUR',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
+    useGrouping: 'always',
   })
 
   const importoConSegno = new Intl.NumberFormat(tag, {
@@ -58,11 +79,13 @@ const monta = (lingua: CodiceLingua): Formato => {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
     signDisplay: 'exceptZero',
+    useGrouping: 'always',
   })
 
   const percentuale = new Intl.NumberFormat(tag, {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
+    useGrouping: 'always',
   })
 
   /**

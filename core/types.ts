@@ -857,6 +857,18 @@ export type CondizioneAssunzione =
   | { readonly tipo: 'sempre' }
   | { readonly tipo: 'ral-supera'; readonly soglia: Citato<Euro> }
   | { readonly tipo: 'contratto-diverso-da'; readonly contratto: TipoContratto }
+  /**
+   * Vale solo per chi ha un dato ente impositore regionale.
+   *
+   * ⚠️ **Esiste perché due limiti riguardano un ente e non il sistema**: la
+   * seconda detrazione di Bolzano, che è una formula continua e non un importo
+   * entro una banda, e la deduzione di Trento, che riduce la base invece
+   * dell'imposta. Senza questa condizione le due voci comparirebbero a
+   * chiunque, e a un residente lombardo direbbero una cosa che non lo riguarda.
+   *
+   * Non introduce aritmetica: è un confronto di nomi, come le altre tre.
+   */
+  | { readonly tipo: 'ente-regionale-e'; readonly nome: string }
 
 /** Una voce del catalogo: l'assunzione più la condizione che la rende applicabile. */
 export interface AssunzioneDichiarata {

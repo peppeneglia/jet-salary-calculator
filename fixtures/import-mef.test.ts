@@ -361,6 +361,38 @@ describe('le detrazioni regionali (D-061)', () => {
     expect(detrazione).toBeDefined()
   })
 
+  /**
+   * ⚠️ **Ciò che il modello non copre si dichiara accanto al numero, non solo
+   * nel rapporto di anomalie.** E si dichiara **con il verso**: entrambe fanno
+   * risultare l'addizionale più alta del reale, quindi il netto mostrato è più
+   * basso di quello vero. È l'informazione utile a chi legge; il motivo per cui
+   * non le calcoliamo non lo è (D-039).
+   */
+  it('le due voci fuori perimetro compaiono solo a chi riguardano', () => {
+    const assunzioniDi = (codice: string) => {
+      const e = eseguiCalcolo({ ral: 60_000, codiceCatastale: codice, tipoContratto: 'indeterminato', mensilita: 13 })
+      if (e.stato !== 'ok') throw new Error('ko')
+      return e.risultato.assunzioni
+    }
+
+    const bolzano = assunzioniDi('A952')
+    const trento = assunzioniDi('L378')
+    const milano = assunzioniDi('F205')
+
+    expect(bolzano.map((a) => a.id)).toContain('S-015')
+    expect(trento.map((a) => a.id)).toContain('S-016')
+
+    // A Milano nessuna delle due: direbbero a un lombardo una cosa che non lo
+    // riguarda, ed è la ragione per cui la condizione è per ente.
+    expect(milano.map((a) => a.id)).not.toContain('S-015')
+    expect(milano.map((a) => a.id)).not.toContain('S-016')
+
+    // Il verso è quello: il netto vero è più alto di quello mostrato.
+    for (const a of [...bolzano, ...trento].filter((x) => x.id === 'S-015' || x.id === 'S-016')) {
+      expect(a.direzione).toBe('netto-reale-piu-alto')
+    }
+  })
+
   it('ogni detrazione cita la legge regionale, con la riserva sul meccanismo (D-059)', () => {
     const bolzano = risolviComune('A952')
     expect(bolzano?.stato).toBe('calcolabile')

@@ -71,6 +71,17 @@ interface Prosa {
   readonly f: (n: number) => string
   /** Un'aliquota: `23%` e non `23,00%`, decimali della lingua. */
   readonly p: (n: number) => string
+  /**
+   * Un numero puro, con il numero di decimali che gli serve.
+   *
+   * ⚠️ **Esiste per il rapporto troncato dell'art. 13 c. 6**, che `f` non sa
+   * scrivere: `f` impone due decimali e trasformerebbe `0,0582` in `0,06`,
+   * cancellando proprio il troncamento alla quarta cifra che il passo deve
+   * mostrare. Senza questa funzione quel numero finiva in un template letterale
+   * **senza passare da nessun formattatore**, e usciva `0.0582` con il punto
+   * inglese in mezzo a numeri italiani — che è il difetto per cui D-038 esiste.
+   */
+  readonly r: (n: number, decimali: number) => string
   /** Un testo della tabella, con i segnaposti già sostituiti. */
   readonly t: (id: IdTesto, valori?: Readonly<Record<string, string>>) => string
 }
@@ -90,18 +101,32 @@ const interpola = (modello: string, valori?: Readonly<Record<string, string>>): 
     : modello.replace(/\{(\w+)\}/g, (intero, chiave: string) => valori[chiave] ?? intero)
 
 const componiProsa = (lingua: Lingua): Prosa => {
+  /*
+   * ⚠️ `useGrouping: 'always'` per la stessa ragione di `app/_lib/formato.ts`:
+   * il default delega a `minimumGroupingDigits` del CLDR, che cambia con la
+   * versione di ICU compilata nel runtime. Lo stesso numero può uscire scritto
+   * in due modi fra il server che rende la pagina e il browser che la riprende.
+   */
   const importo = new Intl.NumberFormat(lingua.tag, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
+    useGrouping: 'always',
   })
   const percento = new Intl.NumberFormat(lingua.tag, {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
+    useGrouping: 'always',
   })
 
   return {
     f: (n) => importo.format(n),
     p: (n) => `${percento.format(n)}%`,
+    r: (n, decimali) =>
+      new Intl.NumberFormat(lingua.tag, {
+        minimumFractionDigits: decimali,
+        maximumFractionDigits: decimali,
+        useGrouping: 'always',
+      }).format(n),
     t: (id, valori) => interpola(lingua.testi[id], valori),
   }
 }
@@ -203,6 +228,7 @@ const assunzioneApplicabile = (
   condizione: CondizioneAssunzione,
   input: Input,
   ral: number,
+  enti: EntiRisolti,
 ): boolean => {
   switch (condizione.tipo) {
     case 'sempre':
@@ -211,6 +237,8 @@ const assunzioneApplicabile = (
       return ral > condizione.soglia.valore
     case 'contratto-diverso-da':
       return input.tipoContratto !== condizione.contratto
+    case 'ente-regionale-e':
+      return enti.regionale.nome === condizione.nome
   }
 }
 
@@ -284,7 +312,7 @@ export function calcolaNetto(
   const regole = regime.fontiRegola
   const passi: Passo[] = []
   const prosa = componiProsa(lingua)
-  const { f, p, t } = prosa
+  const { f, p, r, t } = prosa
 
   const ral: number = input.ral
   // D-052: nessun default qui. Il campo è obbligatorio nel tipo, e il valore
@@ -491,8 +519,11 @@ export function calcolaNetto(
         ? {
             tipo: 'formula',
             espressione: fasciaDetrazione.formula.espressione,
-            applicata: `${f(fasciaDetrazione.formula.base)} + ${f(fasciaDetrazione.formula.quota)} × ${tronca(
-              (fasciaDetrazione.formula.riferimento - rc) / fasciaDetrazione.formula.ampiezza,
+            applicata: `${f(fasciaDetrazione.formula.base)} + ${f(fasciaDetrazione.formula.quota)} × ${r(
+              tronca(
+                (fasciaDetrazione.formula.riferimento - rc) / fasciaDetrazione.formula.ampiezza,
+                regime.troncamentoRapportiDetrazione.valore,
+              ),
               regime.troncamentoRapportiDetrazione.valore,
             )} = ${f(detrazioneComma1)}`,
             fonte: detrazione.fasce.fonte,
@@ -581,8 +612,21 @@ export function calcolaNetto(
     regola: t('irpef-netta.regola'),
     spiegazione:
       netta > 0 ? t('irpef-netta.spiegazione.capiente') : t('irpef-netta.spiegazione.incapiente'),
+    /*
+     * ⚠️ **Nessun parametro, ed è una correzione** (D-026).
+     *
+     * Qui stava `detrazioniTotali` con la fonte degli scaglioni: due errori in
+     * una riga. Il totale delle detrazioni è una **grandezza calcolata**, non un
+     * numero che una norma fissa; e l'art. 11 c. 1 sono gli scaglioni, che con
+     * il pavimento a zero non c'entrano.
+     *
+     * D-026 nomina esattamente questo scambio: la fonte sul parametro dice *da
+     * dove viene il numero*, e un numero che il motore ha appena calcolato non
+     * viene da nessuna parte se non dal calcolo. Il passo porta la regola —
+     * l'art. 11 c. 3, il pavimento — e le grandezze stanno in `entra` e `esce`,
+     * che è il loro posto.
+     */
     fonti: regole['pavimento-imposta-netta'],
-    parametro: { tipo: 'importo', valore: euro(detrazioniTotali), fonte: regime.irpef.scaglioni.fonte },
     esito: esitoNeutro(lorda, netta),
   })
 
@@ -785,7 +829,19 @@ export function calcolaNetto(
                   usata: f(usata),
                 })
               : t('detrazioni-regionali.spiegazione', { quante, ente: regionale.nome }),
-          parametro: { tipo: 'importo', valore: euro(usata), fonte: spettanti[0].fonte },
+          /*
+           * ⚠️ Il parametro è la detrazione **deliberata**, non quella usata:
+           * `usata` è `min(dovuta, lorda)`, cioè una grandezza calcolata dal
+           * pavimento a zero, e nessuna legge regionale la fissa. Quanto se ne
+           * sia potuto usare sta in `entra → esce` (D-026).
+           *
+           * Con più detrazioni cumulate non esiste **un** parametro, e il passo
+           * non ne porta: l'importo complessivo si legge dall'esito.
+           */
+          parametro:
+            spettanti.length === 1
+              ? { tipo: 'importo', valore: spettanti[0].importo, fonte: spettanti[0].fonte }
+              : undefined,
           esito: esitoNeutro(lorda, netta),
         })
       }
@@ -942,7 +998,7 @@ export function calcolaNetto(
     // Solo le assunzioni che si applicano a questo calcolo. La pagina non può
     // quindi mostrarne una che il motore non ha considerato.
     assunzioni: assunzioni
-      .filter((a) => assunzioneApplicabile(a.condizione, input, ral))
+      .filter((a) => assunzioneApplicabile(a.condizione, input, ral, enti))
       .map((a) => a.assunzione) as readonly Assunzione[],
   }
 }

@@ -28,7 +28,7 @@
  * visibile il pavimento a zero (D-018).
  */
 
-import type { Parametro, Passo } from '../../core/types'
+import type { Fonte, Parametro, Passo } from '../../core/types'
 import { useTraduzione } from '../_i18n/provider'
 import { formato } from '../_lib/formato'
 import { Fonti } from './fonte'
@@ -61,8 +61,16 @@ function ValoreParametro({ parametro }: { parametro: Parametro }) {
   }
 }
 
+/**
+ * Due `Fonte` sono la stessa citazione quando indicano lo stesso punto dello
+ * stesso atto. L'URL e la data di consultazione non entrano nel confronto:
+ * sono attributi della lettura, non della norma.
+ */
+const stessaFonte = (a: Fonte, b: Fonte): boolean =>
+  a.atto === b.atto && a.riferimento === b.riferimento
+
 /** Il parametro usato dal passo, con la fonte che dice da dove viene il numero. */
-function BloccoParametro({ parametro }: { parametro: Parametro }) {
+function BloccoParametro({ parametro, mostraFonte }: { parametro: Parametro; mostraFonte: boolean }) {
   const { t } = useTraduzione()
 
   return (
@@ -72,9 +80,18 @@ function BloccoParametro({ parametro }: { parametro: Parametro }) {
       <p className="mt-0.5 text-sm text-inchiostro">
         <ValoreParametro parametro={parametro} />
       </p>
-      <div className="mt-2">
-        <Fonti fonti={[parametro.fonte]} titolo={t('passo.daDoveVieneIlNumero')} />
-      </div>
+      {/*
+        ⚠️ **La citazione si mostra qui solo se non è già fra le regole del
+        passo** (D-026). Le due coesistono perché dicono cose diverse — *si fa
+        così* e *il numero è questo* — ma quando sono la stessa norma, ripeterla
+        due volte a due righe di distanza non aggiunge niente e fa sembrare la
+        pagina più documentata di quanto sia.
+      */}
+      {mostraFonte ? (
+        <div className="mt-2">
+          <Fonti fonti={[parametro.fonte]} titolo={t('passo.daDoveVieneIlNumero')} />
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -192,7 +209,12 @@ export function RigaPasso({ passo, annidato = false }: { passo: Passo; annidato?
 
       <Ragione passo={passo} />
 
-      {passo.parametro ? <BloccoParametro parametro={passo.parametro} /> : null}
+      {passo.parametro ? (
+        <BloccoParametro
+          parametro={passo.parametro}
+          mostraFonte={!(passo.fonti ?? []).some((f) => stessaFonte(f, passo.parametro!.fonte))}
+        />
+      ) : null}
 
       {passo.fonti ? (
         <div className="mt-3">

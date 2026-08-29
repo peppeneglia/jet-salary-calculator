@@ -51,7 +51,60 @@ const massimaleContributivo: Fonte = {
   provenienza: 'verificata',
 }
 
+/**
+ * [S-015, S-016] I due limiti che riguardano un solo ente impositore.
+ *
+ * Il valore lo fissa una legge provinciale, che il prospetto MEF espone nella
+ * colonna `NORME`; la riserva sul meccanismo è quella di D-059, e sta sulla
+ * `Fonte` dei parametri regionali.
+ */
+const prospettoRegionale: Fonte = {
+  atto: 'MEF, Dipartimento delle Finanze — prospetto addizionale regionale IRPEF 2026',
+  consultataIl: '2026-08-28',
+  provenienza: 'importata',
+  estrattoIl: '2026-08-28',
+}
+
 export const assunzioni: readonly AssunzioneDichiarata[] = [
+  {
+    /*
+     * ⚠️ **Vale solo per chi ha Bolzano come ente impositore.** La seconda
+     * detrazione altoatesina è `125 × (reddito − 50.000) / 25.000`, con un
+     * massimo di 125: una **formula continua**, e `DetrazioneLocale` esprime un
+     * importo fisso entro una banda. D-061 ha modellato la prima detrazione,
+     * non questa.
+     */
+    condizione: { tipo: 'ente-regionale-e', nome: 'PROVINCIA AUTONOMA DI BOLZANO' },
+    assunzione: {
+      id: 'S-015',
+      testo: {
+        it: 'A Bolzano, sopra i 50.000 euro di imponibile, spetta una seconda detrazione dall’addizionale regionale che qui non applichiamo: cresce con il reddito e arriva a 125 euro. Chi vi ha diritto paga meno addizionale di quella che vedi, quindi il suo netto è più alto.',
+        en: 'In Bolzano, above 50,000 euro of taxable income, a second credit against the regional addizionale is due that we do not apply here: it grows with income and reaches 125 euro. Anyone entitled to it pays less than you see, so their net pay is higher.',
+      },
+      direzione: 'netto-reale-piu-alto',
+      collocazione: 'blocco-semplificazioni',
+      fonte: prospettoRegionale,
+    },
+  },
+  {
+    /*
+     * ⚠️ **Trento, e non è una detrazione: è una deduzione.** Riduce la base
+     * invece dell'imposta, quindi è un meccanismo che il modello non ha — non
+     * un parametro che manca. Con imponibile fino a 30.000 la deduzione è di
+     * 30.000, cioè azzera la base.
+     */
+    condizione: { tipo: 'ente-regionale-e', nome: 'PROVINCIA AUTONOMA DI TRENTO' },
+    assunzione: {
+      id: 'S-016',
+      testo: {
+        it: 'A Trento, fino a 30.000 euro di imponibile, la Provincia concede una deduzione che abbatte la base su cui si calcola l’addizionale regionale. Qui non la applichiamo: chi vi ha diritto paga meno addizionale di quella che vedi, quindi il suo netto è più alto.',
+        en: 'In Trento, up to 30,000 euro of taxable income, the Province grants a deduction that cuts the base the regional addizionale is worked out on. We do not apply it here: anyone entitled to it pays less than you see, so their net pay is higher.',
+      },
+      direzione: 'netto-reale-piu-alto',
+      collocazione: 'blocco-semplificazioni',
+      fonte: prospettoRegionale,
+    },
+  },
   {
     condizione: { tipo: 'sempre' },
     assunzione: {
