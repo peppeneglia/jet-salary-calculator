@@ -23,6 +23,7 @@ import {
   type Fonte,
   type FontiRegola,
   type Input,
+  type Lingua,
   type Mensilita,
   type ParametriComunali,
   type ParametriRegionali,
@@ -55,6 +56,128 @@ const fontiRegola: FontiRegola = {
   'soglia-esenzione-comunale': [fonte],
   'somma-cuneo': [fonte],
   'trattamento-integrativo': [fonte],
+}
+
+// ---------------------------------------------------------------------------
+// Lingua sintetica
+//
+// ⚠️ Scritta per esteso e **non importata da `data/`**: `core/` non conosce i
+// livelli sopra di sé, e la suite che gira in questo file lo verifica su sé
+// stessa. Vale qui la stessa regola dei parametri: i testi reali stanno in
+// `data/testi.ts`, questi sono sintetici e non vanno scambiati per quelli.
+//
+// La tabella è un `Record` pieno, quindi una voce aggiunta a `IdTesto` senza
+// il suo testo **non compila** — che è il punto del `Record` pieno, e vale per
+// i testi come vale per `FontiRegola`.
+//
+// Le frasi sono minime tranne dove un test le legge: quelle portano le parole
+// che il test cerca, perché è l'unico modo in cui l'asserzione dice qualcosa.
+// ---------------------------------------------------------------------------
+
+const lingua: Lingua = {
+  codice: 'it',
+  tag: 'it-IT',
+  testi: {
+    'ral.etichetta': 'RAL',
+    'ral.regola': 'Punto di partenza.',
+    'ral.spiegazione': 'La RAL comprende le mensilità aggiuntive.',
+    'contributi.etichetta': 'Contributi',
+    'contributi.regola': 'Aliquota a carico del lavoratore.',
+    'contributi.spiegazione.ordinaria': 'Contribuzione, non imposta.',
+    'contributi.spiegazione.apprendista': 'Aliquota ridotta per l’apprendista.',
+    'base-contributiva.etichetta': 'Base contributiva',
+    'base-contributiva.regola': 'Somme al lordo di ogni trattenuta.',
+    'base-contributiva.spiegazione': 'Coincide con la RAL nel caso standard.',
+    'quota.etichetta': 'Quota aggiuntiva',
+    'quota.regola.regime': 'Un punto sulle quote eccedenti, per i regimi sotto il limite.',
+    'quota.regola': 'Un punto sulle quote eccedenti la prima fascia.',
+    'quota.spiegazione.regime': 'Il presupposto è del regime, non del lavoratore.',
+    'quota.ragione.regime': 'Aliquota ordinaria {aliquotaOrdinaria}, limite {limite}.',
+    'quota.spiegazione.sotto-soglia': 'Sotto la prima fascia non si applica.',
+    'quota.ragione.sotto-soglia': 'Retribuzione {retribuzione}, prima fascia {soglia}.',
+    'quota.spiegazione.applicata': 'Solo sulla parte oltre {soglia}.',
+    'reddito-complessivo.etichetta': 'Reddito complessivo',
+    'reddito-complessivo.regola': 'I contributi non concorrono a formare il reddito.',
+    'reddito-complessivo.spiegazione': 'Il reddito nasce già al netto dei contributi.',
+    'irpef-lorda.etichetta': 'IRPEF lorda',
+    'irpef-lorda.regola': 'Aliquote per scaglioni.',
+    'irpef-lorda.spiegazione': 'Ogni scaglione alla propria aliquota.',
+    'detrazione.etichetta': 'Detrazione per lavoro dipendente',
+    'detrazione.regola': 'Detrazione a tratti sul reddito complessivo.',
+    'detrazione.spiegazione': 'Uno sconto sull’imposta, non una trattenuta.',
+    'detrazione-incremento.etichetta': 'Incremento fascia {da}–{a}',
+    'detrazione-incremento.regola': 'La detrazione del comma 1 è aumentata.',
+    'detrazione-incremento.spiegazione': 'Un gradino, non una curva.',
+    'detrazione-cuneo.etichetta': 'Ulteriore detrazione',
+    'detrazione-cuneo.regola': 'Ulteriore detrazione dall’imposta lorda.',
+    'detrazione-cuneo.spiegazione': 'La seconda gamba del taglio del cuneo.',
+    'irpef-netta.etichetta': 'IRPEF netta',
+    'irpef-netta.regola': 'Detrazioni fino alla concorrenza dell’imposta.',
+    'irpef-netta.spiegazione.capiente': 'Qui la capienza c’è.',
+    'irpef-netta.spiegazione.incapiente': 'L’imposta si ferma a zero.',
+    'irpef.etichetta': 'IRPEF',
+    'irpef.regola': 'Imposta progressiva per scaglioni.',
+    'irpef.spiegazione': 'L’imposta che va allo Stato.',
+    'scaglione.etichetta': 'Da {da} a {a} — {aliquota}',
+    'scaglione.etichetta.ultimo': 'Oltre {da} — {aliquota}',
+    'scaglione.regola': 'Scaglione da {da} a {a}.',
+    'scaglione.regola.ultimo': 'Scaglione da {da} in su.',
+    'scaglione.spiegazione': 'Quota compresa nella fascia: {quota}.',
+    'gate.etichetta.aperto': 'Le addizionali sono dovute',
+    'gate.etichetta.chiuso': 'Le addizionali non sono dovute',
+    'gate.regola': 'Dovute se l’IRPEF risulta dovuta.',
+    'gate.spiegazione': 'Il presupposto è binario.',
+    'gate.ragione.aperto': 'IRPEF netta {netta}, presupposto soddisfatto.',
+    'gate.ragione.chiuso': 'IRPEF netta zero, presupposto assente.',
+    'addizionale.spiegazione.gate': 'Non si riduce: non è dovuta.',
+    'addizionale.ragione.gate': 'IRPEF netta zero.',
+    'regionale.etichetta': 'Addizionale regionale — {ente}',
+    'regionale.regola.non-istituita': 'Dovuta all’ente che l’ha istituita.',
+    'regionale.spiegazione.non-istituita': 'Il tributo non esiste per questo ente.',
+    'regionale.ragione.non-istituita': 'Non istituita per {ente}.',
+    'regionale.regola.gate': 'Dovuta se l’IRPEF risulta dovuta.',
+    'regionale.regola': 'Aliquota deliberata dall’ente impositore.',
+    'regionale.spiegazione': 'Stessa base dell’IRPEF.',
+    'detrazioni-regionali.etichetta': 'Detrazioni regionali non applicate',
+    'detrazioni-regionali.regola': 'L’ente prevede detrazioni proprie.',
+    'detrazioni-regionali.spiegazione': '{ente} prevede detrazioni che non applichiamo.',
+    // ⚠️ Le due frasi che i test leggono. Senza, l'asserzione non direbbe nulla.
+    'detrazioni-regionali.ragione':
+      '{ente} prevede {quante}, per un massimo di {totale}. Il calcolatore non le applica: l’addizionale qui calcolata è più alta del reale.',
+    'detrazioni-regionali.una': 'una detrazione propria',
+    'detrazioni-regionali.molte': '{n} detrazioni proprie',
+    'comunale.etichetta': 'Addizionale comunale — {ente}',
+    'comunale.regola.non-istituita': 'Dovuta al comune che l’ha istituita.',
+    'comunale.spiegazione.non-istituita': 'Il tributo non esiste in questo comune.',
+    'comunale.ragione.non-istituita': 'Non istituita nel comune di {ente}.',
+    'comunale.regola.gate': 'Dovuta se l’IRPEF risulta dovuta.',
+    'comunale.regola.esente': 'Non dovuta sotto la soglia di esenzione.',
+    'comunale.spiegazione.esente': 'Due condizioni distinte.',
+    'comunale.ragione.esente': 'Reddito {rc}, soglia {soglia}, comune di {ente}.',
+    'comunale.regola': 'Aliquota deliberata dal comune.',
+    'comunale.spiegazione.ereditato': 'Si applicano le aliquote del {anno}.',
+    'comunale.spiegazione.deliberato': 'Stessa base dell’IRPEF.',
+    'soglia-esenzione.etichetta': 'Soglia di esenzione: {soglia}',
+    'soglia-esenzione.regola': 'Soglia stabilita con regolamento comunale.',
+    'soglia-esenzione.spiegazione.esente': 'Sotto {soglia} non è dovuta affatto.',
+    'soglia-esenzione.spiegazione.dovuta': 'Soglia secca, non franchigia.',
+    'soglia-esenzione.ragione.esente': 'Reddito {rc} sotto la soglia {soglia}.',
+    'soglia-esenzione.ragione.dovuta': 'Reddito {rc} sopra la soglia {soglia}.',
+    'somma-cuneo.etichetta': 'Somma per il taglio del cuneo',
+    'somma-cuneo.regola.non-dovuta': 'Somma per reddito non superiore alla soglia.',
+    'somma-cuneo.spiegazione.non-dovuta': 'Sopra la soglia cambia forma.',
+    'somma-cuneo.ragione.non-dovuta': 'Reddito {rc} sopra la soglia di accesso {soglia}.',
+    'somma-cuneo.regola': 'Somma che non concorre a formare il reddito.',
+    'somma-cuneo.spiegazione': 'Denaro erogato che si somma al netto.',
+    'trattamento-integrativo.etichetta': 'Trattamento integrativo',
+    'trattamento-integrativo.regola.spetta': 'Somma condizionata alla capienza.',
+    'trattamento-integrativo.spiegazione.spetta': 'Si somma al netto.',
+    'trattamento-integrativo.regola.non-spetta': 'Somma condizionata a soglia e capienza.',
+    'trattamento-integrativo.spiegazione.non-spetta': 'Quando spetta, si somma al netto.',
+    'trattamento-integrativo.ragione.sopra-soglia': 'Reddito {rc} sopra il limite {soglia}.',
+    'trattamento-integrativo.ragione.incapiente':
+      'Imposta lorda {lorda}, scarto {scarto}, soglia {sogliaGate}.',
+  },
 }
 
 const regime: Regime = {
@@ -195,7 +318,7 @@ const assunzioni: readonly AssunzioneDichiarata[] = [
     condizione: { tipo: 'sempre' },
     assunzione: {
       id: 'T-sempre',
-      testo: 'Incondizionata.',
+      testo: { it: 'Incondizionata.', en: 'Unconditional.' },
       direzione: 'nessuna',
       collocazione: 'blocco-semplificazioni',
     },
@@ -204,7 +327,7 @@ const assunzioni: readonly AssunzioneDichiarata[] = [
     condizione: { tipo: 'ral-supera', soglia: { valore: euro(60_000), fonte } },
     assunzione: {
       id: 'T-soglia',
-      testo: 'Vale solo oltre una soglia di RAL.',
+      testo: { it: 'Vale solo oltre una soglia di RAL.', en: 'Applies above a RAL threshold.' },
       direzione: 'netto-reale-piu-alto',
       collocazione: 'accanto-al-numero',
     },
@@ -213,7 +336,7 @@ const assunzioni: readonly AssunzioneDichiarata[] = [
     condizione: { tipo: 'contratto-diverso-da', contratto: 'apprendistato' },
     assunzione: {
       id: 'T-non-apprendista',
-      testo: 'Vale per chi non ha dichiarato un apprendistato.',
+      testo: { it: 'Vale per chi non ha dichiarato un apprendistato.', en: 'Applies to anyone not on an apprenticeship.' },
       direzione: 'netto-reale-piu-alto',
       collocazione: 'blocco-semplificazioni',
     },
@@ -255,7 +378,7 @@ const scenari: readonly { nome: string; input: Input; enti: EntiRisolti }[] = [
 
 describe('il netto è derivato dalla traccia', () => {
   test.each(scenari)('$nome: RAL più la somma degli effetti torna al netto', ({ input: i, enti }) => {
-    const r = calcolaNetto(i, regime, enti, assunzioni)
+    const r = calcolaNetto(i, regime, enti, assunzioni, lingua)
     const somma = r.passi.reduce(
       (acc, p) => acc + (p.esito.stato === 'applicato' ? p.esito.effettoSulNetto : 0),
       i.ral as number,
@@ -264,7 +387,7 @@ describe('il netto è derivato dalla traccia', () => {
   })
 
   test('i passi annidati non contribuiscono al netto', () => {
-    const r = calcolaNetto(input(30_000), regime, entiStandard, assunzioni)
+    const r = calcolaNetto(input(30_000), regime, entiStandard, assunzioni, lingua)
     const annidati = r.passi.flatMap((p) => p.dettaglio ?? [])
     expect(annidati.length).toBeGreaterThan(0)
     for (const p of annidati) {
@@ -281,18 +404,18 @@ describe('le mensilità sono viste della stessa grandezza', () => {
   const mensilita: readonly Mensilita[] = [12, 13, 14]
 
   test.each(scenari)('$nome: ogni divisione moltiplicata torna al netto annuo', ({ input: i, enti }) => {
-    const r = calcolaNetto(i, regime, enti, assunzioni)
+    const r = calcolaNetto(i, regime, enti, assunzioni, lingua)
     for (const m of mensilita) expect(r.nettoMensile[m] * m).toBeCloseTo(r.nettoAnnuo, 10)
   })
 
   test('il netto annuo non dipende dalle mensilità scelte', () => {
-    const dodici = calcolaNetto(input(30_000, { mensilita: 12 }), regime, entiStandard, assunzioni)
-    const quattordici = calcolaNetto(input(30_000, { mensilita: 14 }), regime, entiStandard, assunzioni)
+    const dodici = calcolaNetto(input(30_000, { mensilita: 12 }), regime, entiStandard, assunzioni, lingua)
+    const quattordici = calcolaNetto(input(30_000, { mensilita: 14 }), regime, entiStandard, assunzioni, lingua)
     expect(dodici.nettoAnnuo).toBe(quattordici.nettoAnnuo)
   })
 
   test('la mensilità assente vale 13', () => {
-    expect(calcolaNetto(input(30_000, { mensilita: undefined }), regime, entiStandard, assunzioni).mensilita).toBe(13)
+    expect(calcolaNetto(input(30_000, { mensilita: undefined }), regime, entiStandard, assunzioni, lingua).mensilita).toBe(13)
   })
 })
 
@@ -324,24 +447,25 @@ describe('core/ non conosce i livelli sopra di sé', () => {
 
 describe('il motore restituisce solo le assunzioni che si applicano', () => {
   test('le incondizionate ci sono sempre', () => {
-    const r = calcolaNetto(input(30_000), regime, entiStandard, assunzioni)
+    const r = calcolaNetto(input(30_000), regime, entiStandard, assunzioni, lingua)
     expect(r.assunzioni.map((a) => a.id)).toContain('T-sempre')
   })
 
   test('quella con soglia compare solo sopra la soglia', () => {
-    const sotto = calcolaNetto(input(30_000), regime, entiStandard, assunzioni)
-    const sopra = calcolaNetto(input(90_000), regime, entiStandard, assunzioni)
+    const sotto = calcolaNetto(input(30_000), regime, entiStandard, assunzioni, lingua)
+    const sopra = calcolaNetto(input(90_000), regime, entiStandard, assunzioni, lingua)
     expect(sotto.assunzioni.map((a) => a.id)).not.toContain('T-soglia')
     expect(sopra.assunzioni.map((a) => a.id)).toContain('T-soglia')
   })
 
   test('quella sul contratto sparisce in apprendistato', () => {
-    const indeterminato = calcolaNetto(input(30_000), regime, entiStandard, assunzioni)
+    const indeterminato = calcolaNetto(input(30_000), regime, entiStandard, assunzioni, lingua)
     const apprendista = calcolaNetto(
       input(30_000, { tipoContratto: 'apprendistato' }),
       regime,
       entiStandard,
       assunzioni,
+      lingua,
     )
     expect(indeterminato.assunzioni.map((a) => a.id)).toContain('T-non-apprendista')
     expect(apprendista.assunzioni.map((a) => a.id)).not.toContain('T-non-apprendista')
@@ -354,7 +478,7 @@ describe('il motore restituisce solo le assunzioni che si applicano', () => {
 
 describe('le detrazioni regionali non applicate sono visibili', () => {
   test('un ente con detrazioni proprie produce un passo nonDovuto con la ragione', () => {
-    const r = calcolaNetto(input(25_000), regime, entiConDetrazioni, assunzioni)
+    const r = calcolaNetto(input(25_000), regime, entiConDetrazioni, assunzioni, lingua)
     const passo = r.passi.find((p) => p.id === 'detrazioni-regionali-non-applicate')
 
     expect(passo).toBeDefined()
@@ -366,12 +490,12 @@ describe('le detrazioni regionali non applicate sono visibili', () => {
   })
 
   test('non compare per un ente senza detrazioni proprie', () => {
-    const r = calcolaNetto(input(25_000), regime, entiStandard, assunzioni)
+    const r = calcolaNetto(input(25_000), regime, entiStandard, assunzioni, lingua)
     expect(r.passi.find((p) => p.id === 'detrazioni-regionali-non-applicate')).toBeUndefined()
   })
 
   test('il passo non muove il netto', () => {
-    const r = calcolaNetto(input(25_000), regime, entiConDetrazioni, assunzioni)
+    const r = calcolaNetto(input(25_000), regime, entiConDetrazioni, assunzioni, lingua)
     const somma = r.passi.reduce(
       (acc, p) => acc + (p.esito.stato === 'applicato' ? p.esito.effettoSulNetto : 0),
       25_000,

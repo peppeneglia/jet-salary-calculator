@@ -3,7 +3,9 @@
  *
  * TypeScript puro: nessun React, nessun Next, **nessun parametro normativo**.
  * Ogni numero che viene da una legge arriva dal `Regime` o dagli enti risolti,
- * che il motore riceve come argomenti.
+ * che il motore riceve come argomenti. Dal 29/08/2026 vale lo stesso per la
+ * prosa: i testi arrivano dalla `Lingua`, che il motore riceve allo stesso modo
+ * (D-041).
  *
  * Il netto **non si calcola due volte**: è la RAL più la somma degli effetti dei
  * passi di primo livello. Non esiste un secondo conto parallelo che si spera
@@ -32,7 +34,9 @@ import {
   type Fonte,
   type FormaAliquota,
   type FormulaDetrazione,
+  type IdTesto,
   type Input,
+  type Lingua,
   type Mensilita,
   type ParametriComunali,
   type Passo,
@@ -48,39 +52,59 @@ import {
 const MENSILITA: readonly Mensilita[] = [12, 13, 14]
 
 /**
- * Formattazione dei numeri dentro i testi della traccia. Non tocca i valori.
+ * Come si scrive una frase della traccia.
  *
- * ⚠️ **Qui `core/` è legato alla lingua italiana, e la cosa è dichiarata, non
- * subita** (D-038). I campi `regola`, `spiegazione` e `ragione` portano prosa —
- * linguaggio normativo incluso — e i numeri che vi compaiono vanno formattati
- * dove la frase si costruisce. L'alternativa, lasciare a `core/` i soli valori
- * strutturati e comporre le frasi in `app/`, è stata valutata e scartata:
- * ricreerebbe le due verità che D-003 esiste per impedire, con il testo da una
- * parte e il numero dall'altra, liberi di divergere.
+ * ⚠️ **Qui `core/` non è più legato all'italiano, e il pezzo che lo legava è
+ * esattamente quello che D-038 aveva indicato** (D-041). I campi `regola`,
+ * `spiegazione` e `ragione` portano ancora prosa, e i numeri che vi compaiono
+ * si formattano ancora dove la frase si costruisce: la proprietà che D-038
+ * proteggeva — testo e numero nella stessa struttura, senza due verità libere
+ * di divergere — resta intatta. A cambiare è **da dove viene il testo**.
  *
- * La conseguenza accettata è che, se il calcolatore andasse tradotto, la prosa
- * della traccia è esattamente il pezzo da spostare. Sapere **quale** pezzo è il
- * valore di averlo scritto.
- *
- * Da qui discende il vincolo minimo: **una convenzione sola**. Un'aliquota e un
- * importo nella stessa stringa non possono usare separatori decimali diversi,
- * altrimenti la riga è incoerente con sé stessa.
+ * Da qui il vincolo minimo di allora, che vale ancora e ora per lingua:
+ * **una convenzione sola**. Un'aliquota e un importo nella stessa stringa non
+ * possono usare separatori decimali diversi, altrimenti la riga è incoerente
+ * con sé stessa.
  */
-const formatta = new Intl.NumberFormat('it-IT', {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-})
-const f = (n: number): string => formatta.format(n)
+interface Prosa {
+  /** Un importo: due decimali imposti, separatori della lingua. */
+  readonly f: (n: number) => string
+  /** Un'aliquota: `23%` e non `23,00%`, decimali della lingua. */
+  readonly p: (n: number) => string
+  /** Un testo della tabella, con i segnaposti già sostituiti. */
+  readonly t: (id: IdTesto, valori?: Readonly<Record<string, string>>) => string
+}
 
 /**
- * Le aliquote seguono la stessa convenzione degli importi, ma senza decimali
- * imposti: `23%` e non `23,00%`, `1,23%` e non `1.23%`.
+ * Sostituisce i segnaposti `{nome}` di un modello.
+ *
+ * È **la sola logica che i testi richiedono**, e sta qui e non in `data/`: il
+ * catalogo dice *cosa* si scrive, il motore sa *come* comporlo. Un modello con
+ * un segnaposto che nessun valore riempie resta visibile come tale, invece di
+ * sparire in una stringa vuota: un buco che si vede si corregge, uno che non si
+ * vede no.
  */
-const formattaAliquota = new Intl.NumberFormat('it-IT', {
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 2,
-})
-const p = (n: number): string => `${formattaAliquota.format(n)}%`
+const interpola = (modello: string, valori?: Readonly<Record<string, string>>): string =>
+  valori === undefined
+    ? modello
+    : modello.replace(/\{(\w+)\}/g, (intero, chiave: string) => valori[chiave] ?? intero)
+
+const componiProsa = (lingua: Lingua): Prosa => {
+  const importo = new Intl.NumberFormat(lingua.tag, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+  const percento = new Intl.NumberFormat(lingua.tag, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  })
+
+  return {
+    f: (n) => importo.format(n),
+    p: (n) => `${percento.format(n)}%`,
+    t: (id, valori) => interpola(lingua.testi[id], valori),
+  }
+}
 
 /**
  * Troncamento, non arrotondamento. Il numero di cifre arriva dal regime
@@ -134,10 +158,14 @@ const valutaFormula = (formula: FormulaDetrazione, reddito: number, troncamento?
 }
 
 /** Descrive una forma di aliquota in linguaggio da mostrare. */
-const descriviScaglione = (s: Scaglione): string =>
+const descriviScaglione = (s: Scaglione, prosa: Prosa): string =>
   s.a === null
-    ? `Oltre ${f(s.da)} — ${p(s.aliquota)}`
-    : `Da ${f(s.da)} a ${f(s.a)} — ${p(s.aliquota)}`
+    ? prosa.t('scaglione.etichetta.ultimo', { da: prosa.f(s.da), aliquota: prosa.p(s.aliquota) })
+    : prosa.t('scaglione.etichetta', {
+        da: prosa.f(s.da),
+        a: prosa.f(s.a),
+        aliquota: prosa.p(s.aliquota),
+      })
 
 const esitoNeutro = (entra: number, esce: number): Esito => ({
   stato: 'applicato',
@@ -200,6 +228,7 @@ const dettaglioScaglioni = (
   forma: FormaAliquota,
   idPrefisso: string,
   fonte: Fonte,
+  prosa: Prosa,
 ): readonly Passo[] | undefined => {
   if (forma.forma === 'unica') return undefined
   const passi: Passo[] = []
@@ -210,9 +239,12 @@ const dettaglioScaglioni = (
     const quota = Math.min(base, a) - da
     passi.push({
       id: `${idPrefisso}-scaglione-${i + 1}`,
-      etichetta: descriviScaglione(s),
-      regola: `Applicabile a scaglione di reddito da euro ${f(da)}${s.a === null ? '' : ` fino a euro ${f(s.a)}`}.`,
-      spiegazione: `L'aliquota si applica alla sola quota di reddito compresa nella fascia: ${f(quota)}.`,
+      etichetta: descriviScaglione(s, prosa),
+      regola:
+        s.a === null
+          ? prosa.t('scaglione.regola.ultimo', { da: prosa.f(da) })
+          : prosa.t('scaglione.regola', { da: prosa.f(da), a: prosa.f(s.a) }),
+      spiegazione: prosa.t('scaglione.spiegazione', { quota: prosa.f(quota) }),
       parametro: { tipo: 'aliquota', valore: s.aliquota, fonte },
       esito: esitoNeutro(quota, (quota * s.aliquota) / 100),
     })
@@ -229,9 +261,12 @@ export function calcolaNetto(
   regime: Regime,
   enti: EntiRisolti,
   assunzioni: readonly AssunzioneDichiarata[],
+  lingua: Lingua,
 ): Risultato {
   const regole = regime.fontiRegola
   const passi: Passo[] = []
+  const prosa = componiProsa(lingua)
+  const { f, p, t } = prosa
 
   const ral: number = input.ral
   const mensilita: Mensilita = input.mensilita ?? 13
@@ -242,11 +277,10 @@ export function calcolaNetto(
 
   passi.push({
     id: 'ral',
-    etichetta: 'Retribuzione annua lorda',
+    etichetta: t('ral.etichetta'),
     // Nessuna `fonti`: la RAL è un input, non l'applicazione di una norma.
-    regola: 'Punto di partenza dichiarato dall\'utente.',
-    spiegazione:
-      'La RAL comprende già le mensilità aggiuntive: il netto annuo non cambia con 12, 13 o 14 mensilità, cambia solo il divisore.',
+    regola: t('ral.regola'),
+    spiegazione: t('ral.spiegazione'),
     esito: esitoNeutro(ral, ral),
   })
 
@@ -268,13 +302,12 @@ export function calcolaNetto(
 
   passi.push({
     id: 'contributi-ivs',
-    etichetta: 'Contributi previdenziali IVS',
+    etichetta: t('contributi.etichetta'),
     natura: 'previdenza',
-    regola:
-      'Aliquota a carico del lavoratore sulla retribuzione imponibile, assunta al lordo di qualsiasi contributo e trattenuta.',
+    regola: t('contributi.regola'),
     spiegazione: apprendista
-      ? 'Non è una tassa: è contribuzione che genera un diritto pensionistico. L\'aliquota dell\'apprendista è ridotta rispetto a quella ordinaria, ed è l\'unico valore del tipo di contratto che muove il netto.'
-      : 'Non è una tassa: è contribuzione che genera un diritto pensionistico. Esce dalla busta e torna come prestazione futura.',
+      ? t('contributi.spiegazione.apprendista')
+      : t('contributi.spiegazione.ordinaria'),
     fonti: regole['aliquota-ivs'],
     parametro: {
       tipo: 'aliquota',
@@ -285,11 +318,9 @@ export function calcolaNetto(
     dettaglio: [
       {
         id: 'base-contributiva',
-        etichetta: 'Base contributiva',
-        regola:
-          'Le somme si assumono al lordo di qualsiasi contributo e trattenuta: la base è la retribuzione lorda.',
-        spiegazione:
-          'Nel caso standard coincide con la RAL, e non per approssimazione: le voci che la legge esclude non rientrano in questo calcolo.',
+        etichetta: t('base-contributiva.etichetta'),
+        regola: t('base-contributiva.regola'),
+        spiegazione: t('base-contributiva.spiegazione'),
         fonti: regole['base-contributiva'],
         esito: esitoNeutro(ral, retribuzioneImponibile),
       },
@@ -318,43 +349,44 @@ export function calcolaNetto(
   if (!regimeSottoLimite) {
     passi.push({
       id: 'quota-aggiuntiva-1',
-      etichetta: 'Quota aggiuntiva 1%',
+      etichetta: t('quota.etichetta'),
       natura: 'previdenza',
-      regola:
-        'Aliquota aggiuntiva di un punto percentuale sulle quote di retribuzione eccedenti il limite della prima fascia di retribuzione pensionabile, per i regimi con aliquote a carico del lavoratore inferiori al 10 per cento.',
-      spiegazione:
-        'Il presupposto è del regime pensionistico, non del singolo lavoratore: qui l\'aliquota ordinaria non sta sotto il limite, quindi il contributo si spegne per effetto della legge stessa.',
+      regola: t('quota.regola.regime'),
+      spiegazione: t('quota.spiegazione.regime'),
       fonti: regole['quota-aggiuntiva'],
       parametro: parametroSoglia,
       esito: {
         stato: 'nonDovuto',
-        ragione: `L'aliquota ordinaria a carico del lavoratore (${p(regime.contributi.aliquotaOrdinaria.valore)}) non è inferiore al limite del ${p(quotaAggiuntiva.aliquotaMassimaRegime.valore)} previsto dalla norma.`,
+        ragione: t('quota.ragione.regime', {
+          aliquotaOrdinaria: p(regime.contributi.aliquotaOrdinaria.valore),
+          limite: p(quotaAggiuntiva.aliquotaMassimaRegime.valore),
+        }),
       },
     })
   } else if (eccedenza <= 0) {
     passi.push({
       id: 'quota-aggiuntiva-1',
-      etichetta: 'Quota aggiuntiva 1%',
+      etichetta: t('quota.etichetta'),
       natura: 'previdenza',
-      regola:
-        'Aliquota aggiuntiva di un punto percentuale sulle quote di retribuzione eccedenti il limite della prima fascia di retribuzione pensionabile.',
-      spiegazione:
-        'È l\'unica soglia sui contributi. Sotto la prima fascia non si applica.',
+      regola: t('quota.regola'),
+      spiegazione: t('quota.spiegazione.sotto-soglia'),
       fonti: regole['quota-aggiuntiva'],
       parametro: parametroSoglia,
       esito: {
         stato: 'nonDovuto',
-        ragione: `La retribuzione imponibile (${f(retribuzioneImponibile)}) non supera la prima fascia di retribuzione pensionabile, pari a ${f(soglia)}.`,
+        ragione: t('quota.ragione.sotto-soglia', {
+          retribuzione: f(retribuzioneImponibile),
+          soglia: f(soglia),
+        }),
       },
     })
   } else {
     passi.push({
       id: 'quota-aggiuntiva-1',
-      etichetta: 'Quota aggiuntiva 1%',
+      etichetta: t('quota.etichetta'),
       natura: 'previdenza',
-      regola:
-        'Aliquota aggiuntiva di un punto percentuale sulle quote di retribuzione eccedenti il limite della prima fascia di retribuzione pensionabile.',
-      spiegazione: `Si applica solo alla parte di retribuzione oltre ${f(soglia)}, non all'intera retribuzione.`,
+      regola: t('quota.regola'),
+      spiegazione: t('quota.spiegazione.applicata', { soglia: f(soglia) }),
       fonti: regole['quota-aggiuntiva'],
       parametro: {
         tipo: 'aliquota',
@@ -380,11 +412,9 @@ export function calcolaNetto(
 
   passi.push({
     id: 'reddito-complessivo',
-    etichetta: 'Reddito complessivo',
-    regola:
-      'I contributi previdenziali obbligatori non concorrono a formare il reddito: è un\'esclusione, non una deduzione.',
-    spiegazione:
-      'Il reddito su cui si calcolano le imposte nasce già al netto dei contributi. Per questo il loro impatto sul netto è maggiore del loro valore nominale: abbassano anche l\'imposta.',
+    etichetta: t('reddito-complessivo.etichetta'),
+    regola: t('reddito-complessivo.regola'),
+    spiegazione: t('reddito-complessivo.spiegazione'),
     fonti: regole['esclusione-contributi-dal-reddito'],
     esito: esitoNeutro(ral, rc),
   })
@@ -398,10 +428,9 @@ export function calcolaNetto(
   const dettaglioIrpef: Passo[] = [
     {
       id: 'irpef-lorda',
-      etichetta: 'IRPEF lorda',
-      regola: 'Aliquote per scaglioni di reddito.',
-      spiegazione:
-        'Ogni scaglione è tassato alla propria aliquota: solo la parte di reddito che supera una soglia sconta l\'aliquota più alta.',
+      etichetta: t('irpef-lorda.etichetta'),
+      regola: t('irpef-lorda.regola'),
+      spiegazione: t('irpef-lorda.spiegazione'),
       fonti: regole['scaglioni-irpef'],
       parametro: {
         tipo: 'scaglioni',
@@ -409,10 +438,13 @@ export function calcolaNetto(
         fonte: regime.irpef.scaglioni.fonte,
       },
       esito: esitoNeutro(rc, lorda),
-      dettaglio: dettaglioScaglioni(rc, {
-        forma: 'scaglioni-vigenti',
-        scaglioni: regime.irpef.scaglioni.valore,
-      }, 'irpef-lorda', regime.irpef.scaglioni.fonte),
+      dettaglio: dettaglioScaglioni(
+        rc,
+        { forma: 'scaglioni-vigenti', scaglioni: regime.irpef.scaglioni.valore },
+        'irpef-lorda',
+        regime.irpef.scaglioni.fonte,
+        prosa,
+      ),
     },
   ]
 
@@ -429,11 +461,9 @@ export function calcolaNetto(
 
   const passoDetrazione: Passo = {
     id: 'detrazione-art-13',
-    etichetta: 'Detrazione per lavoro dipendente',
-    regola:
-      'Detrazione a tratti sul reddito complessivo; dove è una formula, il risultato del rapporto si assume nelle prime quattro cifre decimali.',
-    spiegazione:
-      'Non è una trattenuta: è uno sconto sull\'imposta. Nella fascia in cui decresce, ogni euro in più di reddito viene tassato e riduce anche la detrazione.',
+    etichetta: t('detrazione.etichetta'),
+    regola: t('detrazione.regola'),
+    spiegazione: t('detrazione.spiegazione'),
     // Due regole in un passo solo: la detrazione e il troncamento del suo rapporto.
     fonti: [...regole['detrazione-lavoro-dipendente'], ...regole['troncamento-rapporti']],
     parametro:
@@ -453,10 +483,12 @@ export function calcolaNetto(
       ? [
           {
             id: 'detrazione-art-13-incremento',
-            etichetta: `Incremento fascia ${f(incremento.redditoDa)}–${f(incremento.redditoA)}`,
-            regola: 'La detrazione spettante ai sensi del comma 1 è aumentata di un importo fisso.',
-            spiegazione:
-              'Un importo fisso che compare a una soglia e sparisce a un\'altra: è un gradino, non una curva.',
+            etichetta: t('detrazione-incremento.etichetta', {
+              da: f(incremento.redditoDa),
+              a: f(incremento.redditoA),
+            }),
+            regola: t('detrazione-incremento.regola'),
+            spiegazione: t('detrazione-incremento.spiegazione'),
             parametro: {
               tipo: 'importo',
               valore: incremento.importo,
@@ -499,10 +531,9 @@ export function calcolaNetto(
   if (fasciaCuneo) {
     dettaglioIrpef.push({
       id: 'detrazione-cuneo',
-      etichetta: 'Ulteriore detrazione (cuneo)',
-      regola: 'Ulteriore detrazione dall\'imposta lorda, decrescente per fasce di reddito complessivo.',
-      spiegazione:
-        'La seconda gamba del taglio del cuneo fiscale: sotto la soglia di accesso è una somma erogata, sopra diventa una detrazione.',
+      etichetta: t('detrazione-cuneo.etichetta'),
+      regola: t('detrazione-cuneo.regola'),
+      spiegazione: t('detrazione-cuneo.spiegazione'),
       fonti: regole['detrazione-cuneo'],
       parametro:
         fasciaCuneo.formula.forma === 'lineare-decrescente'
@@ -526,12 +557,10 @@ export function calcolaNetto(
 
   dettaglioIrpef.push({
     id: 'irpef-netta',
-    etichetta: 'IRPEF netta',
-    regola: 'Le detrazioni si operano sull\'imposta lorda fino alla concorrenza del suo ammontare.',
+    etichetta: t('irpef-netta.etichetta'),
+    regola: t('irpef-netta.regola'),
     spiegazione:
-      netta > 0
-        ? 'Le detrazioni non generano credito: l\'imposta ha un pavimento a zero. Qui la capienza c\'è.'
-        : 'Le detrazioni superano l\'imposta lorda, ma non generano credito: l\'imposta si ferma a zero e l\'eccedenza si perde.',
+      netta > 0 ? t('irpef-netta.spiegazione.capiente') : t('irpef-netta.spiegazione.incapiente'),
     fonti: regole['pavimento-imposta-netta'],
     parametro: { tipo: 'importo', valore: euro(detrazioniTotali), fonte: regime.irpef.scaglioni.fonte },
     esito: esitoNeutro(lorda, netta),
@@ -539,12 +568,10 @@ export function calcolaNetto(
 
   passi.push({
     id: 'irpef',
-    etichetta: 'IRPEF',
+    etichetta: t('irpef.etichetta'),
     natura: 'erariale',
-    regola:
-      'Imposta progressiva per scaglioni sul reddito complessivo al netto degli oneri deducibili, ridotta dalle detrazioni fino alla concorrenza dell\'imposta lorda.',
-    spiegazione:
-      'L\'imposta erariale, quella che va allo Stato. Le detrazioni non sono una trattenuta: riducono l\'imposta già calcolata, e non possono portarla sotto zero.',
+    regola: t('irpef.regola'),
+    spiegazione: t('irpef.spiegazione'),
     esito: esitoSottrae(rc, netta),
     dettaglio: dettaglioIrpef,
   })
@@ -560,20 +587,16 @@ export function calcolaNetto(
 
   passi.push({
     id: 'gate-addizionali',
-    etichetta: gateAperto ? 'Le addizionali sono dovute' : 'Le addizionali non sono dovute',
-    regola:
-      'Le addizionali sono dovute se, per lo stesso anno, l\'IRPEF al netto delle detrazioni e dei crediti risulta dovuta.',
-    spiegazione:
-      'Il presupposto è binario: se l\'imposta è dovuta, le addizionali si applicano sull\'intera base; se non lo è, non si applicano affatto.',
+    etichetta: gateAperto ? t('gate.etichetta.aperto') : t('gate.etichetta.chiuso'),
+    regola: t('gate.regola'),
+    spiegazione: t('gate.spiegazione'),
     // Il gate è due norme, una per tributo.
     fonti: regole['gate-addizionali'],
     esito: {
       stato: 'verifica',
       superata: gateAperto,
       grandezzaLetta: euro(netta),
-      ragione: gateAperto
-        ? `L'IRPEF netta è ${f(netta)} e risulta dovuta: il presupposto delle addizionali è soddisfatto, quindi si applicano sull'intera base imponibile.`
-        : 'L\'IRPEF netta è zero perché le detrazioni superano l\'imposta lorda: il presupposto non è soddisfatto e nessuna delle due addizionali è dovuta.',
+      ragione: gateAperto ? t('gate.ragione.aperto', { netta: f(netta) }) : t('gate.ragione.chiuso'),
     },
   })
 
@@ -590,46 +613,40 @@ export function calcolaNetto(
   if (regionale.stato === 'nonIstituito') {
     passi.push({
       id: 'addizionale-regionale',
-      etichetta: `Addizionale regionale — ${regionale.nome}`,
+      etichetta: t('regionale.etichetta', { ente: regionale.nome }),
       natura: 'locale',
-      regola: 'L\'addizionale è dovuta all\'ente impositore che l\'ha istituita.',
-      spiegazione: 'Non è un\'aliquota pari a zero: il tributo non esiste per questo ente.',
+      regola: t('regionale.regola.non-istituita'),
+      spiegazione: t('regionale.spiegazione.non-istituita'),
       esito: {
         stato: 'nonDovuto',
-        ragione: `L'addizionale regionale non è istituita per ${regionale.nome}.`,
+        ragione: t('regionale.ragione.non-istituita', { ente: regionale.nome }),
       },
     })
   } else if (!gateAperto) {
     passi.push({
       id: 'addizionale-regionale',
-      etichetta: `Addizionale regionale — ${regionale.nome}`,
+      etichetta: t('regionale.etichetta', { ente: regionale.nome }),
       natura: 'locale',
-      regola: 'L\'addizionale regionale è dovuta se per lo stesso anno l\'IRPEF risulta dovuta.',
-      spiegazione:
-        'Non dipende solo dal tuo reddito. Se l\'IRPEF che devi risulta zero, l\'addizionale non si paga affatto — non si riduce: non è dovuta.',
+      regola: t('regionale.regola.gate'),
+      spiegazione: t('addizionale.spiegazione.gate'),
       fonti: regole['gate-addizionali'],
-      esito: {
-        stato: 'nonDovuto',
-        ragione: 'L\'IRPEF netta è zero, quindi il presupposto delle addizionali non è soddisfatto.',
-      },
+      esito: { stato: 'nonDovuto', ragione: t('addizionale.ragione.gate') },
     })
   } else {
     const forma = regionale.parametri.aliquota
     const importo = totaleAddizionale(rc, forma)
     passi.push({
       id: 'addizionale-regionale',
-      etichetta: `Addizionale regionale — ${regionale.nome}`,
+      etichetta: t('regionale.etichetta', { ente: regionale.nome }),
       natura: 'locale',
-      regola:
-        'Aliquota deliberata dall\'ente impositore, applicata al reddito complessivo al netto degli oneri deducibili.',
-      spiegazione:
-        'Si calcola sulla stessa base dell\'IRPEF, non su quello che resta dopo averla pagata. E le detrazioni non la toccano.',
+      regola: t('regionale.regola'),
+      spiegazione: t('regionale.spiegazione'),
       parametro:
         forma.forma === 'unica'
           ? { tipo: 'aliquota', valore: forma.aliquota, fonte: regionale.fonte }
           : { tipo: 'scaglioni', valore: forma, fonte: regionale.fonte },
       esito: esitoSottrae(rc, importo),
-      dettaglio: dettaglioScaglioni(rc, forma, 'addizionale-regionale', regionale.fonte),
+      dettaglio: dettaglioScaglioni(rc, forma, 'addizionale-regionale', regionale.fonte, prosa),
     })
 
     // ⚠️ Ciò che il motore non modella non sparisce in silenzio (D-033).
@@ -641,25 +658,41 @@ export function calcolaNetto(
     // deve dirlo: un numero mancante senza spiegazione è la forma peggiore di
     // errore, perché è plausibile.
     if (regionale.parametri.detrazioni.length > 0) {
-      const totaleDetrazioni = regionale.parametri.detrazioni.reduce((t, d) => t + d.importo, 0)
+      const totaleDetrazioni = regionale.parametri.detrazioni.reduce((tot, d) => tot + d.importo, 0)
+      const quante =
+        regionale.parametri.detrazioni.length === 1
+          ? t('detrazioni-regionali.una')
+          : t('detrazioni-regionali.molte', { n: String(regionale.parametri.detrazioni.length) })
       passi.push({
         id: 'detrazioni-regionali-non-applicate',
-        etichetta: 'Detrazioni regionali non applicate',
+        etichetta: t('detrazioni-regionali.etichetta'),
         natura: 'locale',
-        regola:
-          'L\'ente impositore prevede detrazioni proprie dall\'addizionale regionale, con base giuridica in legge regionale.',
-        spiegazione: `${regionale.nome} prevede detrazioni dall'addizionale regionale che questo calcolatore non applica. L'addizionale mostrata è quindi più alta di quella reale per chi vi ha diritto.`,
+        regola: t('detrazioni-regionali.regola'),
+        spiegazione: t('detrazioni-regionali.spiegazione', { ente: regionale.nome }),
         parametro: { tipo: 'importo', valore: euro(totaleDetrazioni), fonte: regionale.fonte },
         esito: {
           stato: 'nonDovuto',
-          ragione: `${regionale.nome} prevede ${regionale.parametri.detrazioni.length === 1 ? 'una detrazione propria' : `${regionale.parametri.detrazioni.length} detrazioni proprie`} dall'addizionale regionale, per un massimo di ${f(totaleDetrazioni)}. Il calcolatore non le applica: la norma statale che autorizza le regioni a concederle non è stata reperita, e senza di essa non è determinato se abbiano un pavimento proprio, se spettino per intero entro una banda di reddito o in modo continuo, e come si combinino con il presupposto dell'addizionale. Dove spettano, l'addizionale regionale qui calcolata è più alta del reale.`,
+          ragione: t('detrazioni-regionali.ragione', {
+            ente: regionale.nome,
+            quante,
+            totale: f(totaleDetrazioni),
+          }),
         },
       })
     }
   }
 
   // Addizionale comunale: due gate in cascata, non uno.
-  passi.push(costruisciAddizionaleComunale(comunale, rc, gateAperto, regole['gate-addizionali'], regole['soglia-esenzione-comunale']))
+  passi.push(
+    costruisciAddizionaleComunale(
+      comunale,
+      rc,
+      gateAperto,
+      regole['gate-addizionali'],
+      regole['soglia-esenzione-comunale'],
+      prosa,
+    ),
+  )
 
   // -------------------------------------------------------------------------
   // 6. Ramo che aggiunge
@@ -680,12 +713,10 @@ export function calcolaNetto(
   if (!sottoSogliaCuneo) {
     passi.push({
       id: 'somma-cuneo',
-      etichetta: 'Somma per il taglio del cuneo',
+      etichetta: t('somma-cuneo.etichetta'),
       natura: 'aggiunge',
-      regola:
-        'Somma che non concorre alla formazione del reddito, in percentuale sul reddito di lavoro dipendente, per reddito complessivo non superiore alla soglia di accesso.',
-      spiegazione:
-        'Sopra la soglia il beneficio non sparisce: cambia forma e diventa la detrazione applicata sull\'IRPEF.',
+      regola: t('somma-cuneo.regola.non-dovuta'),
+      spiegazione: t('somma-cuneo.spiegazione.non-dovuta'),
       fonti: regole['somma-cuneo'],
       parametro: {
         tipo: 'soglia',
@@ -694,7 +725,10 @@ export function calcolaNetto(
       },
       esito: {
         stato: 'nonDovuto',
-        ragione: `Il reddito complessivo (${f(rc)}) supera la soglia di accesso di ${f(somma.sogliaAccesso.valore)}. Sopra questa soglia opera l'ulteriore detrazione, non la somma.`,
+        ragione: t('somma-cuneo.ragione.non-dovuta', {
+          rc: f(rc),
+          soglia: f(somma.sogliaAccesso.valore),
+        }),
       },
     })
   } else {
@@ -705,12 +739,10 @@ export function calcolaNetto(
     const importo = (rld * percentuale) / 100
     passi.push({
       id: 'somma-cuneo',
-      etichetta: 'Somma per il taglio del cuneo',
+      etichetta: t('somma-cuneo.etichetta'),
       natura: 'aggiunge',
-      regola:
-        'Somma che non concorre alla formazione del reddito, pari a una percentuale dell\'intero reddito di lavoro dipendente.',
-      spiegazione:
-        'Non è una detrazione e non passa dalle imposte: è denaro erogato che si somma al netto. La percentuale colpisce tutto il reddito, non la parte eccedente la soglia della fascia.',
+      regola: t('somma-cuneo.regola'),
+      spiegazione: t('somma-cuneo.spiegazione'),
       fonti: regole['somma-cuneo'],
       parametro: { tipo: 'aliquota', valore: percentuale, fonte: somma.fasce.fonte },
       esito: esitoAggiunge(rld, importo),
@@ -720,12 +752,10 @@ export function calcolaNetto(
   if (spettaTi) {
     passi.push({
       id: 'trattamento-integrativo',
-      etichetta: 'Trattamento integrativo',
+      etichetta: t('trattamento-integrativo.etichetta'),
       natura: 'aggiunge',
-      regola:
-        'Somma che non concorre alla formazione del reddito, a condizione che l\'imposta lorda superi la detrazione dell\'art. 13 c. 1 diminuita di un importo fisso.',
-      spiegazione:
-        'È denaro che si somma al netto senza passare dalle imposte. Spetta a chi ha imposta da pagare, e la soglia non coincide con il punto in cui l\'IRPEF netta diventa positiva.',
+      regola: t('trattamento-integrativo.regola.spetta'),
+      spiegazione: t('trattamento-integrativo.spiegazione.spetta'),
       fonti: regole['trattamento-integrativo'],
       parametro: { tipo: 'importo', valore: ti.importo.valore, fonte: ti.importo.fonte },
       esito: esitoAggiunge(rc, ti.importo.valore),
@@ -733,12 +763,10 @@ export function calcolaNetto(
   } else {
     passi.push({
       id: 'trattamento-integrativo',
-      etichetta: 'Trattamento integrativo',
+      etichetta: t('trattamento-integrativo.etichetta'),
       natura: 'aggiunge',
-      regola:
-        'Somma che non concorre alla formazione del reddito per reddito complessivo non superiore alla soglia, e a condizione che l\'imposta lorda superi la detrazione dell\'art. 13 c. 1 diminuita di un importo fisso.',
-      spiegazione:
-        'Quando spetta, è denaro che si somma al netto senza passare dalle imposte.',
+      regola: t('trattamento-integrativo.regola.non-spetta'),
+      spiegazione: t('trattamento-integrativo.spiegazione.non-spetta'),
       fonti: regole['trattamento-integrativo'],
       parametro: {
         tipo: 'soglia',
@@ -748,8 +776,15 @@ export function calcolaNetto(
       esito: {
         stato: 'nonDovuto',
         ragione: !sottoSogliaTi
-          ? `Il reddito complessivo (${f(rc)}) supera il limite di ${f(ti.sogliaRedditoComplessivo.valore)} previsto per il trattamento integrativo.`
-          : `L'imposta lorda (${f(lorda)}) non supera la detrazione per lavoro dipendente diminuita di ${f(ti.scartoSulGate.valore)}, pari a ${f(sogliaGateTi)}: il trattamento integrativo non spetta.`,
+          ? t('trattamento-integrativo.ragione.sopra-soglia', {
+              rc: f(rc),
+              soglia: f(ti.sogliaRedditoComplessivo.valore),
+            })
+          : t('trattamento-integrativo.ragione.incapiente', {
+              lorda: f(lorda),
+              scarto: f(ti.scartoSulGate.valore),
+              sogliaGate: f(sogliaGateTi),
+            }),
       },
     })
   }
@@ -799,20 +834,21 @@ function costruisciAddizionaleComunale(
   gateAperto: boolean,
   fontiGate: readonly Fonte[],
   fontiEsenzione: readonly Fonte[],
+  prosa: Prosa,
 ): Passo {
-  const etichetta = `Addizionale comunale — ${ente.nome}`
+  const { f, t } = prosa
+  const etichetta = t('comunale.etichetta', { ente: ente.nome })
 
   if (ente.stato === 'nonIstituito') {
     return {
       id: 'addizionale-comunale',
       etichetta,
       natura: 'locale',
-      regola: 'L\'addizionale è dovuta al comune che l\'ha istituita.',
-      spiegazione:
-        'Non è un\'aliquota pari a zero: il tributo non esiste in questo comune. Sono due modi diversi di non pagare nulla.',
+      regola: t('comunale.regola.non-istituita'),
+      spiegazione: t('comunale.spiegazione.non-istituita'),
       esito: {
         stato: 'nonDovuto',
-        ragione: `L'addizionale comunale non è istituita nel comune di ${ente.nome}.`,
+        ragione: t('comunale.ragione.non-istituita', { ente: ente.nome }),
       },
     }
   }
@@ -822,14 +858,10 @@ function costruisciAddizionaleComunale(
       id: 'addizionale-comunale',
       etichetta,
       natura: 'locale',
-      regola: 'L\'addizionale comunale è dovuta se per lo stesso anno risulta dovuta l\'IRPEF.',
-      spiegazione:
-        'Non dipende solo dal tuo reddito. Se l\'IRPEF che devi risulta zero, l\'addizionale non si paga affatto — non si riduce: non è dovuta.',
+      regola: t('comunale.regola.gate'),
+      spiegazione: t('addizionale.spiegazione.gate'),
       fonti: fontiGate,
-      esito: {
-        stato: 'nonDovuto',
-        ragione: 'L\'IRPEF netta è zero, quindi il presupposto delle addizionali non è soddisfatto.',
-      },
+      esito: { stato: 'nonDovuto', ragione: t('addizionale.ragione.gate') },
     }
   }
 
@@ -841,12 +873,11 @@ function costruisciAddizionaleComunale(
       ? undefined
       : {
           id: 'soglia-esenzione-comunale',
-          etichetta: `Soglia di esenzione: ${f(sogliaEsenzione)}`,
-          regola:
-            'Soglia di esenzione in ragione del possesso di specifici requisiti reddituali, stabilita con regolamento comunale.',
+          etichetta: t('soglia-esenzione.etichetta', { soglia: f(sogliaEsenzione) }),
+          regola: t('soglia-esenzione.regola'),
           spiegazione: esente
-            ? `Il reddito complessivo non supera ${f(sogliaEsenzione)}: l'addizionale non è dovuta affatto.`
-            : `È una soglia secca, non una franchigia: superata di un euro si paga sull'intero reddito, non sull'eccedenza. Qui il reddito la supera.`,
+            ? t('soglia-esenzione.spiegazione.esente', { soglia: f(sogliaEsenzione) })
+            : t('soglia-esenzione.spiegazione.dovuta'),
           fonti: fontiEsenzione,
           parametro: { tipo: 'soglia', valore: sogliaEsenzione, fonte: ente.fonte },
           esito: {
@@ -854,8 +885,8 @@ function costruisciAddizionaleComunale(
             superata: !esente,
             grandezzaLetta: euro(rc),
             ragione: esente
-              ? `Il reddito complessivo (${f(rc)}) non supera la soglia di esenzione di ${f(sogliaEsenzione)}.`
-              : `Il reddito complessivo (${f(rc)}) supera la soglia di esenzione di ${f(sogliaEsenzione)}, quindi l'addizionale è dovuta sull'intera base.`,
+              ? t('soglia-esenzione.ragione.esente', { rc: f(rc), soglia: f(sogliaEsenzione) })
+              : t('soglia-esenzione.ragione.dovuta', { rc: f(rc), soglia: f(sogliaEsenzione) }),
           },
         }
 
@@ -864,13 +895,16 @@ function costruisciAddizionaleComunale(
       id: 'addizionale-comunale',
       etichetta,
       natura: 'locale',
-      regola: 'L\'addizionale non è dovuta al di sotto della soglia di esenzione deliberata dal comune.',
-      spiegazione:
-        'Sono due condizioni distinte. Qui l\'IRPEF è dovuta, ma il tuo Comune non fa pagare l\'addizionale a chi resta sotto una certa soglia di reddito.',
+      regola: t('comunale.regola.esente'),
+      spiegazione: t('comunale.spiegazione.esente'),
       fonti: fontiEsenzione,
       esito: {
         stato: 'nonDovuto',
-        ragione: `Il reddito complessivo (${f(rc)}) non supera la soglia di esenzione di ${f(sogliaEsenzione!)} deliberata dal comune di ${ente.nome}.`,
+        ragione: t('comunale.ragione.esente', {
+          rc: f(rc),
+          soglia: f(sogliaEsenzione!),
+          ente: ente.nome,
+        }),
       },
       dettaglio: passoSoglia ? [passoSoglia] : undefined,
     }
@@ -879,19 +913,18 @@ function costruisciAddizionaleComunale(
   const importo = totaleAddizionale(rc, forma)
   const dettaglio: Passo[] = []
   if (passoSoglia) dettaglio.push(passoSoglia)
-  const perScaglione = dettaglioScaglioni(rc, forma, 'addizionale-comunale', ente.fonte)
+  const perScaglione = dettaglioScaglioni(rc, forma, 'addizionale-comunale', ente.fonte, prosa)
   if (perScaglione) dettaglio.push(...perScaglione)
 
   return {
     id: 'addizionale-comunale',
     etichetta,
     natura: 'locale',
-    regola:
-      'Aliquota deliberata dal comune, applicata al reddito complessivo al netto degli oneri deducibili, salva la soglia di esenzione.',
+    regola: t('comunale.regola'),
     spiegazione:
       ente.stato === 'ereditato'
-        ? `Il comune non ha deliberato per l'anno d'imposta: per legge si applicano aliquota ed esenzione già vigenti nel ${ente.annoDiProvenienza}.`
-        : 'Si calcola sulla stessa base dell\'IRPEF, e le detrazioni non la toccano.',
+        ? t('comunale.spiegazione.ereditato', { anno: String(ente.annoDiProvenienza) })
+        : t('comunale.spiegazione.deliberato'),
     fonti: ente.stato === 'ereditato' ? [ente.normaDiFallback] : undefined,
     parametro:
       forma.forma === 'unica'

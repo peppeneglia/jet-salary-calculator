@@ -60,6 +60,179 @@ export const retribuzionePrevidenziale = (n: number): RetribuzionePrevidenziale 
   n as RetribuzionePrevidenziale
 
 // ---------------------------------------------------------------------------
+// La lingua
+//
+// D-041: la lingua è un parametro del motore, non una chiave nella UI.
+// ---------------------------------------------------------------------------
+
+/**
+ * Le lingue in cui il calcolatore sa parlare.
+ *
+ * Sta in `core/` per la stessa ragione per cui ci sta `IdRegola`: descrive il
+ * **dominio** del motore, cioè quali forme può avere la sua uscita. Quali testi
+ * ci siano dentro ciascuna lingua è invece dato, e vive in `data/`.
+ */
+export type CodiceLingua = 'it' | 'en'
+
+/**
+ * Un testo in tutte le lingue.
+ *
+ * Non è una mappa parziale: `Record` pieno, così una voce aggiunta senza la sua
+ * traduzione non compila. È la stessa proprietà di `FontiRegola` — il vincolo
+ * sta nel tipo, non in una convenzione che si dimentica.
+ */
+export type Multilingua = Readonly<Record<CodiceLingua, string>>
+
+/**
+ * Gli identificatori dei testi che il motore emette.
+ *
+ * Unione chiusa e `Record` pieno, per la ragione di sempre: un passo che
+ * acquista una frase senza che la frase esista in entrambe le lingue non
+ * compila.
+ *
+ * ⚠️ **Qui non c'è prosa, ci sono solo chiavi.** La prosa sta in `data/`,
+ * perché il motore la **riceve** come riceve il regime: `core/` non importa
+ * `data/`, ed è il meccanismo che D-002 ha istituito.
+ */
+export type IdTesto =
+  // RAL
+  | 'ral.etichetta'
+  | 'ral.regola'
+  | 'ral.spiegazione'
+  // Contributi
+  | 'contributi.etichetta'
+  | 'contributi.regola'
+  | 'contributi.spiegazione.ordinaria'
+  | 'contributi.spiegazione.apprendista'
+  | 'base-contributiva.etichetta'
+  | 'base-contributiva.regola'
+  | 'base-contributiva.spiegazione'
+  // Quota aggiuntiva 1%
+  | 'quota.etichetta'
+  | 'quota.regola.regime'
+  | 'quota.regola'
+  | 'quota.spiegazione.regime'
+  | 'quota.ragione.regime'
+  | 'quota.spiegazione.sotto-soglia'
+  | 'quota.ragione.sotto-soglia'
+  | 'quota.spiegazione.applicata'
+  // Dal lordo all'imponibile fiscale
+  | 'reddito-complessivo.etichetta'
+  | 'reddito-complessivo.regola'
+  | 'reddito-complessivo.spiegazione'
+  // Ramo erariale
+  | 'irpef-lorda.etichetta'
+  | 'irpef-lorda.regola'
+  | 'irpef-lorda.spiegazione'
+  | 'detrazione.etichetta'
+  | 'detrazione.regola'
+  | 'detrazione.spiegazione'
+  | 'detrazione-incremento.etichetta'
+  | 'detrazione-incremento.regola'
+  | 'detrazione-incremento.spiegazione'
+  | 'detrazione-cuneo.etichetta'
+  | 'detrazione-cuneo.regola'
+  | 'detrazione-cuneo.spiegazione'
+  | 'irpef-netta.etichetta'
+  | 'irpef-netta.regola'
+  | 'irpef-netta.spiegazione.capiente'
+  | 'irpef-netta.spiegazione.incapiente'
+  | 'irpef.etichetta'
+  | 'irpef.regola'
+  | 'irpef.spiegazione'
+  // Gli scaglioni descrivono se stessi
+  | 'scaglione.etichetta'
+  | 'scaglione.etichetta.ultimo'
+  | 'scaglione.regola'
+  | 'scaglione.regola.ultimo'
+  | 'scaglione.spiegazione'
+  // Il gate delle addizionali
+  | 'gate.etichetta.aperto'
+  | 'gate.etichetta.chiuso'
+  | 'gate.regola'
+  | 'gate.spiegazione'
+  | 'gate.ragione.aperto'
+  | 'gate.ragione.chiuso'
+  | 'addizionale.spiegazione.gate'
+  | 'addizionale.ragione.gate'
+  // Addizionale regionale
+  | 'regionale.etichetta'
+  | 'regionale.regola.non-istituita'
+  | 'regionale.spiegazione.non-istituita'
+  | 'regionale.ragione.non-istituita'
+  | 'regionale.regola.gate'
+  | 'regionale.regola'
+  | 'regionale.spiegazione'
+  | 'detrazioni-regionali.etichetta'
+  | 'detrazioni-regionali.regola'
+  | 'detrazioni-regionali.spiegazione'
+  | 'detrazioni-regionali.ragione'
+  | 'detrazioni-regionali.una'
+  | 'detrazioni-regionali.molte'
+  // Addizionale comunale
+  | 'comunale.etichetta'
+  | 'comunale.regola.non-istituita'
+  | 'comunale.spiegazione.non-istituita'
+  | 'comunale.ragione.non-istituita'
+  | 'comunale.regola.gate'
+  | 'comunale.regola.esente'
+  | 'comunale.spiegazione.esente'
+  | 'comunale.ragione.esente'
+  | 'comunale.regola'
+  | 'comunale.spiegazione.ereditato'
+  | 'comunale.spiegazione.deliberato'
+  | 'soglia-esenzione.etichetta'
+  | 'soglia-esenzione.regola'
+  | 'soglia-esenzione.spiegazione.esente'
+  | 'soglia-esenzione.spiegazione.dovuta'
+  | 'soglia-esenzione.ragione.esente'
+  | 'soglia-esenzione.ragione.dovuta'
+  // Ramo che aggiunge
+  | 'somma-cuneo.etichetta'
+  | 'somma-cuneo.regola.non-dovuta'
+  | 'somma-cuneo.spiegazione.non-dovuta'
+  | 'somma-cuneo.ragione.non-dovuta'
+  | 'somma-cuneo.regola'
+  | 'somma-cuneo.spiegazione'
+  | 'trattamento-integrativo.etichetta'
+  | 'trattamento-integrativo.regola.spetta'
+  | 'trattamento-integrativo.spiegazione.spetta'
+  | 'trattamento-integrativo.regola.non-spetta'
+  | 'trattamento-integrativo.spiegazione.non-spetta'
+  | 'trattamento-integrativo.ragione.sopra-soglia'
+  | 'trattamento-integrativo.ragione.incapiente'
+
+/**
+ * I modelli di frase, uno per identificatore.
+ *
+ * Sono **modelli, non funzioni**: i valori prendono il posto di segnaposti
+ * `{nome}`, e a sostituirli è il motore. Una funzione qui sarebbe logica in
+ * `data/` — la stessa ragione per cui `CondizioneAssunzione` è un dato
+ * dichiarativo e non un predicato.
+ */
+export type TestiTraccia = Readonly<Record<IdTesto, string>>
+
+/**
+ * La lingua come la riceve il motore: non un codice, ma il pacchetto intero.
+ *
+ * ⚠️ **Perché non basta il codice.** Con un `'it' | 'en'` il motore dovrebbe
+ * tenersi dentro le due tabelle di prosa, e `core/` tornerebbe a contenere
+ * testo scritto — cioè il difetto che D-041 esiste per togliere. Il motore
+ * **riceve** la lingua come riceve il regime: è il meccanismo di D-002, e vale
+ * per i testi esattamente come per i parametri.
+ *
+ * `tag` è il tag BCP 47 con cui si formattano numeri e date: `1.234,56` in
+ * italiano, `1,234.56` in inglese. La convenzione resta **una sola per lingua**
+ * — un'aliquota e un importo nella stessa frase non possono avere separatori
+ * diversi, che era il difetto all'origine di D-038.
+ */
+export interface Lingua {
+  readonly codice: CodiceLingua
+  readonly tag: string
+  readonly testi: TestiTraccia
+}
+
+// ---------------------------------------------------------------------------
 // Input
 //
 // Pagina madre: «Input obbligatori: RAL, comune di residenza, tipo di contratto.
@@ -114,8 +287,15 @@ export interface Fonte {
    * dato e non in una costante scritta a mano (D-005).
    */
   readonly estrattoIl?: string
-  /** Segnalazione esplicita per i parametri usati senza fonte confermata. */
-  readonly nonVerificato?: string
+  /**
+   * Segnalazione esplicita per i parametri usati senza fonte confermata.
+   *
+   * `Multilingua` e non `string`: la riserva **compare in pagina**, accanto al
+   * valore che qualifica. Una riserva che resta in italiano quando il resto
+   * della pagina è in inglese è una riserva che non viene letta, e una riserva
+   * non letta vale zero.
+   */
+  readonly nonVerificato?: Multilingua
 }
 
 // ---------------------------------------------------------------------------
@@ -580,7 +760,16 @@ export interface AssunzioneDichiarata {
 export interface Assunzione {
   /** Riferimento alla voce in Notion: «S-002», «S-005-bis», «D-023». */
   readonly id: string
-  readonly testo: string
+  /**
+   * Il testo rivolto all'utente, in tutte le lingue.
+   *
+   * Resta **non risolto** fino al rendering, e non è una dimenticanza: il
+   * catalogo lo legge anche `/cosa-non-copre`, che non passa dal motore. Con la
+   * risoluzione dentro `calcolaNetto` le strade diventerebbero due, e la stessa
+   * voce potrebbe leggersi diversa a seconda di quale pagina la mostra. Il
+   * componente che la rende è uno solo, ed è lì che la lingua si applica.
+   */
+  readonly testo: Multilingua
   /** In che direzione il netto calcolato si discosta da quello reale. */
   readonly direzione: 'nessuna' | 'netto-reale-piu-alto' | 'netto-reale-piu-basso'
   /**
