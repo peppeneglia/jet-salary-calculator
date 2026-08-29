@@ -90,7 +90,7 @@ const it = {
   risultato: {
     titolo: 'Il risultato',
     occhiello: '{{contratto}}, {{comune}}, anno {{anno}}.',
-    annoPaese: 'Anno d’imposta {{anno}} · Italia',
+    annoPaese: 'Anno d’imposta {{anno}}',
     riepilogoTitolo: 'Calcolato su',
     riepilogoMensilita: '{{n}} mensilità',
     notaContrattoTitolo: 'Determinato e indeterminato danno lo stesso netto.',
@@ -99,7 +99,7 @@ const it = {
     nettoAnnuo: 'Netto annuo',
     daUnaRal: 'da una RAL di {{importo}}',
     suMensilita: 'su {{n}} mensilità',
-    mensilitaSelezionata: ' — la mensilità selezionata',
+    mensilitaSelezionata: 'la mensilità selezionata',
     notaMensilitaTitolo: 'È sempre lo stesso stipendio, diviso in modi diversi.',
     notaMensilitaCorpo:
       'Il totale dell’anno non cambia: cambia quanto ti arriva ogni volta. Chi ha quattordici mensilità non guadagna meno di chi ne ha dodici.',
@@ -310,7 +310,7 @@ const en: Risorse = {
   risultato: {
     titolo: 'The result',
     occhiello: '{{contratto}}, {{comune}}, tax year {{anno}}.',
-    annoPaese: 'Tax year {{anno}} · Italy',
+    annoPaese: 'Tax year {{anno}}',
     riepilogoTitolo: 'Worked out from',
     riepilogoMensilita: '{{n}} instalments',
     notaContrattoTitolo: 'Fixed-term and permanent give the same net pay.',
@@ -319,7 +319,7 @@ const en: Risorse = {
     nettoAnnuo: 'Net pay for the year',
     daUnaRal: 'from a RAL of {{importo}}',
     suMensilita: 'over {{n}} instalments',
-    mensilitaSelezionata: ' — the selected number of instalments',
+    mensilitaSelezionata: 'the selected number of instalments',
     notaMensilitaTitolo: 'It is the same salary, split up in different ways.',
     notaMensilitaCorpo:
       'The yearly total does not change: what changes is how much reaches you each time. Someone paid over fourteen instalments does not earn less than someone paid over twelve.',

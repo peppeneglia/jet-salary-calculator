@@ -100,8 +100,17 @@ export function SezioneRisultato({ risultato }: { risultato: Risultato }) {
                 >
                   <p className="text-xs font-medium text-inchiostro-tenue">
                     {t('risultato.suMensilita', { n: m })}
+                    {/*
+                      ⚠️ Il separatore sta nel JSX e non in coda alla stringa
+                      tradotta. Uno spazio iniziale dentro una traduzione è
+                      invisibile a chi la rilegge e sparisce al primo strumento
+                      che fa trim: qui mancava, e si leggeva «mensilità— la».
+                    */}
                     {scelta ? (
-                      <span className="sr-only">{t('risultato.mensilitaSelezionata')}</span>
+                      <span className="sr-only">
+                        {' — '}
+                        {t('risultato.mensilitaSelezionata')}
+                      </span>
                     ) : null}
                   </p>
                   <p
