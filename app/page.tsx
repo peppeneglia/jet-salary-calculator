@@ -1,9 +1,14 @@
 /**
  * La pagina.
  *
- * È un server component, e resta tale: il catalogo dei comuni si legge qui, e
- * al client attraversano il confine soltanto nome, provincia, codice catastale
- * e — per i comuni non calcolabili — la ragione. Aliquote, scaglioni e
+ * È un server component, e resta tale. Ma dal 29/08 **il catalogo non passa più
+ * di qui** (D-058): nel documento va **un comune solo**, quello da cui si
+ * parte, e i 7.897 li chiede il campo di scelta alla prima apertura. La lista
+ * pesava 83 KiB compressi ed era il 78% del trasferimento, pagato da tutti e
+ * usato da pochi.
+ *
+ * Quello che attraversa il confine non cambia — nome, provincia, codice
+ * catastale e, per chi non è calcolabile, la ragione. Aliquote, scaglioni e
  * citazioni degli enti restano server-side, ed è la ragione per cui il
  * progetto ha scelto Next (D-004).
  *
@@ -16,11 +21,10 @@ import { Calcolatore } from './_components/calcolatore'
 import { traduzione } from './_i18n/server'
 import type { RichiestaCalcolo } from './_lib/api'
 import { MENSILITA_INIZIALE, eseguiCalcolo } from './_lib/calcolo'
-import { CODICE_COMUNE_INIZIALE, comuniSelezionabili } from './_lib/comuni'
+import { CODICE_COMUNE_INIZIALE, comuneIniziale } from './_lib/comuni'
 
 export default async function Home() {
   const { t, lingua } = await traduzione()
-  const comuni = comuniSelezionabili()
 
   /**
    * Il caso di partenza, derivato dal catalogo e non riscritto a mano.
@@ -57,7 +61,7 @@ export default async function Home() {
 
       <main>
         <Calcolatore
-          comuni={comuni}
+          comuneIniziale={comuneIniziale()}
           iniziale={iniziale}
           risultatoIniziale={esito.stato === 'ok' ? esito.risultato : null}
           erroreIniziale={esito.stato === 'errore' ? esito.errore : null}

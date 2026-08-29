@@ -308,6 +308,8 @@ function parametriDa2026(voce) {
   // ---------------------------------------------------------------------
   const esente = numeroVirgola(voce.importoEsente)
   let sogliaEsenzione = esente && esente.valore > 0 ? esente.valore : null
+  // D-055: la provenienza si marca riga per riga, non si deduce a valle.
+  let origineSoglia = sogliaEsenzione === null ? null : 'colonna'
 
   const incondizionate = []
   for (const e of esenzioni) {
@@ -331,6 +333,7 @@ function parametriDa2026(voce) {
     }
   } else if (distinte.length === 1) {
     sogliaEsenzione = distinte[0]
+    origineSoglia = 'descrizione'
     segnala(
       'esenzione-letta-dal-testo',
       codice,
@@ -350,7 +353,10 @@ function parametriDa2026(voce) {
   }
 
   if (uniche.length === 1) {
-    return { aliquota: { forma: 'unica', aliquota: uniche[0].aliquota }, sogliaEsenzione }
+    return {
+      parametri: { aliquota: { forma: 'unica', aliquota: uniche[0].aliquota }, sogliaEsenzione },
+      origineSoglia,
+    }
   }
   if (uniche.length > 1) {
     segnala('aliquota-unica-ripetuta', codice, `${nome}: ${uniche.length} righe «aliquota unica»`)
@@ -401,8 +407,8 @@ function parametriDa2026(voce) {
   }
 
   return {
-    aliquota: formaDaConfini(confini, ordinati.map((s) => s.aliquota)),
-    sogliaEsenzione,
+    parametri: { aliquota: formaDaConfini(confini, ordinati.map((s) => s.aliquota)), sogliaEsenzione },
+    origineSoglia,
   }
 }
 
@@ -480,6 +486,7 @@ function leggiAnnuale2025() {
         provincia,
         stato: 'risolto',
         parametri: { aliquota: { forma: 'unica', aliquota: letta.valore }, sogliaEsenzione },
+        origineSoglia: sogliaEsenzione === null ? null : 'colonna',
         setScaglioniInferito: false,
       })
       continue
@@ -521,6 +528,7 @@ function leggiAnnuale2025() {
       provincia,
       stato: 'risolto',
       parametri: { aliquota: formaDaConfini(confini, aliquote), sogliaEsenzione },
+      origineSoglia: sogliaEsenzione === null ? null : 'colonna',
       setScaglioniInferito: true,
     })
   }
@@ -552,6 +560,74 @@ function fasciaRegionale(grezzo) {
 }
 
 const statisticheRegionali = { righe: 0, massimoNelFile: 0 }
+
+/**
+ * ⚠️ **La soglia di esenzione regionale sta nella prosa, e va presa con le pinze**
+ * (D-057).
+ *
+ * Il prospetto regionale **non ha una colonna** come `IMPORTO_ESENTE` del file
+ * comunale: se un ente prevede una soglia, lo scrive in `DISPOSIZIONE`. Leggere
+ * un parametro da un testo libero è esattamente ciò che ho rifiutato di fare
+ * per le detrazioni regionali, quindi la differenza va detta: **qui il testo
+ * dichiara da sé la meccanica**, e l'estrazione la accetta solo se lo fa.
+ *
+ * Due condizioni, entrambe necessarie:
+ * 1. una frase che esenta dei redditi **fino a** un importo;
+ * 2. una conferma esplicita del **cliff** — *oltre* lo stesso importo si applica
+ *    l'aliquota *sull'intero imponibile*.
+ *
+ * La Valle d'Aosta le soddisfa entrambe, con lo stesso numero in tutte e due le
+ * frasi. Un ente che parlasse di esenzione senza dire cosa succede sopra la
+ * soglia finirebbe nel rapporto, **senza soglia**: un'esenzione applicata come
+ * cliff quando è una franchigia è un numero plausibile e sbagliato.
+ *
+ * ⚠️ **E qui la convenzione numerica cambia di nuovo, dentro lo stesso file.**
+ * Le colonne `ALIQUOTA` e `FASCIA` usano il punto decimale (`1.23`, `15000.00`);
+ * la prosa di `DISPOSIZIONE` scrive `15.000 euro` all'italiana. Terza
+ * convenzione, terzo normalizzatore dichiarato.
+ */
+function sogliaEsenzioneRegionale(ente, provvedimento) {
+  const blob = normalizzaTesto([provvedimento.disposizione, provvedimento.note].filter(Boolean).join(' '))
+  if (!/esent|esenzion/i.test(blob)) return null
+
+  const frasi = blob.split(/(?<=[.;])\s+/)
+  const frasiEsenzione = frasi.filter((fr) => /esent|esenzion/i.test(fr) && /reddito/i.test(fr))
+  if (frasiEsenzione.length === 0) {
+    segnala('esenzione-regionale-non-interpretabile', ente, `il testo nomina un'esenzione ma nessuna frase la lega a un reddito: ${blob.slice(0, 200)}`)
+    return null
+  }
+
+  const sogliePossibili = new Set()
+  for (const fr of frasiEsenzione) {
+    for (const m of fr.matchAll(/fino a (?:euro )?([\d.,]+)/gi)) {
+      const n = numeroVirgola(m[1].replace(/[.,]$/, ''))
+      if (n) sogliePossibili.add(n.valore)
+    }
+  }
+  if (sogliePossibili.size !== 1) {
+    segnala('esenzione-regionale-non-interpretabile', ente, `${sogliePossibili.size} soglie candidate nel testo (${[...sogliePossibili].join(', ')}) — nessuna applicata`)
+    return null
+  }
+  const soglia = [...sogliePossibili][0]
+
+  // La conferma del cliff: sopra la soglia si paga sull'**intero** imponibile.
+  const conferma = frasi.some(
+    (fr) =>
+      /oltre/i.test(fr) &&
+      /inter[oa]/i.test(fr) &&
+      [...fr.matchAll(/([\d.,]+)/g)].some((m) => {
+        const n = numeroVirgola(m[1].replace(/[.,]$/, ''))
+        return n && n.valore === soglia
+      }),
+  )
+  if (!conferma) {
+    segnala('esenzione-regionale-senza-conferma-cliff', ente, `soglia di ${soglia} trovata, ma il testo non dichiara che sopra si applica l'aliquota sull'intera base: non applicata`)
+    return null
+  }
+
+  segnala('esenzione-regionale-applicata', ente, `soglia di ${soglia}, letta dal testo di DISPOSIZIONE e confermata come cliff dallo stesso testo`)
+  return soglia
+}
 
 function leggiRegionale2026() {
   const righe = leggiCsvComeOggetti(join(FONTI, 'addreg2026.csv'))
@@ -641,13 +717,6 @@ function leggiRegionale2026() {
         'il testo libero del prospetto descrive una detrazione regionale; non viene estratta perché ricavarne importo e banda dal testo sarebbe un parametro senza fonte (D-033)',
       )
     }
-    if (/esent|esenzion/i.test(testoLibero)) {
-      segnala(
-        'esenzione-regionale-non-rappresentabile',
-        ente,
-        "il prospetto descrive una soglia di esenzione regionale, ma `ParametriRegionali` in core/ non ha un campo per rappresentarla: l'addizionale regionale risulta più alta del reale sotto quella soglia",
-      )
-    }
 
     enti.push({
       nome: ente,
@@ -659,6 +728,7 @@ function leggiRegionale2026() {
       // Le detrazioni esistono nel testo libero ma non vengono inferite: il
       // motore le dichiarerà mancanti invece di applicarle a caso (D-033).
       detrazioni: [],
+      sogliaEsenzione: sogliaEsenzioneRegionale(ente, scelto),
       provvedimentiScartati: scartati.map((p) => ({ numero: p.numero, dataPubblicazione: p.pubblicazione })),
     })
   }
@@ -755,6 +825,7 @@ function risolvi(giornaliero, annuale, entiRegionali) {
     assenteDal2025: 0,
     setInferito: 0,
     conSogliaEsenzione: 0,
+    sogliaDallaDescrizione: 0,
     deliberaNonUtilizzabile: 0,
     senzaEnteRegionale: 0,
   }
@@ -775,10 +846,10 @@ function risolvi(giornaliero, annuale, entiRegionali) {
       enteRegionale,
     }
 
-    let parametri = null
+    let letto = null
     if (voce.deliberato) {
-      parametri = parametriDa2026(voce)
-      if (parametri) {
+      letto = parametriDa2026(voce)
+      if (letto) {
         conteggi.deliberato += 1
         comuni.push({
           ...comune,
@@ -787,10 +858,14 @@ function risolvi(giornaliero, annuale, entiRegionali) {
           numeroDelibera: normalizzaTesto(voce.riga.NUMERO_DELIBERA) || null,
           dataPubblicazione: dataItaliana(voce.riga.DATA_PUBBLICAZIONE),
           note: voce.note,
-          parametri,
+          parametri: letto.parametri,
+          // D-055 — la soglia viene dalla colonna dedicata oppure dalla
+          // descrizione della fascia, e quale delle due si dice qui.
+          origineSoglia: letto.origineSoglia,
           setScaglioniInferito: false,
         })
-        if (parametri.sogliaEsenzione !== null) conteggi.conSogliaEsenzione += 1
+        if (letto.parametri.sogliaEsenzione !== null) conteggi.conSogliaEsenzione += 1
+        if (letto.origineSoglia === 'descrizione') conteggi.sogliaDallaDescrizione += 1
         continue
       }
       conteggi.deliberaNonUtilizzabile += 1
@@ -826,6 +901,7 @@ function risolvi(giornaliero, annuale, entiRegionali) {
       stato: 'ereditato',
       annoDiProvenienza: ANNO_IMPOSTA - 1,
       parametri: precedente.parametri,
+      origineSoglia: precedente.origineSoglia,
       setScaglioniInferito: precedente.setScaglioniInferito,
     })
   }
@@ -1000,6 +1076,61 @@ for (const c of comuni) {
   comuniPerEnte.set(e, (comuniPerEnte.get(e) ?? 0) + 1)
 }
 
+/**
+ * ⚠️ **La mappatura provincia → ente è il punto più fragile dell'import, e
+ * questi controlli dicono fin dove arrivano — non che sia giusta.**
+ *
+ * Nessuno dei tre file MEF lega una sigla di provincia a un ente impositore: il
+ * comunale porta la sigla, il regionale il nome dell'ente, e in mezzo non c'è
+ * niente. La tabella **non è derivabile** da questi dati, quindi non è
+ * verificabile con questi dati. Quello che si può fare è escludere gli errori
+ * che si vedono — buchi, doppioni, enti inventati, enti vuoti — e **dichiarare
+ * quello che resta**.
+ *
+ * **Il difetto che sopravvive a tutti e quattro i controlli è lo scambio:** due
+ * province attribuite l'una all'ente dell'altra. Copertura, unicità e totali
+ * tornerebbero identici, e ogni comune di quelle due province riceverebbe
+ * l'aliquota di un ente sbagliato producendo un numero perfettamente
+ * plausibile. Per questo la tabella resta marcata **non verificata**.
+ */
+function controlliSullaMappatura() {
+  const sigleNelFile = new Set(comuni.map((c) => c.provincia))
+  const sigleMappate = new Set(ENTE_PER_PROVINCIA.keys())
+  const nomiProspetto = new Set(entiRegionali.map((e) => e.nome))
+
+  const nonMappate = [...sigleNelFile].filter((p) => !sigleMappate.has(p)).sort()
+  const mappateInEccesso = [...sigleMappate].filter((p) => !sigleNelFile.has(p)).sort()
+  const entiInventati = Object.keys(PROVINCE_PER_ENTE).filter((e) => !nomiProspetto.has(e)).sort()
+  const entiSenzaComuni = [...nomiProspetto].filter((e) => !comuniPerEnte.has(e)).sort()
+
+  const doppioni = []
+  const vista = new Map()
+  for (const [ente, province] of Object.entries(PROVINCE_PER_ENTE)) {
+    for (const p of province) {
+      if (vista.has(p)) doppioni.push(`${p}: ${vista.get(p)} e ${ente}`)
+      else vista.set(p, ente)
+    }
+  }
+
+  for (const p of nonMappate) segnala('provincia-non-mappata', p, 'sigla presente nel file comunale e assente dalla tabella')
+  for (const p of mappateInEccesso) segnala('provincia-mappata-in-eccesso', p, 'sigla nella tabella e assente dal file comunale')
+  for (const e of entiInventati) segnala('ente-non-nel-prospetto', e, 'ente nella tabella e assente dal prospetto regionale')
+  for (const e of entiSenzaComuni) segnala('ente-senza-comuni', e, 'ente nel prospetto e senza alcun comune assegnato')
+  for (const d of doppioni) segnala('provincia-assegnata-due-volte', d, 'la stessa sigla compare sotto due enti')
+
+  return [
+    ['sigle di provincia nel file comunale', sigleNelFile.size],
+    ['sigle coperte dalla tabella', sigleNelFile.size - nonMappate.length],
+    ['sigle nella tabella ma non nel file', mappateInEccesso.length],
+    ['sigle assegnate a due enti', doppioni.length],
+    ['enti della tabella assenti dal prospetto', entiInventati.length],
+    ['enti del prospetto senza comuni', entiSenzaComuni.length],
+    ['somma dei comuni per ente', [...comuniPerEnte.values()].reduce((a, b) => a + b, 0)],
+  ]
+}
+
+const esitiMappatura = controlliSullaMappatura()
+
 const listaLeggera = comuni.map((c) => ({
   codiceCatastale: c.codiceCatastale,
   nome: c.nome,
@@ -1029,11 +1160,36 @@ const rapporto = [
   '| --- | --- | --- | --- |',
   ...righeVerifica,
   '',
+  '## Nota sulla misura dei comuni a scaglioni previgenti',
+  '',
+  "*Fonti* §15 registrava **157 comuni**. La misura era una ricerca **case-sensitive**, e il file non è uniforme nelle maiuscole: convivono `da euro`, `Da euro`, `OLTRE euro`, `SCAGLIONE` e `SCAGLIONI`. Ricontata:",
+  '',
+  '| Come si conta | Comuni |',
+  '| --- | --- |',
+  '| ricerca case-sensitive originale | 157 |',
+  '| predicato corretto, ancora case-sensitive | 163 |',
+  '| tre predicati indipendenti, case-insensitive — quattro fasce a scaglione, confine a 15.000, presenza di `15.000,01` — che **concordano** | 176 |',
+  '| di cui con delibera 2026 accettata | 173 |',
+  '',
+  "I 176 coincidono esattamente con le righe `FLAG_NUOVA = 0`, i *casi specifici* che il MEF non acquisisce col format assistito: è una quarta conferma indipendente, e viene da una colonna invece che dal testo.",
+  '',
   '## Esiti della risoluzione',
   '',
   '| Stato | Comuni |',
   '| --- | --- |',
   ...Object.entries(conteggi).map(([k, v]) => `| ${k} | ${v} |`),
+  '',
+  '## La mappatura provincia → ente impositore — cosa è verificato e cosa no',
+  '',
+  "**Nessuno dei tre file MEF lega una sigla di provincia a un ente impositore.** Il file comunale porta la sigla, il prospetto regionale il nome dell'ente, e in mezzo non c'è nulla: la tabella delle 107 province in `scripts/importa-mef.mjs` **non è derivabile da questi dati, quindi non è verificabile con questi dati**. Resta marcata *non verificata* dentro `regioni-2026.json`.",
+  '',
+  'Quello che i controlli escludono — eseguiti a ogni import, non asseriti:',
+  '',
+  '| Controllo | Esito |',
+  '| --- | --- |',
+  ...esitiMappatura.map(([nome, valore]) => `| ${nome} | ${valore} |`),
+  '',
+  "> ⚠️ **Il difetto che sopravvive a tutti e quattro i controlli è lo scambio.** Due province attribuite l'una all'ente dell'altra passerebbero copertura, unicità e totali senza muovere un numero, e ogni comune di quelle due province riceverebbe l'aliquota di un ente sbagliato — **con un risultato perfettamente plausibile**. È la ragione per cui la marcatura resta, e per cui chiuderla richiede una fonte esterna: la ripartizione amministrativa su atto, che non è in cartella.",
   '',
   '## Comuni per ente impositore regionale',
   '',

@@ -39,6 +39,19 @@ I valori attesi sono quelli già misurati in *Fonti* §15 e §15.b sugli stessi 
 | LOMBARDIA — forma aliquota | scaglioni-previgenti | scaglioni-previgenti | OK |
 | LOMBARDIA — aliquote | 1.23 / 1.58 / 1.72 / 1.73 | 1.23 / 1.58 / 1.72 / 1.73 | OK |
 
+## Nota sulla misura dei comuni a scaglioni previgenti
+
+*Fonti* §15 registrava **157 comuni**. La misura era una ricerca **case-sensitive**, e il file non è uniforme nelle maiuscole: convivono `da euro`, `Da euro`, `OLTRE euro`, `SCAGLIONE` e `SCAGLIONI`. Ricontata:
+
+| Come si conta | Comuni |
+| --- | --- |
+| ricerca case-sensitive originale | 157 |
+| predicato corretto, ancora case-sensitive | 163 |
+| tre predicati indipendenti, case-insensitive — quattro fasce a scaglione, confine a 15.000, presenza di `15.000,01` — che **concordano** | 176 |
+| di cui con delibera 2026 accettata | 173 |
+
+I 176 coincidono esattamente con le righe `FLAG_NUOVA = 0`, i *casi specifici* che il MEF non acquisisce col format assistito: è una quarta conferma indipendente, e viene da una colonna invece che dal testo.
+
 ## Esiti della risoluzione
 
 | Stato | Comuni |
@@ -52,8 +65,27 @@ I valori attesi sono quelli già misurati in *Fonti* §15 e §15.b sugli stessi 
 | assenteDal2025 | 1 |
 | setInferito | 589 |
 | conSogliaEsenzione | 2841 |
+| sogliaDallaDescrizione | 136 |
 | deliberaNonUtilizzabile | 3 |
 | senzaEnteRegionale | 0 |
+
+## La mappatura provincia → ente impositore — cosa è verificato e cosa no
+
+**Nessuno dei tre file MEF lega una sigla di provincia a un ente impositore.** Il file comunale porta la sigla, il prospetto regionale il nome dell'ente, e in mezzo non c'è nulla: la tabella delle 107 province in `scripts/importa-mef.mjs` **non è derivabile da questi dati, quindi non è verificabile con questi dati**. Resta marcata *non verificata* dentro `regioni-2026.json`.
+
+Quello che i controlli escludono — eseguiti a ogni import, non asseriti:
+
+| Controllo | Esito |
+| --- | --- |
+| sigle di provincia nel file comunale | 107 |
+| sigle coperte dalla tabella | 107 |
+| sigle nella tabella ma non nel file | 0 |
+| sigle assegnate a due enti | 0 |
+| enti della tabella assenti dal prospetto | 0 |
+| enti del prospetto senza comuni | 0 |
+| somma dei comuni per ente | 7897 |
+
+> ⚠️ **Il difetto che sopravvive a tutti e quattro i controlli è lo scambio.** Due province attribuite l'una all'ente dell'altra passerebbero copertura, unicità e totali senza muovere un numero, e ogni comune di quelle due province riceverebbe l'aliquota di un ente sbagliato — **con un risultato perfettamente plausibile**. È la ragione per cui la marcatura resta, e per cui chiuderla richiede una fonte esterna: la ripartizione amministrativa su atto, che non è in cartella.
 
 ## Comuni per ente impositore regionale
 
@@ -105,7 +137,7 @@ Totale: **1482** in 12 categorie.
 | `secondo-provvedimento-scartato` | 2 |
 | `fascia-duplicata` | 2 |
 | `esenzione-2025-non-normalizzabile` | 1 |
-| `esenzione-regionale-non-rappresentabile` | 1 |
+| `esenzione-regionale-applicata` | 1 |
 | `confini-fuori-dai-due-set` | 1 |
 | `assente-dall-annuale-2025` | 1 |
 
@@ -433,9 +465,9 @@ Totale: **1482** in 12 categorie.
 - **M412** — SOLBIATE CON CAGNO: IMPORTO_ESENTE = "0" ma la descrizione dichiara una soglia di 15000 — «Esenzione per redditi imponibili fino a euro 15.000,00»
 - **M421** — BORGO VALBELLUNA: IMPORTO_ESENTE = "0" ma la descrizione dichiara una soglia di 10000 — «Esenzione per redditi imponibili fino a euro 10.000,00»
 
-### `esenzione-regionale-non-rappresentabile` — 1
+### `esenzione-regionale-applicata` — 1
 
-- **REGIONE VALLE D'AOSTA** — il prospetto descrive una soglia di esenzione regionale, ma `ParametriRegionali` in core/ non ha un campo per rappresentarla: l'addizionale regionale risulta più alta del reale sotto quella soglia
+- **REGIONE VALLE D'AOSTA** — soglia di 15000, letta dal testo di DISPOSIZIONE e confermata come cliff dallo stesso testo
 
 ### `fascia-duplicata` — 2
 

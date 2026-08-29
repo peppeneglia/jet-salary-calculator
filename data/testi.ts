@@ -194,6 +194,14 @@ const it: TestiTraccia = {
     'Il comune non ha deliberato per l’anno d’imposta: per legge si applicano aliquota ed esenzione già vigenti nel {anno}.',
   'comunale.spiegazione.deliberato':
     'Si calcola sulla stessa base dell’IRPEF, e le detrazioni non la toccano.',
+  'regionale.regola.esente':
+    'Soglia di esenzione deliberata dall’ente impositore, in ragione del possesso di specifici requisiti reddituali.',
+  'regionale.spiegazione.esente':
+    'Anche l’addizionale regionale può avere una soglia sotto la quale non è dovuta. Qui il reddito ci sta sotto, quindi non si paga nulla all’ente.',
+  'regionale.ragione.esente':
+    'Il reddito complessivo ({rc}) non supera la soglia di esenzione di {soglia} deliberata da {ente}.',
+  'soglia-esenzione-regionale.regola':
+    'Soglia di esenzione in ragione del possesso di specifici requisiti reddituali, deliberata dall’ente impositore. La norma statale che l’autorizza non è stata reperita: la base è il provvedimento dell’ente.',
   'soglia-esenzione.etichetta': 'Soglia di esenzione: {soglia}',
   'soglia-esenzione.regola':
     'Soglia di esenzione in ragione del possesso di specifici requisiti reddituali, stabilita con regolamento comunale.',
@@ -396,6 +404,14 @@ const en: TestiTraccia = {
     'The municipality did not adopt new figures for this tax year: by law the rate and exemption already in force in {anno} continue to apply.',
   'comunale.spiegazione.deliberato':
     'It is computed on the same income as IRPEF, and the tax credits do not touch it.',
+  'regionale.regola.esente':
+    'Exemption threshold set by the levying authority, based on specified income requirements.',
+  'regionale.spiegazione.esente':
+    'The regional addizionale can have a threshold below which it is not due either. Here your income falls below it, so nothing is owed to the authority.',
+  'regionale.ragione.esente':
+    'Total taxable income ({rc}) does not exceed the {soglia} exemption threshold set by {ente}.',
+  'soglia-esenzione-regionale.regola':
+    'Exemption threshold based on specified income requirements, set by the levying authority. The national provision authorising it has not been traced: the basis is the authority’s own act.',
   'soglia-esenzione.etichetta': 'Exemption threshold: {soglia}',
   'soglia-esenzione.regola':
     'Exemption threshold based on specified income requirements, set by municipal regulation.',

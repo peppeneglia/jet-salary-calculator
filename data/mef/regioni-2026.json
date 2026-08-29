@@ -197,6 +197,7 @@
     ]
    },
    "detrazioni": [],
+   "sogliaEsenzione": null,
    "provvedimentiScartati": []
   },
   {
@@ -231,6 +232,7 @@
     ]
    },
    "detrazioni": [],
+   "sogliaEsenzione": null,
    "provvedimentiScartati": []
   },
   {
@@ -260,6 +262,7 @@
     ]
    },
    "detrazioni": [],
+   "sogliaEsenzione": null,
    "provvedimentiScartati": []
   },
   {
@@ -273,6 +276,7 @@
     "aliquota": 1.23
    },
    "detrazioni": [],
+   "sogliaEsenzione": null,
    "provvedimentiScartati": []
   },
   {
@@ -286,6 +290,7 @@
     "aliquota": 1.73
    },
    "detrazioni": [],
+   "sogliaEsenzione": null,
    "provvedimentiScartati": []
   },
   {
@@ -320,6 +325,7 @@
     ]
    },
    "detrazioni": [],
+   "sogliaEsenzione": null,
    "provvedimentiScartati": []
   },
   {
@@ -354,6 +360,7 @@
     ]
    },
    "detrazioni": [],
+   "sogliaEsenzione": null,
    "provvedimentiScartati": []
   },
   {
@@ -388,6 +395,7 @@
     ]
    },
    "detrazioni": [],
+   "sogliaEsenzione": null,
    "provvedimentiScartati": []
   },
   {
@@ -422,6 +430,7 @@
     ]
    },
    "detrazioni": [],
+   "sogliaEsenzione": null,
    "provvedimentiScartati": []
   },
   {
@@ -451,6 +460,7 @@
     ]
    },
    "detrazioni": [],
+   "sogliaEsenzione": null,
    "provvedimentiScartati": []
   },
   {
@@ -485,6 +495,7 @@
     ]
    },
    "detrazioni": [],
+   "sogliaEsenzione": null,
    "provvedimentiScartati": []
   },
   {
@@ -519,6 +530,7 @@
     ]
    },
    "detrazioni": [],
+   "sogliaEsenzione": null,
    "provvedimentiScartati": []
   },
   {
@@ -553,6 +565,7 @@
     ]
    },
    "detrazioni": [],
+   "sogliaEsenzione": null,
    "provvedimentiScartati": [
     {
      "numero": "2227",
@@ -592,6 +605,7 @@
     ]
    },
    "detrazioni": [],
+   "sogliaEsenzione": null,
    "provvedimentiScartati": []
   },
   {
@@ -626,6 +640,7 @@
     ]
    },
    "detrazioni": [],
+   "sogliaEsenzione": null,
    "provvedimentiScartati": [
     {
      "numero": "2207",
@@ -644,6 +659,7 @@
     "aliquota": 1.23
    },
    "detrazioni": [],
+   "sogliaEsenzione": null,
    "provvedimentiScartati": []
   },
   {
@@ -657,6 +673,7 @@
     "aliquota": 1.23
    },
    "detrazioni": [],
+   "sogliaEsenzione": null,
    "provvedimentiScartati": []
   },
   {
@@ -691,6 +708,7 @@
     ]
    },
    "detrazioni": [],
+   "sogliaEsenzione": null,
    "provvedimentiScartati": []
   },
   {
@@ -725,6 +743,7 @@
     ]
    },
    "detrazioni": [],
+   "sogliaEsenzione": null,
    "provvedimentiScartati": []
   },
   {
@@ -738,6 +757,7 @@
     "aliquota": 1.23
    },
    "detrazioni": [],
+   "sogliaEsenzione": 15000,
    "provvedimentiScartati": []
   },
   {
@@ -751,6 +771,7 @@
     "aliquota": 1.23
    },
    "detrazioni": [],
+   "sogliaEsenzione": null,
    "provvedimentiScartati": []
   }
  ]

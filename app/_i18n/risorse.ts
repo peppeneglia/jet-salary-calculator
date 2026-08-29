@@ -76,6 +76,11 @@ const it = {
       'Serve per le addizionali di Regione e Comune. Conta dove avevi il domicilio fiscale al 1° gennaio. Scrivi le prime lettere per cercarlo. Per ora l’elenco contiene i comuni che abbiamo verificato uno per uno.',
     comuneSegnaposto: 'Cerca un comune',
     comuneNessunRisultato: 'Nessun comune con questo nome, per ora.',
+    comuneElencoInArrivo: 'Sto caricando l’elenco dei comuni…',
+    comuneElencoPronto: 'Elenco pronto: {{n}} comuni, cerca pure.',
+    comuneElencoFallito:
+      'Non sono riuscito a caricare l’elenco dei comuni. Puoi riprovare: intanto resta selezionato quello che vedi nel campo, e il calcolo funziona.',
+    comuneElencoRiprova: 'Riprova a caricare l’elenco',
     comuneMarcatoreNonDisponibile: 'non disponibile',
     comuneNonCalcolabile: 'Per {{comune}} non possiamo calcolare il netto.',
     contrattoEtichetta: 'Tipo di contratto',
@@ -297,6 +302,11 @@ const en: Risorse = {
       'Needed for the regional and municipal addizionali. What counts is where you were tax-resident on 1 January. Type the first few letters to search. For now the list holds the municipalities we have checked one by one.',
     comuneSegnaposto: 'Search for a municipality',
     comuneNessunRisultato: 'No municipality by that name, for now.',
+    comuneElencoInArrivo: 'Loading the list of municipalities…',
+    comuneElencoPronto: 'List ready: {{n}} municipalities, go ahead and search.',
+    comuneElencoFallito:
+      'I could not load the list of municipalities. You can try again: meanwhile the one in the field stays selected, and the calculation still works.',
+    comuneElencoRiprova: 'Try loading the list again',
     comuneMarcatoreNonDisponibile: 'not available',
     comuneNonCalcolabile: 'We cannot work out net pay for {{comune}}.',
     contrattoEtichetta: 'Type of contract',

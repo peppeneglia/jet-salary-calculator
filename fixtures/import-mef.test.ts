@@ -20,7 +20,13 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { CODICE_COMUNE_INIZIALE, comuniSelezionabili, coperturaComuni, risolviComune } from '../app/_lib/comuni'
+import {
+  CODICE_COMUNE_INIZIALE,
+  comuneIniziale,
+  comuniSelezionabili,
+  coperturaComuni,
+  risolviComune,
+} from '../app/_lib/comuni'
 import { eseguiCalcolo } from '../app/_lib/calcolo'
 import { aliquoteLombardia, aliquotaComunaleMilano, sogliaEsenzioneMilano } from '../data/caso-base'
 import datiComuni from '../data/mef/comuni-2026.json'
@@ -116,29 +122,29 @@ describe('i tre stati di D-054 sono tre cose diverse', () => {
   })
 
   /**
-   * ⚠️ **Non sono due comuni: sono 282, e D-037 va riletto.**
+   * ⚠️ **D-056: i 282 comuni delle due Province autonome sono calcolabili.**
    *
-   * La decisione dice *«oggi solo Trento e Bolzano»*, e con tre voci in
-   * catalogo era vero. Ma l'ente impositore delle due Province autonome non è
-   * l'ente dei due capoluoghi: è quello di **tutti** i comuni del
-   * Trentino-Alto Adige — 166 in provincia di Trento, 116 in quella di
-   * Bolzano. Con il dataset intero i non calcolabili passano da 2 a 283, cioè
-   * dallo 0,03% al **3,58%** dei comuni italiani.
-   *
-   * Il numero è qui, in un test, perché è esattamente il genere di cosa che
-   * D-054 chiede di dire con la cifra invece che con l'aggettivo.
+   * D-037 non è stata revocata — si è avverata la sua condizione di caduta,
+   * *«cade quando entrano i parametri delle due Province»*. E ciò che chiamava
+   * «Trento e Bolzano» erano **166 comuni trentini e 116 altoatesini**:
+   * l'ente impositore delle Province autonome non riguarda i due capoluoghi,
+   * riguarda tutto il territorio.
    */
-  it('l\'intero Trentino-Alto Adige è non calcolabile, non i due capoluoghi (D-037)', () => {
-    for (const codice of ['L378', 'A952']) {
-      expect(risolviComune(codice)?.stato).toBe('nonCalcolabile')
-    }
+  it('i 282 comuni delle Province autonome sono calcolabili (D-056)', () => {
     const taa = datiComuni.comuni.filter((c) => c.provincia === 'TN' || c.provincia === 'BZ')
     expect(taa).toHaveLength(282)
-    for (const c of taa) expect(risolviComune(c.codiceCatastale)?.stato).toBe('nonCalcolabile')
-    // ⚠️ Ma il file MEF distingue i due modi di non pagare nulla, e l'import lo
-    // conserva: Trento non ha mai istituito il tributo, Bolzano l'ha deliberato
-    // a zero. Sono due cose diverse e restano tali.
-    expect(datiComuni.comuni.find((c) => c.codiceCatastale === 'L378')?.stato).toBe('nonIstituito')
+    for (const c of taa) expect(risolviComune(c.codiceCatastale)?.stato).toBe('calcolabile')
+
+    // Ciascuno prende l'ente della **propria** Provincia, non della regione.
+    const trento = risolviComune('L378')
+    const bolzano = risolviComune('A952')
+    expect(trento?.stato === 'calcolabile' && trento.enti.regionale.nome).toBe('PROVINCIA AUTONOMA DI TRENTO')
+    expect(bolzano?.stato === 'calcolabile' && bolzano.enti.regionale.nome).toBe('PROVINCIA AUTONOMA DI BOLZANO')
+
+    // ⚠️ E il file MEF distingue i due modi di non pagare l'addizionale
+    // **comunale**, che l'import conserva: Trento non l'ha mai istituita,
+    // Bolzano l'ha deliberata a zero. Sono due cose diverse e restano tali.
+    expect(trento?.stato === 'calcolabile' && trento.enti.comunale.stato).toBe('nonIstituito')
     expect(datiComuni.comuni.find((c) => c.codiceCatastale === 'A952')?.parametri?.aliquota.aliquota).toBe(0)
   })
 })
@@ -164,6 +170,68 @@ describe('nessun clamp, mai', () => {
     expect(molise?.provvedimentiScartati).toHaveLength(1)
     // Il provvedimento scartato è pubblicato dopo quello selezionato.
     expect(molise!.provvedimentiScartati[0].dataPubblicazione > molise!.dataPubblicazione).toBe(true)
+  })
+})
+
+// ---------------------------------------------------------------------------
+
+describe('la soglia di esenzione regionale (D-057)', () => {
+  it('la porta un ente su ventuno, ed è misurato non assunto', () => {
+    const conSoglia = datiRegioni.enti.filter((e) => e.sogliaEsenzione !== null)
+    expect(conSoglia).toHaveLength(1)
+    expect(conSoglia[0].nome).toBe("REGIONE VALLE D'AOSTA")
+    expect(conSoglia[0].sogliaEsenzione).toBe(15_000)
+  })
+
+  it('arriva fino agli enti risolti di un comune valdostano', () => {
+    const aosta = risolviComune('A326')
+    expect(aosta?.stato).toBe('calcolabile')
+    if (aosta?.stato !== 'calcolabile') return
+    const regionale = aosta.enti.regionale
+    expect(regionale.stato === 'deliberato' && regionale.parametri.sogliaEsenzione).toBe(15_000)
+  })
+
+  /**
+   * ⚠️ **Il difetto che D-057 chiude era un numero sbagliato in produzione**,
+   * non una lacuna dichiarata: prima di questa passata un residente valdostano
+   * sotto la soglia vedeva un'addizionale regionale che non doveva.
+   */
+  it('sotto la soglia l\'addizionale regionale non è più dovuta — end to end', () => {
+    const sotto = eseguiCalcolo({
+      ral: 14_000,
+      codiceCatastale: 'A326',
+      tipoContratto: 'indeterminato',
+      mensilita: 13,
+    })
+    expect(sotto.stato).toBe('ok')
+    if (sotto.stato !== 'ok') return
+
+    const gate = sotto.risultato.passi.find((p) => p.id === 'gate-addizionali')!
+    expect(gate.esito.stato === 'verifica' && gate.esito.superata).toBe(true)
+
+    const regionale = sotto.risultato.passi.find((p) => p.id === 'addizionale-regionale')!
+    expect(regionale.esito.stato).toBe('nonDovuto')
+    // La soglia è resa come **verifica con la sua ragione**, non come voce a zero.
+    const verifica = regionale.dettaglio?.find((d) => d.id === 'soglia-esenzione-regionale')
+    expect(verifica?.esito.stato).toBe('verifica')
+  })
+
+  it('sopra la soglia si paga, e sull\'intera base — è un cliff', () => {
+    const sopra = eseguiCalcolo({
+      ral: 30_000,
+      codiceCatastale: 'A326',
+      tipoContratto: 'indeterminato',
+      mensilita: 13,
+    })
+    expect(sopra.stato).toBe('ok')
+    if (sopra.stato !== 'ok') return
+
+    const rcPasso = sopra.risultato.passi.find((p) => p.id === 'reddito-complessivo')!
+    const regionale = sopra.risultato.passi.find((p) => p.id === 'addizionale-regionale')!
+    expect(regionale.esito.stato).toBe('applicato')
+    if (regionale.esito.stato !== 'applicato' || rcPasso.esito.stato !== 'applicato') return
+    // 1,23% sull'intero reddito complessivo, non sulla parte oltre 15.000.
+    expect(regionale.esito.esce).toBeCloseTo((rcPasso.esito.esce * 1.23) / 100, 6)
   })
 })
 
@@ -206,11 +274,27 @@ describe('il confine verso il client', () => {
 
   it('i comuni non calcolabili portano la ragione già nella lista (D-037)', () => {
     const nonCalcolabili = comuniSelezionabili().filter((c) => !c.calcolabile)
-    // 282 in Trentino-Alto Adige, per l'ente impositore fuori perimetro, più il
-    // comune assente dall'elenco consolidato 2025. Sono il 3,58% del totale, e
-    // chi apre l'elenco li vede marcati **prima** di selezionarli.
-    expect(nonCalcolabili).toHaveLength(283)
+    // Dopo D-056 ne resta **uno**: Castegnero Nanto, dove il fallback del
+    // c. 752 non si interrompe ma si biforca su due aliquote diverse. Chi apre
+    // l'elenco lo vede marcato **prima** di selezionarlo.
+    expect(nonCalcolabili).toHaveLength(1)
+    expect(nonCalcolabili[0].codiceCatastale).toBe('M439')
     for (const c of nonCalcolabili) expect(c.ragione?.it).toBeTruthy()
+  })
+
+  /**
+   * D-058: nel documento va **un comune solo**, e deve bastare a rendere il
+   * campo leggibile prima che l'elenco arrivi.
+   */
+  it('nel documento entra un comune solo, completo (D-058)', () => {
+    const iniziale = comuneIniziale()
+    expect(iniziale.codiceCatastale).toBe(CODICE_COMUNE_INIZIALE)
+    expect(iniziale.nome).toBe('MILANO')
+    expect(iniziale.provincia).toBe('MI')
+    expect(iniziale.calcolabile).toBe(true)
+    // Pesa quattro campi, contro i 7.897 dell'elenco intero.
+    expect(JSON.stringify(iniziale).length).toBeLessThan(200)
+    expect(JSON.stringify(comuniSelezionabili()).length).toBeGreaterThan(500_000)
   })
 
   it('la copertura si conta dal dato, non si scrive a mano (D-054)', () => {

@@ -163,6 +163,10 @@ export type IdTesto =
   | 'regionale.regola.gate'
   | 'regionale.regola'
   | 'regionale.spiegazione'
+  | 'regionale.regola.esente'
+  | 'regionale.spiegazione.esente'
+  | 'regionale.ragione.esente'
+  | 'soglia-esenzione-regionale.regola'
   | 'detrazioni-regionali.etichetta'
   | 'detrazioni-regionali.regola'
   | 'detrazioni-regionali.spiegazione'
@@ -582,6 +586,28 @@ export interface ParametriRegionali {
    * quelle per carichi di famiglia restano fuori.
    */
   readonly detrazioni: readonly DetrazioneLocale[]
+  /**
+   * Soglia di esenzione, facoltativa e per ente (D-057). Stessa meccanica a
+   * **cliff** della comunale: sotto la soglia zero, un euro sopra si paga
+   * sull'intera base. `null` = l'ente non l'ha deliberata.
+   *
+   * ⚠️ **Non è un meccanismo nuovo: è quello comunale reso simmetrico.** La
+   * soglia era già modellata come asse ortogonale alla forma dell'aliquota sul
+   * livello comunale; qui non si aggiunge nulla, si toglie un'asimmetria che
+   * era un'assunzione mai verificata — e che i dati hanno falsificato.
+   *
+   * ⚠️ **E chiude per la terza volta lo stesso errore di metodo.** L'argomento
+   * dal silenzio dell'art. 50 — *l'articolo non la prevede, quindi non esiste*
+   * — aveva già fallito sugli scaglioni regionali e sulle detrazioni
+   * regionali. In questo dominio l'assenza di una previsione nella norma
+   * statale non dice nulla su cosa gli enti deliberano.
+   *
+   * Al 29/08/2026 la porta **un ente su ventuno**, la Valle d'Aosta, e il
+   * numero è misurato sul prospetto: il testo dichiara l'esenzione fino a
+   * 15.000 e aggiunge che oltre *«si applica l'aliquota ordinaria sull'intero
+   * imponibile»*, che è la definizione del cliff.
+   */
+  readonly sogliaEsenzione: Euro | null
 }
 
 export interface DetrazioneLocale {

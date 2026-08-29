@@ -195,6 +195,11 @@ const entiRegionali = new Map<string, EnteRisolto<ParametriRegionali>>(
         // parametro senza fonte. L'array resta vuoto e il motore dichiara la
         // mancanza in traccia invece di applicare un numero inventato (D-033).
         detrazioni: [],
+        // ⚠️ **Un ente su ventuno**, e il numero è misurato sul prospetto, non
+        // assunto (D-057). La Valle d'Aosta esenta i redditi fino a 15.000, e
+        // il suo stesso testo dichiara che sopra si applica l'aliquota
+        // sull'intero imponibile — cioè un cliff, non una franchigia.
+        sogliaEsenzione: e.sogliaEsenzione === null ? null : euro(e.sogliaEsenzione),
       },
     } satisfies EnteRisolto<ParametriRegionali>,
   ]),
@@ -205,35 +210,29 @@ const entiRegionali = new Map<string, EnteRisolto<ParametriRegionali>>(
 // ---------------------------------------------------------------------------
 
 /**
- * ⚠️ **Trento e Bolzano non sono calcolabili, ed è una scoperta della ricerca,
- * non una svista.**
+ * ⚠️ **Il comune assente dall'elenco 2025: la catena del fallback non si
+ * interrompe, si biforca — ed è per questo che non è uno zero.**
  *
- * È una delle poche conclusioni che ha **falsificato una riga del perimetro** —
- * quella secondo cui la copertura Italia intera è dati e non struttura, e
- * quindi non può rompere il motore. Rompe la struttura: la mappatura non è
- * `comune → regione` ma `comune → ente impositore`, e per due province quel
- * soggetto non è una regione.
+ * Ce n'è **uno solo**, Castegnero Nanto (VI), e i file raccontano tutta la
+ * storia: il giornaliero 2026 porta **tre** codici — `C056` Castegnero, `F838`
+ * Nanto e `M439` Castegnero Nanto — tutti e tre a `0*`; l'elenco annuale 2025
+ * porta i due predecessori con **aliquote diverse**, 0,65% e 0,75%, e il comune
+ * fuso non ce l'ha affatto.
  *
- * Il testo è condiviso dai due comuni perché la ragione è la stessa: non
- * riguarda Trento o Bolzano, riguarda l'assetto del Trentino-Alto Adige.
+ * Il c. 752 rinvia a *«scaglioni e aliquote già vigenti in ciascun ente
+ * nell'anno precedente»*. Nell'anno precedente quel territorio aveva **due**
+ * aliquote vigenti. Non c'è un valore da ereditare: ce ne sono due, e sceglierne
+ * uno è una decisione, non una lettura.
+ *
+ * ⚠️ **Perché non è lo stato «senza addizionale applicabile» di D-054.**
+ * L'argomento di D-054 per gli 884 è il consolidamento: *un `0*` che sopravvive
+ * all'elenco annuale significa nessuna aliquota applicabile*. Qui non c'è uno
+ * `0*` che sopravvive — **non c'è la riga**. Un'addizionale a zero direbbe che
+ * il comune non ha il tributo, e i suoi due predecessori ce l'avevano entrambi.
  */
-const trentinoAltoAdige: Multilingua = {
-  it: 'In Trentino-Alto Adige l’addizionale «regionale» non la fissa la regione: la stabiliscono le due Province autonome, separatamente, ciascuna con le proprie aliquote. La regione, come soggetto che impone il tributo, non esiste. Il calcolatore conosce l’addizionale comunale di questi due comuni ma non quella provinciale, e applicare al suo posto l’aliquota lombarda produrrebbe un numero credibile e sbagliato. Preferiamo dirtelo.',
-  en: 'In Trentino-Alto Adige the “regional” surcharge is not set by the region: it is set by the two autonomous Provinces, separately, each with its own rates. The region, as the authority levying the tax, does not exist. The calculator knows the addizionale comunale of these two municipalities but not the provincial one, and putting the Lombardy rate in its place would produce a credible, wrong number. We would rather tell you.',
-}
-
-/**
- * ⚠️ **Il comune assente dall'elenco 2025 è un caso esplicito, non un buco.**
- *
- * Ce n'è **uno solo** — Castegnero Nanto, nato dalla fusione di due comuni
- * vicentini — e nel 2026 non ha ancora deliberato. Il c. 752 rinvia all'anno
- * precedente, ma nell'anno precedente quel comune non esisteva: la catena del
- * fallback si interrompe senza che nessuno abbia sbagliato. Resta in elenco,
- * marcato, invece di cadere in un valore indefinito (D-054).
- */
-const fusoDopoIlConsolidamento: Multilingua = {
-  it: 'Questo comune non ha deliberato l’addizionale per il 2026, e la legge dice di applicare quella dell’anno precedente. Ma nell’elenco consolidato del 2025 non c’è: è nato da una fusione dopo. Non abbiamo un’aliquota da applicare, e inventarne una darebbe un numero credibile e sbagliato.',
-  en: 'This municipality did not set its 2026 surcharge, and the law says to apply the previous year’s. But it is absent from the consolidated 2025 list: it was created by a merger afterwards. We have no rate to apply, and making one up would produce a credible, wrong number.',
+const fallbackBiforcato: Multilingua = {
+  it: 'Questo comune non ha deliberato l’addizionale per il 2026, e la legge dice di applicare quella già vigente l’anno prima. Ma l’anno prima non esisteva: è nato dalla fusione di Castegnero e Nanto, che avevano due aliquote diverse — 0,65% e 0,75%. Non c’è un’aliquota da ereditare, ce ne sono due, e sceglierne una non spetta a noi. Mettere zero direbbe che qui l’addizionale non si paga, e non è vero.',
+  en: 'This municipality did not set its 2026 surcharge, and the law says to apply the one already in force the year before. But the year before it did not exist: it was formed by merging Castegnero and Nanto, which had two different rates — 0.65% and 0.75%. There is no single rate to inherit, there are two, and picking one is not ours to do. Showing zero would say the surcharge is not levied here, and that is not true.',
 }
 
 /**
@@ -247,9 +246,6 @@ const fusoDopoIlConsolidamento: Multilingua = {
  * senza che nessuno lo decidesse.
  */
 export const CODICE_COMUNE_INIZIALE = 'F205'
-
-/** Gli enti impositori regionali che il perimetro attuale non copre (D-037). */
-const ENTI_FUORI_PERIMETRO = new Set(['PROVINCIA AUTONOMA DI TRENTO', 'PROVINCIA AUTONOMA DI BOLZANO'])
 
 function comunaleDa(c: (typeof datiComuni.comuni)[number]): EnteRisolto<ParametriComunali> {
   const nome = c.nome
@@ -298,17 +294,29 @@ const catalogo: readonly ComuneDelCatalogo[] = datiComuni.comuni.map((c): Comune
   const identita = { codiceCatastale: c.codiceCatastale, nome: c.nome, provincia: c.provincia }
 
   if (c.stato === 'nonCalcolabile') {
-    return { stato: 'nonCalcolabile', ...identita, ragione: fusoDopoIlConsolidamento }
+    return { stato: 'nonCalcolabile', ...identita, ragione: fallbackBiforcato }
   }
 
-  // ⚠️ Il prospetto regionale **contiene** le aliquote delle due Province
-  // autonome, quindi il parametro tecnicamente c'è. Restano fuori perimetro
-  // perché D-037 le esclude e questa non è la sede per revocarlo: la decisione
-  // sta in Notion, non in questo file.
-  if (c.enteRegionale === null || ENTI_FUORI_PERIMETRO.has(c.enteRegionale)) {
-    return { stato: 'nonCalcolabile', ...identita, ragione: trentinoAltoAdige }
+  /*
+   * ⚠️ **I 282 comuni delle due Province autonome sono calcolabili** (D-056).
+   *
+   * D-037 li teneva fuori, e non è stata revocata: **si è avverata la sua
+   * condizione di caduta**, che la decisione si era scritta da sé — «cade
+   * quando entrano i parametri delle due Province». Il prospetto regionale
+   * importato contiene le aliquote di entrambe, quindi il parametro c'è.
+   *
+   * E ciò che D-037 chiamava «Trento e Bolzano» erano in realtà **166 comuni
+   * trentini e 116 altoatesini**: l'ente impositore delle Province autonome non
+   * riguarda i due capoluoghi, riguarda tutto il territorio.
+   *
+   * La riserva sulla citazione è quella già dichiarata per la Lombardia —
+   * `NORME` espone la legge abilitante e non l'atto che fissa i valori 2026,
+   * Bolzano cita il 1998 come la Lombardia cita il 2003 — e applicare due pesi
+   * diversi allo stesso difetto sarebbe incoerente.
+   */
+  if (c.enteRegionale === null) {
+    throw new Error(`${c.codiceCatastale} ${c.nome}: nessun ente impositore regionale mappato`)
   }
-
   const regionale = entiRegionali.get(c.enteRegionale)
   if (!regionale) throw new Error(`${c.codiceCatastale} ${c.nome}: ente regionale «${c.enteRegionale}» assente dal prospetto`)
 
@@ -369,6 +377,21 @@ const selezionabili: readonly ComuneSelezionabile[] = [...catalogo]
   )
 
 export const comuniSelezionabili = (): readonly ComuneSelezionabile[] => selezionabili
+
+/**
+ * L'unica voce dell'elenco che entra nel documento — D-058.
+ *
+ * ⚠️ **È la condizione perché il caricamento differito non sia un
+ * peggioramento.** Il campo deve restare leggibile mentre l'elenco arriva, e
+ * per esserlo gli serve il comune scelto **per intero**: un codice catastale da
+ * solo mostrerebbe `F205` invece di *Milano (MI)*, o un campo vuoto. Sono
+ * quattro campi contro 7.897 voci.
+ */
+export const comuneIniziale = (): ComuneSelezionabile => {
+  const c = selezionabili.find((v) => v.codiceCatastale === CODICE_COMUNE_INIZIALE)
+  if (!c) throw new Error(`Il comune iniziale ${CODICE_COMUNE_INIZIALE} non è nel catalogo`)
+  return c
+}
 
 /**
  * I numeri della copertura, **ricalcolati dall'import** e non scritti a mano.

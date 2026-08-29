@@ -148,12 +148,17 @@ function Segmenti<T extends string | number>({
 }
 
 export function SezioneInput({
-  comuni,
+  comuneIniziale,
   iniziale,
   inCorso,
   onCalcola,
 }: {
-  comuni: readonly ComuneSelezionabile[]
+  /**
+   * ⚠️ **Un comune, non l'elenco** — D-058. L'elenco lo chiede il campo alla
+   * prima apertura; qui passa solo la voce da cui si parte, che deve essere
+   * leggibile prima che la rete risponda.
+   */
+  comuneIniziale: ComuneSelezionabile
   /** Il caso di partenza, deciso da chi orchestra: qui non si duplica un default. */
   iniziale: RichiestaCalcolo
   inCorso: boolean
@@ -174,7 +179,17 @@ export function SezioneInput({
   const campoComune = useRef<HTMLInputElement>(null)
 
   const [ral, setRal] = useState(String(iniziale.ral))
-  const [codiceCatastale, setCodiceCatastale] = useState(iniziale.codiceCatastale)
+  /**
+   * ⚠️ **Il comune scelto si tiene per intero, non come codice** (D-058).
+   *
+   * Prima il codice bastava, perché l'elenco era già qui e il nome si ritrovava
+   * cercandolo. Con il caricamento differito l'elenco può non esserci ancora, e
+   * un codice da solo non si sa né scrivere nel campo né marcare come non
+   * calcolabile. La selezione arriva completa da `SceltaComune`, che l'elenco
+   * ce l'ha nel momento in cui si sceglie.
+   */
+  const [comuneScelto, setComuneScelto] = useState<ComuneSelezionabile>(comuneIniziale)
+  const codiceCatastale = comuneScelto.codiceCatastale
   const [tipoContratto, setTipoContratto] = useState<TipoContratto>(iniziale.tipoContratto)
   /*
     Nessun ripiego: `iniziale` porta sempre il campo (D-052), e il valore da cui
@@ -205,9 +220,6 @@ export function SezioneInput({
    * ha chiesto e lo prende per proprio.
    */
   const ralIntatta = ral === String(iniziale.ral)
-
-  /** Il comune scelto, per marcarlo **prima** che si prema il bottone (D-037). */
-  const comuneScelto = comuni.find((c) => c.codiceCatastale === codiceCatastale)
 
   const invia = (e: React.FormEvent) => {
     e.preventDefault()
@@ -332,12 +344,11 @@ export function SezioneInput({
             <SceltaComune
               id={idComune}
               campo={campoComune}
-              comuni={comuni}
-              valore={codiceCatastale}
+              comuneCorrente={comuneScelto}
               invalido={errori.comune !== undefined}
               descrittoDa={errori.comune ? idErroreComune : idAiutoComune}
-              onCambia={(codice) => {
-                setCodiceCatastale(codice)
+              onCambia={(comune) => {
+                setComuneScelto(comune)
                 if (errori.comune) setErrori((p) => ({ ...p, comune: undefined }))
               }}
             />

@@ -120,6 +120,9 @@ export const lombardia: EnteRisolto<ParametriRegionali> = {
     // Le detrazioni regionali esistono — Umbria 150 €, Lazio 60 € — ma la
     // Lombardia non ne prevede. L'array vuoto è un dato, non un segnaposto.
     detrazioni: [],
+    // Stessa cosa per la soglia: **un ente su ventuno** ne ha una, ed è la
+    // Valle d'Aosta (D-057). Il `null` è misurato sul prospetto, non assunto.
+    sogliaEsenzione: null,
   },
 }
 

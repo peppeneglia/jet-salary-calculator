@@ -60,12 +60,12 @@ async function interroga(richiesta: RichiestaCalcolo): Promise<RispostaCalcolo |
  * è una pagina raggiungibile dal footer, sempre, anche senza calcolare nulla.
  */
 export function Calcolatore({
-  comuni,
+  comuneIniziale,
   iniziale,
   risultatoIniziale,
   erroreIniziale,
 }: {
-  comuni: readonly ComuneSelezionabile[]
+  comuneIniziale: ComuneSelezionabile
   iniziale: RichiestaCalcolo
   risultatoIniziale: Risultato | null
   erroreIniziale: Errore | null
@@ -157,7 +157,12 @@ export function Calcolatore({
 
   return (
     <div className="space-y-6">
-      <SezioneInput comuni={comuni} iniziale={iniziale} inCorso={inCorso} onCalcola={calcola} />
+      <SezioneInput
+        comuneIniziale={comuneIniziale}
+        iniziale={iniziale}
+        inCorso={inCorso}
+        onCalcola={calcola}
+      />
 
       <div ref={esito} className="scroll-mt-6 space-y-6">
         {mostrato && errore ? (

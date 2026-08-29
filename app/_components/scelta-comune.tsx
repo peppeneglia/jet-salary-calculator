@@ -28,9 +28,40 @@
  * sono focalizzabili e non hanno `tabIndex`.
  */
 
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { useTraduzione } from '../_i18n/provider'
 import type { ComuneSelezionabile } from '../_lib/comuni'
+
+/**
+ * L'elenco, chiesto una volta per sessione — D-058.
+ *
+ * ⚠️ **La memoria sta nel modulo e non in uno stato React, ed è la ragione per
+ * cui «una volta» è vero.** Uno stato del componente si azzera a ogni
+ * smontaggio, e il campo verrebbe ricaricato ogni volta che la sezione si
+ * ricompone. Qui la promessa è condivisa: la seconda apertura del campo non
+ * genera una seconda richiesta, e due campi sulla stessa pagina ne farebbero
+ * comunque una sola.
+ *
+ * Si conserva la **promessa**, non il risultato: due aperture ravvicinate prima
+ * che la rete risponda si agganciano alla stessa richiesta invece di aprirne
+ * due.
+ */
+let elencoInCorso: Promise<readonly ComuneSelezionabile[]> | null = null
+
+const chiediElenco = (): Promise<readonly ComuneSelezionabile[]> => {
+  elencoInCorso ??= fetch('/api/comuni')
+    .then((r) => {
+      if (!r.ok) throw new Error(String(r.status))
+      return r.json() as Promise<readonly ComuneSelezionabile[]>
+    })
+    .catch((e: unknown) => {
+      // Un tentativo fallito non deve restare in cache: senza questo, chi preme
+      // «riprova» riceverebbe di nuovo la stessa promessa già rifiutata.
+      elencoInCorso = null
+      throw e
+    })
+  return elencoInCorso
+}
 
 /**
  * L'accento non deve impedire di trovare un comune.
@@ -49,27 +80,42 @@ const normalizza = (s: string): string =>
 
 export function SceltaComune({
   id,
-  comuni,
-  valore,
+  comuneCorrente,
   invalido,
   descrittoDa,
   campo,
   onCambia,
 }: {
   id: string
-  comuni: readonly ComuneSelezionabile[]
-  /** Il codice catastale scelto. È la chiave del dataset MEF, non il nome. */
-  valore: string
+  /**
+   * Il comune scelto, **per intero e sempre disponibile**.
+   *
+   * ⚠️ Non è un codice: è l'oggetto. Con il caricamento differito il campo
+   * deve poter scrivere il proprio contenuto **prima che l'elenco arrivi**, e
+   * un codice catastale da solo non si sa rendere — mostrerebbe `F205` invece
+   * di *Milano (MI)*, oppure un campo vuoto (D-058).
+   */
+  comuneCorrente: ComuneSelezionabile
   invalido: boolean
   descrittoDa: string
   /** Il riferimento all'input, perché chi invia il modulo possa portarci il fuoco. */
   campo: React.RefObject<HTMLInputElement | null>
-  onCambia: (codiceCatastale: string) => void
+  onCambia: (comune: ComuneSelezionabile) => void
 }) {
   const { t } = useTraduzione()
   const idElenco = useId()
+  const idStato = useId()
 
   const [aperto, setAperto] = useState(false)
+  /**
+   * L'elenco e il suo stato — D-058.
+   *
+   * `null` non è «elenco vuoto»: è «non l'ho ancora chiesto». Finché resta
+   * `null` il campo funziona lo stesso, perché il comune corrente arriva dal
+   * documento e non dall'elenco.
+   */
+  const [comuni, setComuni] = useState<readonly ComuneSelezionabile[] | null>(null)
+  const [caricamento, setCaricamento] = useState<'fermo' | 'in-corso' | 'fallito'>('fermo')
   /**
    * Il testo digitato, oppure `null` quando non si sta cercando.
    *
@@ -85,15 +131,36 @@ export function SceltaComune({
   const pannello = useRef<HTMLUListElement>(null)
 
   const etichettaDi = (c: ComuneSelezionabile) => `${c.nome} (${c.provincia})`
-  const scelto = comuni.find((c) => c.codiceCatastale === valore)
+  const scelto = comuneCorrente
+  const valore = comuneCorrente.codiceCatastale
+
+  /**
+   * Finché l'elenco non c'è, l'unica voce che si sa mostrare è quella scelta:
+   * il pannello non è mai vuoto e la selezione corrente resta leggibile, che è
+   * la condizione che D-058 pone perché il differimento non sia un
+   * peggioramento.
+   */
+  const disponibili = useMemo(() => comuni ?? [comuneCorrente], [comuni, comuneCorrente])
+
+  const carica = useCallback(() => {
+    if (comuni !== null) return
+    setCaricamento('in-corso')
+    chiediElenco().then(
+      (elenco) => {
+        setComuni(elenco)
+        setCaricamento('fermo')
+      },
+      () => setCaricamento('fallito'),
+    )
+  }, [comuni])
 
   const visibili = useMemo(() => {
-    if (bozza === null || bozza.trim() === '') return comuni
+    if (bozza === null || bozza.trim() === '') return disponibili
     const q = normalizza(bozza)
-    return comuni.filter(
+    return disponibili.filter(
       (c) => normalizza(c.nome).includes(q) || normalizza(c.provincia).includes(q),
     )
-  }, [comuni, bozza])
+  }, [disponibili, bozza])
 
   /* L'opzione evidenziata deve restare in vista quando ci si muove da tastiera. */
   useEffect(() => {
@@ -104,6 +171,10 @@ export function SceltaComune({
   }, [aperto, evidenziato])
 
   const apri = () => {
+    // ⚠️ La richiesta parte **anche se il pannello è già aperto**: chi apre,
+    // chiude e riapre dopo un errore di rete deve poter ritentare senza che il
+    // primo `return` glielo impedisca.
+    carica()
     if (aperto) return
     setAperto(true)
     const i = visibili.findIndex((c) => c.codiceCatastale === valore)
@@ -116,7 +187,7 @@ export function SceltaComune({
   }
 
   const seleziona = (c: ComuneSelezionabile) => {
-    onCambia(c.codiceCatastale)
+    onCambia(c)
     chiudi()
   }
 
@@ -204,14 +275,18 @@ export function SceltaComune({
             aperto && visibili[evidenziato] ? `${idElenco}-${evidenziato}` : undefined
           }
           aria-invalid={invalido ? true : undefined}
-          aria-describedby={descrittoDa}
+          aria-describedby={`${descrittoDa} ${idStato}`}
           value={bozza ?? (scelto ? etichettaDi(scelto) : '')}
           placeholder={t('input.comuneSegnaposto')}
           onChange={(e) => {
+            // Anche digitare chiede l'elenco: chi arriva da tastiera e comincia
+            // a scrivere non passa dal `mousedown`.
+            carica()
             setBozza(e.target.value)
             setEvidenziato(0)
             setAperto(true)
           }}
+          onFocus={carica}
           onKeyDown={tasto}
           onMouseDown={() => {
             if (!aperto) apri()
@@ -262,14 +337,69 @@ export function SceltaComune({
         un pannello che copre lo schermo intero nasconde il campo da cui è
         uscito, e chi cerca non vede più cosa ha scritto.
       */}
+      {/*
+        ⚠️ **L'attesa va annunciata, non solo disegnata** (D-058).
+
+        Il riquadro qui sotto non si vede: esiste per chi la pagina la ascolta.
+        Un pannello che si riempie senza dire nulla lascia chi usa uno screen
+        reader davanti a un campo che sembra rotto — e l'attesa dura una volta
+        sola, ma quella volta va detta. È legato all'input da `aria-describedby`
+        **e** è un `role=\"status\"`: il primo lo rende leggibile a richiesta, il
+        secondo lo fa annunciare da sé quando cambia.
+      */}
+      <div id={idStato} role="status" aria-live="polite" className="sr-only">
+        {caricamento === 'in-corso'
+          ? t('input.comuneElencoInArrivo')
+          : caricamento === 'fallito'
+            ? t('input.comuneElencoFallito')
+            : comuni
+              ? t('input.comuneElencoPronto', { n: comuni.length })
+              : ''}
+      </div>
+
       {aperto ? (
         <ul
           ref={pannello}
           id={idElenco}
           role="listbox"
           aria-label={t('input.comuneEtichetta')}
+          aria-busy={caricamento === 'in-corso' ? true : undefined}
           className="absolute z-20 mt-2 max-h-64 w-full overflow-y-auto overscroll-contain rounded-blocco border border-bordo-controllo bg-carta p-1.5"
         >
+          {/*
+            Il pannello resta utilizzabile mentre l'elenco arriva: la voce
+            scelta è già lì, e sotto si dice che ne stanno arrivando altre.
+            È la condizione di D-058 perché il differimento non sia un
+            peggioramento — il campo non diventa mai un vicolo cieco.
+          */}
+          {caricamento === 'in-corso' ? (
+            <li className="px-3 py-3 text-sm text-inchiostro-tenue">
+              {t('input.comuneElencoInArrivo')}
+            </li>
+          ) : null}
+
+          {/*
+            ⚠️ **L'errore dice cosa fare**, come i sette casi di D-043: non
+            «fetch failed», ma che la ricerca è ferma sul comune già scelto e che
+            si può ritentare. Il bottone è nel pannello e non altrove perché è lì
+            che il problema si manifesta.
+          */}
+          {caricamento === 'fallito' ? (
+            <li className="px-3 py-3 text-sm text-inchiostro-tenue">
+              <p>{t('input.comuneElencoFallito')}</p>
+              <button
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  carica()
+                }}
+                className="fuoco-dentro mt-2 min-h-11 rounded-voce border border-bordo-controllo px-3 py-1.5 text-inchiostro hover:border-bordo-controllo-forte"
+              >
+                {t('input.comuneElencoRiprova')}
+              </button>
+            </li>
+          ) : null}
+
           {visibili.length === 0 ? (
             <li className="px-3 py-3 text-sm text-inchiostro-tenue">
               {t('input.comuneNessunRisultato')}

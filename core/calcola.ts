@@ -636,20 +636,82 @@ export function calcolaNetto(
     })
   } else {
     const forma = regionale.parametri.aliquota
-    const importo = totaleAddizionale(rc, forma)
-    passi.push({
-      id: 'addizionale-regionale',
-      etichetta: t('regionale.etichetta', { ente: regionale.nome }),
-      natura: 'locale',
-      regola: t('regionale.regola'),
-      spiegazione: t('regionale.spiegazione'),
-      parametro:
-        forma.forma === 'unica'
-          ? { tipo: 'aliquota', valore: forma.aliquota, fonte: regionale.fonte }
-          : { tipo: 'scaglioni', valore: forma, fonte: regionale.fonte },
-      esito: esitoSottrae(rc, importo),
-      dettaglio: dettaglioScaglioni(rc, forma, 'addizionale-regionale', regionale.fonte, prosa),
-    })
+    const sogliaRegionale = regionale.parametri.sogliaEsenzione
+    const esenteRegionale = sogliaRegionale !== null && rc <= sogliaRegionale
+
+    /**
+     * ⚠️ **Anche l'ente regionale può avere una soglia, ed è un cliff** (D-057).
+     *
+     * Stessa meccanica della comunale, e stessa forma nella traccia: la soglia
+     * è una **verifica con la sua ragione**, non una voce a zero.
+     *
+     * ⚠️ **Nessuna ****`fonti`**** sul passo, ed è deliberato.** Il gate delle
+     * addizionali e la soglia comunale citano una norma statale; qui quella
+     * norma **non esiste o non è stata reperita** — l'art. 50 non prevede la
+     * soglia, ed è proprio l'argomento dal silenzio che questo campo ha
+     * falsificato. La base è il provvedimento dell'ente, che il `parametro`
+     * porta con sé nella propria `fonte`. Scrivere qui un articolo per
+     * simmetria con la comunale sarebbe inventare una citazione.
+     */
+    const passoSogliaRegionale: Passo | undefined =
+      sogliaRegionale === null
+        ? undefined
+        : {
+            id: 'soglia-esenzione-regionale',
+            etichetta: t('soglia-esenzione.etichetta', { soglia: f(sogliaRegionale) }),
+            regola: t('soglia-esenzione-regionale.regola'),
+            spiegazione: esenteRegionale
+              ? t('soglia-esenzione.spiegazione.esente', { soglia: f(sogliaRegionale) })
+              : t('soglia-esenzione.spiegazione.dovuta'),
+            parametro: { tipo: 'soglia', valore: sogliaRegionale, fonte: regionale.fonte },
+            esito: {
+              stato: 'verifica',
+              superata: !esenteRegionale,
+              grandezzaLetta: euro(rc),
+              ragione: esenteRegionale
+                ? t('soglia-esenzione.ragione.esente', { rc: f(rc), soglia: f(sogliaRegionale) })
+                : t('soglia-esenzione.ragione.dovuta', { rc: f(rc), soglia: f(sogliaRegionale) }),
+            },
+          }
+
+    if (esenteRegionale) {
+      passi.push({
+        id: 'addizionale-regionale',
+        etichetta: t('regionale.etichetta', { ente: regionale.nome }),
+        natura: 'locale',
+        regola: t('regionale.regola.esente'),
+        spiegazione: t('regionale.spiegazione.esente'),
+        esito: {
+          stato: 'nonDovuto',
+          ragione: t('regionale.ragione.esente', {
+            rc: f(rc),
+            soglia: f(sogliaRegionale!),
+            ente: regionale.nome,
+          }),
+        },
+        dettaglio: [passoSogliaRegionale!],
+      })
+    } else {
+      const importo = totaleAddizionale(rc, forma)
+      const dettaglioRegionale: Passo[] = []
+      if (passoSogliaRegionale) dettaglioRegionale.push(passoSogliaRegionale)
+      const perScaglione = dettaglioScaglioni(rc, forma, 'addizionale-regionale', regionale.fonte, prosa)
+      if (perScaglione) dettaglioRegionale.push(...perScaglione)
+
+      passi.push({
+        id: 'addizionale-regionale',
+        etichetta: t('regionale.etichetta', { ente: regionale.nome }),
+        natura: 'locale',
+        regola: t('regionale.regola'),
+        spiegazione: t('regionale.spiegazione'),
+        parametro:
+          forma.forma === 'unica'
+            ? { tipo: 'aliquota', valore: forma.aliquota, fonte: regionale.fonte }
+            : { tipo: 'scaglioni', valore: forma, fonte: regionale.fonte },
+        esito: esitoSottrae(rc, importo),
+        dettaglio: dettaglioRegionale.length > 0 ? dettaglioRegionale : undefined,
+      })
+    }
 
     // ⚠️ Ciò che il motore non modella non sparisce in silenzio (D-033).
     //
@@ -659,7 +721,12 @@ export function calcolaNetto(
     // continue, e come interagiscano con il gate. Il motore non le applica, e
     // deve dirlo: un numero mancante senza spiegazione è la forma peggiore di
     // errore, perché è plausibile.
-    if (regionale.parametri.detrazioni.length > 0) {
+    //
+    // ⚠️ **E non si emette quando l'esenzione ha già azzerato l'addizionale.**
+    // Il passo dice *stai pagando più del reale*; sopra una soglia che ha già
+    // portato il tributo a zero non ci sarebbe niente da pagare di meno, e
+    // l'avviso direbbe una cosa falsa.
+    if (!esenteRegionale && regionale.parametri.detrazioni.length > 0) {
       const totaleDetrazioni = regionale.parametri.detrazioni.reduce((tot, d) => tot + d.importo, 0)
       const quante =
         regionale.parametri.detrazioni.length === 1

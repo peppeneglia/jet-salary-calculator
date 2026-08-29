@@ -78,6 +78,11 @@ const lingua: Lingua = {
   codice: 'it',
   tag: 'it-IT',
   testi: {
+    'regionale.regola.esente': 'Soglia di esenzione deliberata dall’ente.',
+    'regionale.spiegazione.esente': 'Sotto la soglia l’addizionale regionale non è dovuta.',
+    'regionale.ragione.esente':
+      'Il reddito complessivo ({rc}) non supera la soglia di esenzione di {soglia} deliberata da {ente}.',
+    'soglia-esenzione-regionale.regola': 'Soglia deliberata dall’ente impositore.',
     'ral.etichetta': 'RAL',
     'ral.regola': 'Punto di partenza.',
     'ral.spiegazione': 'La RAL comprende le mensilità aggiuntive.',
@@ -275,6 +280,20 @@ const regioneScaglioni: EnteRisolto<ParametriRegionali> = {
       ],
     },
     detrazioni: [],
+    sogliaEsenzione: null,
+  },
+}
+
+/** Esercita D-057: l'ente regionale ha una soglia, ed è un cliff come la comunale. */
+const regioneConSoglia: EnteRisolto<ParametriRegionali> = {
+  stato: 'deliberato',
+  nome: 'Regione con soglia',
+  annoDelibera: 2026,
+  fonte,
+  parametri: {
+    aliquota: { forma: 'unica', aliquota: aliquota(1.23) },
+    detrazioni: [],
+    sogliaEsenzione: euro(25_000),
   },
 }
 
@@ -309,6 +328,7 @@ const regioneConDetrazioni: EnteRisolto<ParametriRegionali> = {
       { importo: euro(150), redditoDa: euro(10_000), redditoA: euro(20_000), fonte },
       { importo: euro(60), redditoDa: euro(20_000), redditoA: null, fonte },
     ],
+    sogliaEsenzione: null,
   },
 }
 
@@ -344,6 +364,7 @@ const assunzioni: readonly AssunzioneDichiarata[] = [
 ]
 
 const entiStandard: EntiRisolti = { regionale: regioneScaglioni, comunale: comuneEreditato }
+const entiSogliaRegionale: EntiRisolti = { regionale: regioneConSoglia, comunale: comuneEreditato }
 const entiAssenti: EntiRisolti = { regionale: regioneNonIstituita, comunale: comuneNonIstituito }
 const entiConDetrazioni: EntiRisolti = { regionale: regioneConDetrazioni, comunale: comuneEreditato }
 
@@ -506,6 +527,59 @@ describe('il motore restituisce solo le assunzioni che si applicano', () => {
     )
     expect(indeterminato.assunzioni.map((a) => a.id)).toContain('T-non-apprendista')
     expect(apprendista.assunzioni.map((a) => a.id)).not.toContain('T-non-apprendista')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 4-bis. La soglia di esenzione regionale è un cliff, come la comunale (D-057)
+// ---------------------------------------------------------------------------
+
+describe('anche l’ente regionale può avere una soglia di esenzione', () => {
+  test('sotto la soglia l’addizionale regionale non è dovuta, con la sua ragione', () => {
+    const r = calcolaNetto(input(20_000), regime, entiSogliaRegionale, assunzioni, lingua)
+    // Il gate deve essere aperto, altrimenti il test misurerebbe il gate e non la soglia.
+    const gate = r.passi.find((p) => p.id === 'gate-addizionali')!
+    expect(gate.esito.stato === 'verifica' && gate.esito.superata).toBe(true)
+    const passo = r.passi.find((p) => p.id === 'addizionale-regionale')
+
+    expect(passo!.esito.stato).toBe('nonDovuto')
+    if (passo!.esito.stato === 'nonDovuto') {
+      expect(passo!.esito.ragione).toContain('soglia di esenzione')
+    }
+    // La verifica è un passo con la sua ragione, non una voce a zero.
+    const verifica = passo!.dettaglio?.find((d) => d.id === 'soglia-esenzione-regionale')
+    expect(verifica?.esito.stato).toBe('verifica')
+    if (verifica?.esito.stato === 'verifica') expect(verifica.esito.superata).toBe(false)
+  })
+
+  test('sopra la soglia si paga sull’intera base, non sull’eccedenza — è un cliff', () => {
+    const rc = (r: ReturnType<typeof calcolaNetto>) => {
+      const passo = r.passi.find((p) => p.id === 'reddito-complessivo')!
+      return passo.esito.stato === 'applicato' ? passo.esito.esce : 0
+    }
+    const sopra = calcolaNetto(input(40_000), regime, entiSogliaRegionale, assunzioni, lingua)
+    const passo = sopra.passi.find((p) => p.id === 'addizionale-regionale')!
+
+    expect(passo.esito.stato).toBe('applicato')
+    if (passo.esito.stato === 'applicato') {
+      // 1,23% sull'INTERO reddito complessivo, non sulla parte oltre 15.000.
+      expect(passo.esito.esce).toBeCloseTo((rc(sopra) * 1.23) / 100, 8)
+    }
+  })
+
+  test('senza soglia il passo di verifica non compare affatto', () => {
+    const r = calcolaNetto(input(40_000), regime, entiStandard, assunzioni, lingua)
+    const passo = r.passi.find((p) => p.id === 'addizionale-regionale')!
+    expect(passo.dettaglio?.some((d) => d.id === 'soglia-esenzione-regionale')).not.toBe(true)
+  })
+
+  test('il netto resta la somma degli effetti anche con l’esenzione regionale', () => {
+    const r = calcolaNetto(input(20_000), regime, entiSogliaRegionale, assunzioni, lingua)
+    const somma = r.passi.reduce(
+      (acc, p) => acc + (p.esito.stato === 'applicato' ? p.esito.effettoSulNetto : 0),
+      20_000,
+    )
+    expect(somma).toBeCloseTo(r.nettoAnnuo, 10)
   })
 })
 
