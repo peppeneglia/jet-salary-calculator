@@ -2,6 +2,11 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Wix_Madefor_Display } from 'next/font/google'
 import { Nav } from './_components/nav'
+import { Preferenze } from './_components/preferenze'
+import { ProviderLingua } from './_i18n/provider'
+import { traduzione } from './_i18n/server'
+import { preferenze } from './_lib/preferenze-server'
+import { attributoLingua, attributoTema } from './_lib/preferenze'
 import './globals.css'
 
 /**
@@ -14,10 +19,19 @@ const wixMadefor = Wix_Madefor_Display({
   display: 'swap',
 })
 
-export const metadata: Metadata = {
-  title: 'Jet Salary Calculator',
-  description:
-    'Quanto resta davvero di uno stipendio lordo: netto annuo e mensile, con il dettaglio di ogni voce e la norma che la determina. Progetto indipendente, non un prodotto Jet HR.',
+/**
+ * Titolo e descrizione seguono la lingua di chi apre la pagina.
+ *
+ * `generateMetadata` e non una costante: la costante era scritta in italiano, e
+ * una scheda del browser in una lingua mentre la pagina è in un'altra è la
+ * stessa incoerenza che D-041 esiste per togliere.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await traduzione()
+  return {
+    title: t('meta.titolo'),
+    description: t('meta.descrizione'),
+  }
 }
 
 /**
@@ -31,19 +45,22 @@ export const metadata: Metadata = {
  * verde la supera, e per non perdere il segnale il numero resta l'unica cosa
  * verde **dentro** il contenuto: la cornice è struttura, il netto è dato.
  *
- * Testo scuro sul verde e non bianco: `#14181A` su `#66C239` supera il
- * rapporto di contrasto richiesto, il bianco no.
+ * ⚠️ **La cornice non cambia con il tema, ed è una scelta** (D-042). Il verde
+ * del marchio resta identico e il testo che ci sta sopra resta scuro: #14181A
+ * su #66C239 vale 7,95 in entrambi i temi. Per questo dentro la cornice si usa
+ * `su-verde` e mai `inchiostro`, che sul tema scuro diventa quasi bianco e
+ * scenderebbe a 2,25.
  */
 function Marchio({ grande }: { grande?: boolean }) {
   return (
     <Link href="/" className="flex items-center gap-2.5 rounded-voce">
       <span aria-hidden className="flex items-end gap-0.75">
-        <span className="h-5 w-1.5 rounded-full bg-inchiostro" />
-        <span className="h-3.5 w-1.5 rounded-full bg-inchiostro" />
-        <span className="h-2 w-1.5 rounded-full bg-inchiostro" />
+        <span className="h-5 w-1.5 rounded-full bg-su-verde" />
+        <span className="h-3.5 w-1.5 rounded-full bg-su-verde" />
+        <span className="h-2 w-1.5 rounded-full bg-su-verde" />
       </span>
       <span
-        className={`font-semibold tracking-tight text-inchiostro ${grande ? 'text-lg' : 'text-base'}`}
+        className={`font-semibold tracking-tight text-su-verde ${grande ? 'text-lg' : 'text-base'}`}
       >
         Jet Salary Calculator
       </span>
@@ -54,40 +71,45 @@ function Marchio({ grande }: { grande?: boolean }) {
 function Intestazione() {
   return (
     <div className="mx-auto w-full max-w-4xl px-3 pt-3 sm:px-4 sm:pt-4">
-      <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-sezione bg-verde px-5 py-4 sm:px-6">
+      <header className="su-verde flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-sezione bg-verde px-5 py-4 sm:px-6">
         <Marchio grande />
-        <Nav etichetta="Sezioni del sito" />
+        <Nav posizione="testa" />
       </header>
     </div>
   )
 }
 
-function Chiusura() {
+async function Chiusura() {
+  const { t } = await traduzione()
+  const { tema } = await preferenze()
+
   return (
     <div className="mx-auto w-full max-w-4xl px-3 pb-3 sm:px-4 sm:pb-4">
-      <footer className="rounded-sezione bg-verde px-5 py-6 sm:px-6 sm:py-7">
+      <footer className="su-verde rounded-sezione bg-verde px-5 py-6 sm:px-6 sm:py-7">
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
           <Marchio />
-          <Nav etichetta="Sezioni del sito, in fondo" />
+          <Nav posizione="piede" />
         </div>
 
-        <div className="mt-6 grid gap-6 border-t border-inchiostro/15 pt-6 sm:grid-cols-2">
-          <p className="text-sm leading-relaxed text-inchiostro/80">
-            Il risultato è il netto di un anno intero, per uno stipendio percepito tutto nell’anno.
-            Non è l’importo di una singola busta paga: quella risponde a una domanda diversa, e il
-            numero che ci leggi sarà un altro.
-          </p>
+        <div className="mt-6 grid gap-6 border-t border-su-verde/15 pt-6 sm:grid-cols-2">
+          <p className="text-sm leading-relaxed text-su-verde/80">{t('piede.notaAnnuale')}</p>
           <div>
-            <p className="text-sm leading-relaxed text-inchiostro/80">
-              Ci sono cose che questo calcolatore non tiene in conto, e preferiamo dirtele.
-            </p>
+            <p className="text-sm leading-relaxed text-su-verde/80">{t('piede.invito')}</p>
             <Link
               href="/cosa-non-copre"
-              className="mt-3 inline-block rounded-voce bg-inchiostro px-4 py-2 text-sm font-semibold text-carta transition-opacity hover:opacity-90"
+              className="mt-3 inline-block rounded-voce bg-su-verde px-4 py-2 text-sm font-semibold text-su-verde-contro transition-opacity hover:opacity-90"
             >
-              Cosa questo calcolatore non copre
+              {t('piede.linkNonCopre')}
             </Link>
           </div>
+        </div>
+
+        {/*
+          I due selettori. In fondo e non in testa: chi arriva vuole calcolare
+          il proprio netto, non scegliere una lingua (D-041, D-042).
+        */}
+        <div className="mt-6 border-t border-su-verde/15 pt-5">
+          <Preferenze temaIniziale={tema} />
         </div>
 
         {/*
@@ -96,24 +118,44 @@ function Chiusura() {
           come un loro prodotto. Sta in pagina e non nell'email, perché chi apre
           il link l'email non la legge.
         */}
-        <div className="mt-6 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 border-t border-inchiostro/15 pt-5 text-sm text-inchiostro/75">
-          <p className="leading-relaxed">
-            Progetto indipendente. Non è un prodotto Jet HR e non è affiliato all’azienda.
-          </p>
-          <p className="font-medium whitespace-nowrap">Anno d’imposta 2026 · Italia</p>
+        <div className="mt-5 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 border-t border-su-verde/15 pt-5 text-sm text-su-verde/75">
+          <p className="leading-relaxed">{t('piede.indipendente')}</p>
+          <p className="font-medium whitespace-nowrap">{t('piede.annoPaese')}</p>
         </div>
       </footer>
     </div>
   )
 }
 
-export default function RootLayout({ children }: LayoutProps<'/'>) {
+/**
+ * ⚠️ **`lang` e `data-theme` li scrive il server, ed è tutto l'impianto.**
+ *
+ * `lang` cambia con la lingua scelta, perché è la dichiarazione su cui un
+ * lettore di schermo decide come pronunciare il testo: lasciarlo a `it` con la
+ * pagina in inglese non è un dettaglio di markup, è una pagina che si fa
+ * leggere male.
+ *
+ * `data-theme` è presente solo quando la scelta è esplicita. **La sua assenza è
+ * lo stato «come il sistema»**, e il CSS la interpreta con
+ * `prefers-color-scheme`: nessuno script, nessun momento in cui la pagina è del
+ * colore sbagliato.
+ */
+export default async function RootLayout({ children }: LayoutProps<'/'>) {
+  const { lingua, tema } = await preferenze()
+  const temaEsplicito = attributoTema(tema)
+
   return (
-    <html lang="it" className={`${wixMadefor.variable} h-full antialiased`}>
+    <html
+      lang={attributoLingua(lingua)}
+      data-theme={temaEsplicito}
+      className={`${wixMadefor.variable} h-full antialiased`}
+    >
       <body className="flex min-h-full flex-col font-sans">
-        <Intestazione />
-        <div className="flex-1">{children}</div>
-        <Chiusura />
+        <ProviderLingua lingua={lingua}>
+          <Intestazione />
+          <div className="flex-1">{children}</div>
+          <Chiusura />
+        </ProviderLingua>
       </body>
     </html>
   )

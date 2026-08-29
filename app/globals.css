@@ -1,13 +1,25 @@
 @import "tailwindcss";
 
 /*
- * Token visivi — D-035.
+ * Token visivi — D-035, D-042.
  *
- * Fondo bianco, verde d'accento #66C239, nessun angolo vivo. I valori stanno
- * qui e non nei componenti: la direzione visiva è una decisione registrata nel
- * Decision log, e cambiarla deve essere una modifica in un posto solo.
+ * ⚠️ **Un colore si scrive qui e in nessun altro posto.** Nessun componente
+ * porta dentro un valore esadecimale né una tinta della palette Tailwind:
+ * tutto passa da un token con un nome che dice il **ruolo**, non la tinta. È la
+ * condizione perché due temi possano esistere — una tinta chiara scritta dentro
+ * un componente resta chiara anche sul tema scuro, e non c'è modo di
+ * accorgersene se non guardando.
+ *
+ * I nomi seguono il ruolo per la stessa ragione. `--color-verde-testo` si
+ * chiamava `verde-scuro` finché il tema era uno solo; sul tema scuro quel verde
+ * **schiarisce**, e un nome che descrive la luminosità sarebbe diventato falso.
+ * Un token il cui nome mente è peggio di un token assente.
+ *
+ * Il tema chiaro resta il default (D-035). Il tema scuro è una preferenza di
+ * chi legge, non un cambio di identità: stessi raggi, stessa tipografia, stesso
+ * verde.
  */
-@theme {
+@theme static {
   /* Neutri. Leggermente caldi: il grigio puro accanto al verde vira al freddo. */
   --color-carta: #ffffff;
   --color-fondo: #f6f7f4;
@@ -18,16 +30,41 @@
 
   /*
    * Il verde ha un significato solo: quello che resta al dipendente.
-   * Nient'altro è verde.
+   * Nient'altro è verde — salvo la cornice, che è struttura e non dato.
    *
-   * Due valori e non uno: #66C239 su bianco sta sotto il rapporto di contrasto
-   * richiesto per il testo, quindi riempie ma non scrive. Per le parole si usa
-   * lo stesso accento scurito.
+   * Due valori e non uno: #66C239 su bianco sta a 2,25 contro il 4,5 richiesto
+   * per il testo, quindi riempie ma non scrive. Per le parole si usa lo stesso
+   * accento scurito, che su bianco sta a 5,25.
    */
   --color-verde: #66c239;
-  --color-verde-scuro: #3d7a20;
+  --color-verde-testo: #3d7a20;
   --color-verde-velo: #f1f9ec;
   --color-verde-bordo: #cfe9bd;
+
+  /*
+   * La cornice verde ha un proprio primo piano, e **non cambia con il tema**.
+   *
+   * Senza questi due token la testata userebbe `inchiostro`, che sul tema scuro
+   * diventa quasi bianco: bianco su #66C239 sta a 2,25 e sarebbe illeggibile.
+   * La fascia resta identica nei due temi — è l'identità del progetto, non una
+   * superficie — quindi il suo testo è fissato una volta: #14181A su #66C239
+   * vale 7,95.
+   */
+  --color-su-verde: #14181a;
+  --color-su-verde-contro: #ffffff;
+
+  /*
+   * Avviso: tutto ciò che chiede qualcosa a chi legge o qualifica un risultato.
+   *
+   * Una famiglia sola e non due (D-043). Il rosso direbbe *guasto*, e nessuno
+   * di questi messaggi lo è: una RAL da correggere, un comune che non copriamo,
+   * una riserva su una fonte sono cose da fare o da sapere, non errori di
+   * sistema. Il registro dei messaggi dice **cosa fare**, e il colore deve dire
+   * la stessa cosa.
+   */
+  --color-avviso: #fffbeb;
+  --color-avviso-bordo: #f3dda0;
+  --color-avviso-testo: #78350f;
 
   /*
    * Un raggio coerente su tutti i livelli: voce, blocco, sezione. Tre gradini
@@ -42,9 +79,68 @@
 }
 
 /*
- * Nessun blocco `prefers-color-scheme`: D-035 fissa il fondo bianco, e una
- * dark mode a metà è peggio della sua assenza.
+ * Il tema scuro.
+ *
+ * Tre stati, e il default è **come il sistema**: senza `data-theme` sull'html
+ * decide `prefers-color-scheme`. La scelta esplicita stampa l'attributo e vince
+ * in entrambe le direzioni, per questo il blocco di sistema esclude
+ * `[data-theme='light']` — altrimenti chi sceglie *chiaro* su un sistema scuro
+ * non verrebbe accontentato.
+ *
+ * L'attributo lo scrive il **server**, leggendo il cookie della preferenza: la
+ * pagina arriva già del colore giusto, senza lo sfarfallio di uno script che
+ * corregge il tema dopo il primo disegno.
+ *
+ * ⚠️ **Il verde sul fondo scuro è stato misurato, non assunto** (D-042).
+ * #66C239 come testo su `carta` scura vale **7,68** e passa: sul tema scuro il
+ * verde del testo *è* il verde del marchio, senza varianti inventate. È il
+ * contrario di quel che accade sul chiaro, dove lo stesso verde non scrive.
+ * Sul velo scuro #16240F vale 7,22.
  */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --color-carta: #171c19;
+    --color-fondo: #0e1210;
+    --color-inchiostro: #e8eee8;
+    --color-inchiostro-tenue: #9faca3;
+    --color-bordo: #2a312c;
+    --color-bordo-forte: #3b443e;
+
+    --color-verde-testo: #66c239;
+    --color-verde-velo: #16240f;
+    --color-verde-bordo: #33512a;
+
+    --color-avviso: #241c0e;
+    --color-avviso-bordo: #4a3a18;
+    --color-avviso-testo: #f5d98b;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-carta: #171c19;
+  --color-fondo: #0e1210;
+  --color-inchiostro: #e8eee8;
+  --color-inchiostro-tenue: #9faca3;
+  --color-bordo: #2a312c;
+  --color-bordo-forte: #3b443e;
+
+  --color-verde-testo: #66c239;
+  --color-verde-velo: #16240f;
+  --color-verde-bordo: #33512a;
+
+  --color-avviso: #241c0e;
+  --color-avviso-bordo: #4a3a18;
+  --color-avviso-testo: #f5d98b;
+}
+
+:root {
+  color-scheme: light;
+}
+
 body {
   background: var(--color-fondo);
   color: var(--color-inchiostro);
@@ -56,8 +152,13 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-verde-scuro);
+  outline: 2px solid var(--color-verde-testo);
   outline-offset: 2px;
+}
+
+/* Il focus dentro la cornice verde: lì il verde del testo sparirebbe nel fondo. */
+.su-verde :focus-visible {
+  outline-color: var(--color-su-verde);
 }
 
 @media (prefers-reduced-motion: reduce) {
