@@ -1,0 +1,221 @@
+/**
+ * Il dataset MEF importato, messo alla prova.
+ *
+ * Sta in `fixtures/` per la stessa ragione del confronto motore ↔ fixture: non
+ * è un test del motore — `core/` non sa nulla di CSV — e non è logica di
+ * `data/`, che non ne ha. È il **contratto fra l'import e i livelli che lo
+ * consumano**, e i contratti non vivono dentro una delle due parti (D-030).
+ *
+ * Copre tre cose, e la prima è la più importante:
+ *
+ * 1. **il caso base non si è mosso.** RAL 30.000 a Milano deve dare lo stesso
+ *    netto di prima dell'import, a quattro decimali;
+ * 2. **il parametro scritto a mano e quello importato coincidono.** Milano e
+ *    Lombardia sono gli unici due enti verificati sulle delibere (D-005): se
+ *    l'import dicesse altro, la divergenza va **vista**, non risolta in
+ *    silenzio da chi ha scritto l'import;
+ * 3. **le invarianti dell'import reggono** — i tre stati, nessun clamp, ogni
+ *    comune con il proprio ente impositore.
+ */
+
+import { describe, expect, it } from 'vitest'
+
+import { CODICE_COMUNE_INIZIALE, comuniSelezionabili, coperturaComuni, risolviComune } from '../app/_lib/comuni'
+import { eseguiCalcolo } from '../app/_lib/calcolo'
+import { aliquoteLombardia, aliquotaComunaleMilano, sogliaEsenzioneMilano } from '../data/caso-base'
+import datiComuni from '../data/mef/comuni-2026.json'
+import datiRegioni from '../data/mef/regioni-2026.json'
+
+const massimo = (a: { forma: string; aliquota?: number; scaglioni?: readonly { aliquota: number }[] }): number =>
+  a.forma === 'unica' ? (a.aliquota ?? 0) : Math.max(...(a.scaglioni ?? []).map((s) => s.aliquota))
+
+// ---------------------------------------------------------------------------
+
+describe('il caso base non si è mosso', () => {
+  it('RAL 30.000 a Milano dà lo stesso netto di prima dell\'import', () => {
+    const esito = eseguiCalcolo({
+      ral: 30_000,
+      codiceCatastale: CODICE_COMUNE_INIZIALE,
+      tipoContratto: 'indeterminato',
+      mensilita: 13,
+    })
+    expect(esito.stato).toBe('ok')
+    if (esito.stato !== 'ok') return
+    // Il valore è quello calcolato dal motore prima che il dataset entrasse:
+    // se cambia, l'import ha alterato un parametro che era verificato a mano.
+    expect(esito.risultato.nettoAnnuo).toBeCloseTo(23_425.4846, 4)
+  })
+
+  it('il comune iniziale della pagina è Milano, non il primo del catalogo', () => {
+    const primoDelCatalogo = datiComuni.comuni[0]
+    expect(primoDelCatalogo.codiceCatastale).not.toBe(CODICE_COMUNE_INIZIALE)
+    expect(risolviComune(CODICE_COMUNE_INIZIALE)?.nome).toBe('MILANO')
+  })
+})
+
+// ---------------------------------------------------------------------------
+
+describe('il parametro scritto a mano e quello importato coincidono', () => {
+  const milanoImportato = datiComuni.comuni.find((c) => c.codiceCatastale === 'F205')
+  const lombardiaImportata = datiRegioni.enti.find((e) => e.nome === 'REGIONE LOMBARDIA')
+
+  it('Milano — aliquota unica 0,8% ereditata dal 2025', () => {
+    expect(milanoImportato?.stato).toBe('ereditato')
+    expect(milanoImportato?.annoDiProvenienza).toBe(2025)
+    expect(milanoImportato?.parametri?.aliquota.forma).toBe('unica')
+    expect(milanoImportato?.parametri?.aliquota.aliquota).toBe(aliquotaComunaleMilano as number)
+  })
+
+  it('Milano — soglia di esenzione a 23.000, e resta un cliff', () => {
+    expect(milanoImportato?.parametri?.sogliaEsenzione).toBe(sogliaEsenzioneMilano as number)
+  })
+
+  it('Lombardia — scaglioni previgenti, 1,23 / 1,58 / 1,72 / 1,73', () => {
+    expect(lombardiaImportata?.aliquota.forma).toBe('scaglioni-previgenti')
+    expect(lombardiaImportata?.aliquota.scaglioni).toEqual(
+      aliquoteLombardia.scaglioni.map((s) => ({ da: s.da as number, a: s.a as number | null, aliquota: s.aliquota as number })),
+    )
+  })
+
+  it('Lombardia — il provvedimento selezionato è quello di gennaio, e non ce ne sono di scartati', () => {
+    expect(lombardiaImportata?.dataPubblicazione.startsWith('2026-01')).toBe(true)
+    expect(lombardiaImportata?.provvedimentiScartati).toEqual([])
+  })
+})
+
+// ---------------------------------------------------------------------------
+
+describe('i tre stati di D-054 sono tre cose diverse', () => {
+  it('gli stati coprono tutti e 7.897 i comuni, senza residui', () => {
+    const { totale2026, deliberato, ereditato, nonIstituito, assenteDal2025 } = datiComuni.conteggi
+    expect(totale2026).toBe(7_897)
+    expect(deliberato + ereditato + nonIstituito + assenteDal2025).toBe(totale2026)
+  })
+
+  it('il fallback del c. 752 è il ramo principale, non una correzione', () => {
+    // 4.822 comuni con 0*, di cui 3.937 risolti sull'annuale 2025.
+    expect(datiComuni.conteggi.ereditatoPerZeroStar).toBe(3_937)
+    expect(datiComuni.conteggi.ereditato).toBeGreaterThan(datiComuni.conteggi.deliberato)
+  })
+
+  it('«senza addizionale applicabile» resta calcolabile: il numero è corretto, non mancante', () => {
+    expect(datiComuni.conteggi.nonIstituito).toBe(884)
+    const senza = datiComuni.comuni.find((c) => c.stato === 'nonIstituito' && c.provincia !== 'TN' && c.provincia !== 'BZ')
+    expect(senza).toBeDefined()
+    const risolto = risolviComune(senza!.codiceCatastale)
+    expect(risolto?.stato).toBe('calcolabile')
+    if (risolto?.stato !== 'calcolabile') return
+    expect(risolto.enti.comunale.stato).toBe('nonIstituito')
+  })
+
+  it('il comune assente dall\'annuale 2025 è un caso esplicito, non un valore indefinito', () => {
+    const assenti = datiComuni.comuni.filter((c) => c.stato === 'nonCalcolabile')
+    expect(assenti).toHaveLength(1)
+    expect(assenti[0].ragione).toBe('assente-dall-annuale-2025')
+    expect(risolviComune(assenti[0].codiceCatastale)?.stato).toBe('nonCalcolabile')
+  })
+
+  /**
+   * ⚠️ **Non sono due comuni: sono 282, e D-037 va riletto.**
+   *
+   * La decisione dice *«oggi solo Trento e Bolzano»*, e con tre voci in
+   * catalogo era vero. Ma l'ente impositore delle due Province autonome non è
+   * l'ente dei due capoluoghi: è quello di **tutti** i comuni del
+   * Trentino-Alto Adige — 166 in provincia di Trento, 116 in quella di
+   * Bolzano. Con il dataset intero i non calcolabili passano da 2 a 283, cioè
+   * dallo 0,03% al **3,58%** dei comuni italiani.
+   *
+   * Il numero è qui, in un test, perché è esattamente il genere di cosa che
+   * D-054 chiede di dire con la cifra invece che con l'aggettivo.
+   */
+  it('l\'intero Trentino-Alto Adige è non calcolabile, non i due capoluoghi (D-037)', () => {
+    for (const codice of ['L378', 'A952']) {
+      expect(risolviComune(codice)?.stato).toBe('nonCalcolabile')
+    }
+    const taa = datiComuni.comuni.filter((c) => c.provincia === 'TN' || c.provincia === 'BZ')
+    expect(taa).toHaveLength(282)
+    for (const c of taa) expect(risolviComune(c.codiceCatastale)?.stato).toBe('nonCalcolabile')
+    // ⚠️ Ma il file MEF distingue i due modi di non pagare nulla, e l'import lo
+    // conserva: Trento non ha mai istituito il tributo, Bolzano l'ha deliberato
+    // a zero. Sono due cose diverse e restano tali.
+    expect(datiComuni.comuni.find((c) => c.codiceCatastale === 'L378')?.stato).toBe('nonIstituito')
+    expect(datiComuni.comuni.find((c) => c.codiceCatastale === 'A952')?.parametri?.aliquota.aliquota).toBe(0)
+  })
+})
+
+// ---------------------------------------------------------------------------
+
+describe('nessun clamp, mai', () => {
+  it('il tetto comunale di 0,8 è superato, e i comuni sopra restano sopra', () => {
+    const sopra = datiComuni.comuni.filter((c) => c.parametri && massimo(c.parametri.aliquota) > 0.8)
+    expect(sopra.length).toBeGreaterThan(0)
+    expect(Math.max(...sopra.map((c) => massimo(c.parametri!.aliquota)))).toBeCloseTo(1.2, 10)
+  })
+
+  it('il tetto regionale di 1,4 è superato da 15 enti su 21', () => {
+    const sopra = datiRegioni.enti.filter((e) => massimo(e.aliquota) > 1.4)
+    expect(sopra).toHaveLength(15)
+    expect(datiRegioni.enti).toHaveLength(21)
+  })
+
+  it('la selezione D-053 tiene il Molise a 3,33, non a 3,63', () => {
+    const molise = datiRegioni.enti.find((e) => e.nome === 'REGIONE MOLISE')
+    expect(massimo(molise!.aliquota)).toBeCloseTo(3.33, 10)
+    expect(molise?.provvedimentiScartati).toHaveLength(1)
+    // Il provvedimento scartato è pubblicato dopo quello selezionato.
+    expect(molise!.provvedimentiScartati[0].dataPubblicazione > molise!.dataPubblicazione).toBe(true)
+  })
+})
+
+// ---------------------------------------------------------------------------
+
+describe('la mappatura è comune → ente impositore', () => {
+  it('ogni comune punta a un ente presente nel prospetto regionale', () => {
+    const enti = new Set(datiRegioni.enti.map((e) => e.nome))
+    const orfani = datiComuni.comuni.filter((c) => c.enteRegionale === null || !enti.has(c.enteRegionale))
+    expect(orfani).toEqual([])
+  })
+
+  it('il Trentino-Alto Adige non esiste come ente impositore', () => {
+    const nomi = datiRegioni.enti.map((e) => e.nome)
+    expect(nomi).toContain('PROVINCIA AUTONOMA DI TRENTO')
+    expect(nomi).toContain('PROVINCIA AUTONOMA DI BOLZANO')
+    expect(nomi.some((n) => /TRENTINO/i.test(n))).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------------------
+
+describe('il confine verso il client', () => {
+  it('la lista leggera porta quattro campi, più la ragione dove serve', () => {
+    const lista = comuniSelezionabili()
+    expect(lista).toHaveLength(7_897)
+
+    // ⚠️ Il controllo è **strutturale**, non una ricerca di stringa: la parola
+    // «aliquota» compare legittimamente dentro la ragione di Trento e Bolzano —
+    // *«applicare al suo posto l'aliquota lombarda darebbe un numero credibile
+    // e sbagliato»* — e cercarla lì dentro confonde la spiegazione col dato.
+    // Quello che non deve attraversare il confine è un **valore**.
+    const ammessi = new Set(['codiceCatastale', 'nome', 'provincia', 'calcolabile', 'ragione'])
+    const estranei = [...new Set(lista.flatMap((c) => Object.keys(c)))].filter((k) => !ammessi.has(k))
+    expect(estranei).toEqual([])
+
+    const numerici = lista.filter((c) => Object.values(c).some((v) => typeof v === 'number'))
+    expect(numerici).toEqual([])
+  })
+
+  it('i comuni non calcolabili portano la ragione già nella lista (D-037)', () => {
+    const nonCalcolabili = comuniSelezionabili().filter((c) => !c.calcolabile)
+    // 282 in Trentino-Alto Adige, per l'ente impositore fuori perimetro, più il
+    // comune assente dall'elenco consolidato 2025. Sono il 3,58% del totale, e
+    // chi apre l'elenco li vede marcati **prima** di selezionarli.
+    expect(nonCalcolabili).toHaveLength(283)
+    for (const c of nonCalcolabili) expect(c.ragione?.it).toBeTruthy()
+  })
+
+  it('la copertura si conta dal dato, non si scrive a mano (D-054)', () => {
+    expect(coperturaComuni.totale).toBe(7_897)
+    expect(coperturaComuni.calcolabili + coperturaComuni.nonCalcolabili).toBe(coperturaComuni.totale)
+    expect(coperturaComuni.estrattoIl).toBe('2026-08-28')
+  })
+})

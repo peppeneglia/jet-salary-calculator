@@ -1,0 +1,757 @@
+{
+ "provenienza": {
+  "origine": "MEF, Dipartimento delle Finanze — Fiscalità regionale e locale",
+  "annoImposta": 2026,
+  "estrattoIl": "2026-08-28",
+  "generatoDa": "scripts/importa-mef.mjs",
+  "avvertenza": "Gli elenchi generali del MEF si aggiornano quotidianamente e non portano un timbro di versione: la data di estrazione è l'unico riferimento, e per questo vive dentro il dato invece che in una costante scritta a mano (D-005)."
+ },
+ "artefatti": {
+  "regionale2026": {
+   "file": "addreg2026.csv",
+   "descrizione": "Prospetto addizionale regionale IRPEF 2026",
+   "estrattoIl": "2026-08-28",
+   "enti": 21
+  }
+ },
+ "regolaDiSelezione": "Per ciascun ente si prende il provvedimento con DATA PUBBLICAZIONE più antica dell'anno d'imposta: la colonna ANNO vale 2026 su tutte le righe e non discrimina. È una regola meccanica, non un criterio di efficacia (D-053).",
+ "mappaturaProvince": {
+  "nonVerificato": "La ripartizione province → ente impositore non è in nessuno dei tre file MEF e non è stata reperita su un atto. È di uso corrente ma va dichiarata non verificata finché non lo sarà.",
+  "perEnte": {
+   "REGIONE PIEMONTE": [
+    "AL",
+    "AT",
+    "BI",
+    "CN",
+    "NO",
+    "TO",
+    "VB",
+    "VC"
+   ],
+   "REGIONE VALLE D'AOSTA": [
+    "AO"
+   ],
+   "REGIONE LOMBARDIA": [
+    "BG",
+    "BS",
+    "CO",
+    "CR",
+    "LC",
+    "LO",
+    "MB",
+    "MI",
+    "MN",
+    "PV",
+    "SO",
+    "VA"
+   ],
+   "PROVINCIA AUTONOMA DI BOLZANO": [
+    "BZ"
+   ],
+   "PROVINCIA AUTONOMA DI TRENTO": [
+    "TN"
+   ],
+   "REGIONE VENETO": [
+    "BL",
+    "PD",
+    "RO",
+    "TV",
+    "VE",
+    "VI",
+    "VR"
+   ],
+   "REGIONE FRIULI VENEZIA GIULIA": [
+    "GO",
+    "PN",
+    "TS",
+    "UD"
+   ],
+   "REGIONE LIGURIA": [
+    "GE",
+    "IM",
+    "SP",
+    "SV"
+   ],
+   "REGIONE EMILIA-ROMAGNA": [
+    "BO",
+    "FC",
+    "FE",
+    "MO",
+    "PC",
+    "PR",
+    "RA",
+    "RE",
+    "RN"
+   ],
+   "REGIONE TOSCANA": [
+    "AR",
+    "FI",
+    "GR",
+    "LI",
+    "LU",
+    "MS",
+    "PI",
+    "PO",
+    "PT",
+    "SI"
+   ],
+   "REGIONE UMBRIA": [
+    "PG",
+    "TR"
+   ],
+   "REGIONE MARCHE": [
+    "AN",
+    "AP",
+    "FM",
+    "MC",
+    "PU"
+   ],
+   "REGIONE LAZIO": [
+    "FR",
+    "LT",
+    "RI",
+    "RM",
+    "VT"
+   ],
+   "REGIONE ABRUZZO": [
+    "AQ",
+    "CH",
+    "PE",
+    "TE"
+   ],
+   "REGIONE MOLISE": [
+    "CB",
+    "IS"
+   ],
+   "REGIONE CAMPANIA": [
+    "AV",
+    "BN",
+    "CE",
+    "NA",
+    "SA"
+   ],
+   "REGIONE PUGLIA": [
+    "BA",
+    "BR",
+    "BT",
+    "FG",
+    "LE",
+    "TA"
+   ],
+   "REGIONE BASILICATA": [
+    "MT",
+    "PZ"
+   ],
+   "REGIONE CALABRIA": [
+    "CS",
+    "CZ",
+    "KR",
+    "RC",
+    "VV"
+   ],
+   "REGIONE SICILIA": [
+    "AG",
+    "CL",
+    "CT",
+    "EN",
+    "ME",
+    "PA",
+    "RG",
+    "SR",
+    "TP"
+   ],
+   "REGIONE SARDEGNA": [
+    "CA",
+    "NU",
+    "OR",
+    "SS",
+    "SU"
+   ]
+  }
+ },
+ "enti": [
+  {
+   "nome": "PROVINCIA AUTONOMA DI BOLZANO",
+   "numeroProvvedimento": "2182",
+   "dataPubblicazione": "2026-01-29",
+   "norme": "Art. 21/sexiesdecies, legge provinciale 11 agosto 1998, n. 9",
+   "note": "Le detrazioni sono cumulabili ma non generano credito d'imposta. Nella verifica della soglia di 90.000 euro va tenuto conto dei redditi di fabbricati assoggettati alla cedolare secca, dei redditi assoggettati ad imposta sostitutiva sulle mance e dei redditi forfettari degli esercenti impresa, arti o professioni. La detrazione per carichi di famiglia si applica nei limiti reddituali stabiliti dall'art. 12 del DPR 917/1986 anche a figli a carico di eta' inferiore ai 21 e superiore a 30 anni.",
+   "aliquota": {
+    "forma": "scaglioni-vigenti",
+    "scaglioni": [
+     {
+      "da": 0,
+      "a": 28000,
+      "aliquota": 1.23
+     },
+     {
+      "da": 28000,
+      "a": 50000,
+      "aliquota": 1.23
+     },
+     {
+      "da": 50000,
+      "a": null,
+      "aliquota": 1.73
+     }
+    ]
+   },
+   "detrazioni": [],
+   "provvedimentiScartati": []
+  },
+  {
+   "nome": "PROVINCIA AUTONOMA DI TRENTO",
+   "numeroProvvedimento": "2172",
+   "dataPubblicazione": "2026-01-22",
+   "norme": "Articolo 1, commi 2 quater, 2 sexies e 3 bis, della legge provinciale 23 dicembre 2019, n. 13, come modificato dall'articolo 1 della legge provinciale 29 dicembre 2025, n. 11.",
+   "note": null,
+   "aliquota": {
+    "forma": "scaglioni-previgenti",
+    "scaglioni": [
+     {
+      "da": 0,
+      "a": 15000,
+      "aliquota": 1.23
+     },
+     {
+      "da": 15000,
+      "a": 28000,
+      "aliquota": 1.23
+     },
+     {
+      "da": 28000,
+      "a": 50000,
+      "aliquota": 1.23
+     },
+     {
+      "da": 50000,
+      "a": null,
+      "aliquota": 1.73
+     }
+    ]
+   },
+   "detrazioni": [],
+   "provvedimentiScartati": []
+  },
+  {
+   "nome": "REGIONE ABRUZZO",
+   "numeroProvvedimento": "2176",
+   "dataPubblicazione": "2026-01-28",
+   "norme": "Articolo 6 del decreto legislativo 6 maggio 2011, n. 68. Articolo 1, comma 8, della legge regionale 12 dicembre 2006, n. 44. Articolo 1, comma 1, della legge regionale 4 aprile 2025, n. 9.",
+   "note": null,
+   "aliquota": {
+    "forma": "scaglioni-vigenti",
+    "scaglioni": [
+     {
+      "da": 0,
+      "a": 28000,
+      "aliquota": 1.67
+     },
+     {
+      "da": 28000,
+      "a": 50000,
+      "aliquota": 2.87
+     },
+     {
+      "da": 50000,
+      "a": null,
+      "aliquota": 3.33
+     }
+    ]
+   },
+   "detrazioni": [],
+   "provvedimentiScartati": []
+  },
+  {
+   "nome": "REGIONE BASILICATA",
+   "numeroProvvedimento": "2189",
+   "dataPubblicazione": "2026-01-29",
+   "norme": "Art. 6, D.lgs. 06/05/2011, n. 68 e art. 50, D.lgs.15/12/1997, n. 446.",
+   "note": null,
+   "aliquota": {
+    "forma": "unica",
+    "aliquota": 1.23
+   },
+   "detrazioni": [],
+   "provvedimentiScartati": []
+  },
+  {
+   "nome": "REGIONE CALABRIA",
+   "numeroProvvedimento": "2180",
+   "dataPubblicazione": "2026-01-29",
+   "norme": "ART.1 L.R. N.30 DEL 07/08/2002 come modificato dalla L.R. N.1 DEL 11/01/2006. ART.29, comma 14, D.L. 29/12/2011 N.216, convertito dalla LEGGE 24/02/2012 N.14.",
+   "note": null,
+   "aliquota": {
+    "forma": "unica",
+    "aliquota": 1.73
+   },
+   "detrazioni": [],
+   "provvedimentiScartati": []
+  },
+  {
+   "nome": "REGIONE CAMPANIA",
+   "numeroProvvedimento": "2188",
+   "dataPubblicazione": "2026-01-29",
+   "norme": "Art. 50 del D.Lgs. 446/1997. Art. 6 del D.Lgs. 68/2011. L.R. 16 gennaio 2014, n. 4. Art. 11, comma 15, D.L. 28 giugno 2013, n. 76, convertito in Legge 9 agosto 2013, n.99. Art. 1, comma 2, Legge 30 dicembre 2021, n. 234. Art. 1 della L.R. 28 dicembre 2021, n. 31. Art. 1 della L.R. 30 marzo 2022, n. 7.",
+   "note": "Qualora l'imposta dovuta sia minore delle detrazioni di cui ai commi 2 e 3 dell'art.1 della L.R. 30 marzo 2022, n.7, non sorge alcun credito d'imposta. Ai fini della quantificazione e della ripartizione delle detrazioni, si applicano le disposizioni previste dall'articolo 12 del Decreto del Presidente della Repubblica 22 dicembre 1986, n. 917 (Testo unico delle imposte sui redditi) e successive modifiche e integrazioni.'.",
+   "aliquota": {
+    "forma": "scaglioni-previgenti",
+    "scaglioni": [
+     {
+      "da": 0,
+      "a": 15000,
+      "aliquota": 1.73
+     },
+     {
+      "da": 15000,
+      "a": 28000,
+      "aliquota": 2.96
+     },
+     {
+      "da": 28000,
+      "a": 50000,
+      "aliquota": 3.2
+     },
+     {
+      "da": 50000,
+      "a": null,
+      "aliquota": 3.33
+     }
+    ]
+   },
+   "detrazioni": [],
+   "provvedimentiScartati": []
+  },
+  {
+   "nome": "REGIONE EMILIA-ROMAGNA",
+   "numeroProvvedimento": "2170",
+   "dataPubblicazione": "2026-01-19",
+   "norme": "Articolo 6 del decreto legislativo 6 maggio 2011, n. 68. Articolo 2 della legge regionale 20 dicembre 2006, n. 19 come modificato dall'articolo 2, comma 1, della legge regionale 31 marzo 2025, n. 1, coordinato con le modifiche apportate dalla legge regionale 25 luglio 2025, n. 9.",
+   "note": null,
+   "aliquota": {
+    "forma": "scaglioni-previgenti",
+    "scaglioni": [
+     {
+      "da": 0,
+      "a": 15000,
+      "aliquota": 1.33
+     },
+     {
+      "da": 15000,
+      "a": 28000,
+      "aliquota": 1.93
+     },
+     {
+      "da": 28000,
+      "a": 50000,
+      "aliquota": 2.78
+     },
+     {
+      "da": 50000,
+      "a": null,
+      "aliquota": 3.33
+     }
+    ]
+   },
+   "detrazioni": [],
+   "provvedimentiScartati": []
+  },
+  {
+   "nome": "REGIONE FRIULI VENEZIA GIULIA",
+   "numeroProvvedimento": "2169",
+   "dataPubblicazione": "2026-01-19",
+   "norme": "Art. 50 D.Lgs. 446/1997 - Art. 1, comma 5, L.R. 25 luglio 2012, n. 14 - Art. 1, comma 727,Legge 30 dicembre 2024, n. 207 (Bilancio di previsione dello Stato per l'anno finanziario 2025).",
+   "note": null,
+   "aliquota": {
+    "forma": "scaglioni-previgenti",
+    "scaglioni": [
+     {
+      "da": 0,
+      "a": 15000,
+      "aliquota": 0.7
+     },
+     {
+      "da": 15000,
+      "a": 28000,
+      "aliquota": 1.23
+     },
+     {
+      "da": 28000,
+      "a": 50000,
+      "aliquota": 1.23
+     },
+     {
+      "da": 50000,
+      "a": null,
+      "aliquota": 1.23
+     }
+    ]
+   },
+   "detrazioni": [],
+   "provvedimentiScartati": []
+  },
+  {
+   "nome": "REGIONE LAZIO",
+   "numeroProvvedimento": "2174",
+   "dataPubblicazione": "2026-01-22",
+   "norme": "Legge regionale n. 20 del 31 dicembre 2025",
+   "note": null,
+   "aliquota": {
+    "forma": "scaglioni-previgenti",
+    "scaglioni": [
+     {
+      "da": 0,
+      "a": 15000,
+      "aliquota": 1.73
+     },
+     {
+      "da": 15000,
+      "a": 28000,
+      "aliquota": 3.33
+     },
+     {
+      "da": 28000,
+      "a": 50000,
+      "aliquota": 3.33
+     },
+     {
+      "da": 50000,
+      "a": null,
+      "aliquota": 3.33
+     }
+    ]
+   },
+   "detrazioni": [],
+   "provvedimentiScartati": []
+  },
+  {
+   "nome": "REGIONE LIGURIA",
+   "numeroProvvedimento": "2177",
+   "dataPubblicazione": "2026-01-28",
+   "norme": "Legge Regionale 9 ottobre 2024 n. 17 articolo 2 bis come modificata dalla Legge regionale 31 marzo 2025 n. 3. Legge Regionale 17 marzo 2022 n. 3 articolo 1. Decreto Legislativo 6 maggio 2011 n. 68 articolo 6.",
+   "note": null,
+   "aliquota": {
+    "forma": "scaglioni-vigenti",
+    "scaglioni": [
+     {
+      "da": 0,
+      "a": 28000,
+      "aliquota": 1.23
+     },
+     {
+      "da": 28000,
+      "a": 50000,
+      "aliquota": 3.18
+     },
+     {
+      "da": 50000,
+      "a": null,
+      "aliquota": 3.23
+     }
+    ]
+   },
+   "detrazioni": [],
+   "provvedimentiScartati": []
+  },
+  {
+   "nome": "REGIONE LOMBARDIA",
+   "numeroProvvedimento": "2179",
+   "dataPubblicazione": "2026-01-28",
+   "norme": "Art. 72, comma 1, legge regionale 14 luglio 2003, n. 10.",
+   "note": null,
+   "aliquota": {
+    "forma": "scaglioni-previgenti",
+    "scaglioni": [
+     {
+      "da": 0,
+      "a": 15000,
+      "aliquota": 1.23
+     },
+     {
+      "da": 15000,
+      "a": 28000,
+      "aliquota": 1.58
+     },
+     {
+      "da": 28000,
+      "a": 50000,
+      "aliquota": 1.72
+     },
+     {
+      "da": 50000,
+      "a": null,
+      "aliquota": 1.73
+     }
+    ]
+   },
+   "detrazioni": [],
+   "provvedimentiScartati": []
+  },
+  {
+   "nome": "REGIONE MARCHE",
+   "numeroProvvedimento": "2171",
+   "dataPubblicazione": "2026-01-22",
+   "norme": "Articolo 1 della legge regionale 23 marzo 2022, n. 5 - Articolo 50 del decreto legislativo 15 dicembre 1997, n. 446 - Articolo 6 del decreto legislativo 6 maggio 2011, n. 68. Articolo 1, comma 728, della legge 30 dicembre 2024, n.207.",
+   "note": null,
+   "aliquota": {
+    "forma": "scaglioni-previgenti",
+    "scaglioni": [
+     {
+      "da": 0,
+      "a": 15000,
+      "aliquota": 1.23
+     },
+     {
+      "da": 15000,
+      "a": 28000,
+      "aliquota": 1.53
+     },
+     {
+      "da": 28000,
+      "a": 50000,
+      "aliquota": 1.7
+     },
+     {
+      "da": 50000,
+      "a": null,
+      "aliquota": 1.73
+     }
+    ]
+   },
+   "detrazioni": [],
+   "provvedimentiScartati": []
+  },
+  {
+   "nome": "REGIONE MOLISE",
+   "numeroProvvedimento": "2186",
+   "dataPubblicazione": "2026-01-29",
+   "norme": "Art. 2 della L.R. n. 9/2013. Art. 1, comma 174, della Legge n. 311/2004. Art. 2, comma 86, della Legge n. 191/2009 - art.1 L.R. 15 dicembre 2023 n. 5",
+   "note": null,
+   "aliquota": {
+    "forma": "scaglioni-previgenti",
+    "scaglioni": [
+     {
+      "da": 0,
+      "a": 15000,
+      "aliquota": 1.73
+     },
+     {
+      "da": 15000,
+      "a": 28000,
+      "aliquota": 1.93
+     },
+     {
+      "da": 28000,
+      "a": 50000,
+      "aliquota": 3.33
+     },
+     {
+      "da": 50000,
+      "a": null,
+      "aliquota": 3.33
+     }
+    ]
+   },
+   "detrazioni": [],
+   "provvedimentiScartati": [
+    {
+     "numero": "2227",
+     "dataPubblicazione": "2026-06-19"
+    }
+   ]
+  },
+  {
+   "nome": "REGIONE PIEMONTE",
+   "numeroProvvedimento": "2187",
+   "dataPubblicazione": "2026-01-29",
+   "norme": "legge regionale 28 marzo 2022 n. 4. legge regionale 6 agosto 2025 n. 16.",
+   "note": null,
+   "aliquota": {
+    "forma": "scaglioni-previgenti",
+    "scaglioni": [
+     {
+      "da": 0,
+      "a": 15000,
+      "aliquota": 1.62
+     },
+     {
+      "da": 15000,
+      "a": 28000,
+      "aliquota": 2.68
+     },
+     {
+      "da": 28000,
+      "a": 50000,
+      "aliquota": 3.31
+     },
+     {
+      "da": 50000,
+      "a": null,
+      "aliquota": 3.33
+     }
+    ]
+   },
+   "detrazioni": [],
+   "provvedimentiScartati": []
+  },
+  {
+   "nome": "REGIONE PUGLIA",
+   "numeroProvvedimento": "2178",
+   "dataPubblicazione": "2026-01-28",
+   "norme": "Normativa Regione Puglia: legge regionale 28 marzo 2022, n.8. art. 3 della legge regionale 29 dicembre 2015, n.40.",
+   "note": null,
+   "aliquota": {
+    "forma": "scaglioni-previgenti",
+    "scaglioni": [
+     {
+      "da": 0,
+      "a": 15000,
+      "aliquota": 1.33
+     },
+     {
+      "da": 15000,
+      "a": 28000,
+      "aliquota": 1.43
+     },
+     {
+      "da": 28000,
+      "a": 50000,
+      "aliquota": 1.63
+     },
+     {
+      "da": 50000,
+      "a": null,
+      "aliquota": 1.85
+     }
+    ]
+   },
+   "detrazioni": [],
+   "provvedimentiScartati": [
+    {
+     "numero": "2207",
+     "dataPubblicazione": "2026-05-29"
+    }
+   ]
+  },
+  {
+   "nome": "REGIONE SARDEGNA",
+   "numeroProvvedimento": "2184",
+   "dataPubblicazione": "2026-01-29",
+   "norme": "D.L. 201/2011, art. 28. L.R. 48/2018, art.2, comma 1 e comma 1 bis. L. 234/2021, art. 1, comma 2, lett. a). L.R. 11 luglio 2022, n. 13, art. 1.",
+   "note": "Ai fini delle agevolazioni previste dalla L.R. 48/2018, art. 2, per 'minorenni fiscalmente a carico' si intendono i soggetti minori di anni 18 con un reddito complessivo uguale o inferiore a 4.000 euro, al lordo degli oneri deducibili.",
+   "aliquota": {
+    "forma": "unica",
+    "aliquota": 1.23
+   },
+   "detrazioni": [],
+   "provvedimentiScartati": []
+  },
+  {
+   "nome": "REGIONE SICILIA",
+   "numeroProvvedimento": "2183",
+   "dataPubblicazione": "2026-01-29",
+   "norme": "D.lgs 15/12/1997 n. 446 art.50, L.R. 2 maggio 2007 n. 12 art. 1, D.L.6/12/2011 n. 201 art.28, L.R. 09-02-2015, n. 4 art.1 c.10-quater, L.R. 11/8/2017 n. 15 art. 8",
+   "note": null,
+   "aliquota": {
+    "forma": "unica",
+    "aliquota": 1.23
+   },
+   "detrazioni": [],
+   "provvedimentiScartati": []
+  },
+  {
+   "nome": "REGIONE TOSCANA",
+   "numeroProvvedimento": "2190",
+   "dataPubblicazione": "2026-01-30",
+   "norme": "ARTICOLO 1 LEGGE REGIONALE 28/12/2023 N.48",
+   "note": null,
+   "aliquota": {
+    "forma": "scaglioni-previgenti",
+    "scaglioni": [
+     {
+      "da": 0,
+      "a": 15000,
+      "aliquota": 1.42
+     },
+     {
+      "da": 15000,
+      "a": 28000,
+      "aliquota": 1.43
+     },
+     {
+      "da": 28000,
+      "a": 50000,
+      "aliquota": 3.32
+     },
+     {
+      "da": 50000,
+      "a": null,
+      "aliquota": 3.33
+     }
+    ]
+   },
+   "detrazioni": [],
+   "provvedimentiScartati": []
+  },
+  {
+   "nome": "REGIONE UMBRIA",
+   "numeroProvvedimento": "2168",
+   "dataPubblicazione": "2026-01-19",
+   "norme": "Art. 1 - Legge regionale 11 aprile 2025, n. 2",
+   "note": "Le disposizioni agevolative non generano il riconoscimento di alcun credito d'imposta",
+   "aliquota": {
+    "forma": "scaglioni-previgenti",
+    "scaglioni": [
+     {
+      "da": 0,
+      "a": 15000,
+      "aliquota": 1.73
+     },
+     {
+      "da": 15000,
+      "a": 28000,
+      "aliquota": 3.02
+     },
+     {
+      "da": 28000,
+      "a": 50000,
+      "aliquota": 3.12
+     },
+     {
+      "da": 50000,
+      "a": null,
+      "aliquota": 3.33
+     }
+    ]
+   },
+   "detrazioni": [],
+   "provvedimentiScartati": []
+  },
+  {
+   "nome": "REGIONE VALLE D'AOSTA",
+   "numeroProvvedimento": "2167",
+   "dataPubblicazione": "2026-01-19",
+   "norme": "articolo 50, commi 2 e 3, del D.Lgs. 15 dicembre 1997, n.446, come modificato dall'articolo 28, comma 1 del D.L. 6 dicembre 2011, n. 201 - articolo 1 della legge regionale n. 29 del 23 dicembre 2025",
+   "note": null,
+   "aliquota": {
+    "forma": "unica",
+    "aliquota": 1.23
+   },
+   "detrazioni": [],
+   "provvedimentiScartati": []
+  },
+  {
+   "nome": "REGIONE VENETO",
+   "numeroProvvedimento": "2173",
+   "dataPubblicazione": "2026-01-22",
+   "norme": "D.LGS 68/2011 art.6 c.1. L.R. 19/2005 art.1 c.5, come modificato dall'articolo 9 della L.R. 30/2022",
+   "note": null,
+   "aliquota": {
+    "forma": "unica",
+    "aliquota": 1.23
+   },
+   "detrazioni": [],
+   "provvedimentiScartati": []
+  }
+ ]
+}

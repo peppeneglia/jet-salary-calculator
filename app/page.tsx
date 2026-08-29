@@ -16,16 +16,21 @@ import { Calcolatore } from './_components/calcolatore'
 import { traduzione } from './_i18n/server'
 import type { RichiestaCalcolo } from './_lib/api'
 import { MENSILITA_INIZIALE, eseguiCalcolo } from './_lib/calcolo'
-import { comuniSelezionabili } from './_lib/comuni'
+import { CODICE_COMUNE_INIZIALE, comuniSelezionabili } from './_lib/comuni'
 
 export default async function Home() {
   const { t, lingua } = await traduzione()
   const comuni = comuniSelezionabili()
 
   /**
-   * Il caso di partenza, derivato dal catalogo e non riscritto a mano: il
-   * comune iniziale è il primo calcolabile, così l'arrivo del dataset MEF non
-   * lascia qui un codice catastale orfano.
+   * Il caso di partenza, derivato dal catalogo e non riscritto a mano.
+   *
+   * ⚠️ Il comune iniziale era «il primo calcolabile»: con tre voci in catalogo
+   * quello era Milano, con i 7.897 del dataset MEF ordinati per codice
+   * catastale sarebbe diventato Abano Terme. Il caso base — l'unico verificato
+   * a mano sulle delibere, e quello di cui si conosce il netto a quattro
+   * decimali — si sarebbe spostato senza che nessuno lo decidesse. Adesso è una
+   * costante del catalogo, e resta un codice che il catalogo garantisce.
    *
    * ⚠️ La RAL è un **esempio**, e l'etichetta accanto al campo lo dice: è la
    * conseguenza da gestire di D-036, perché un netto che l'utente non ha
@@ -33,7 +38,7 @@ export default async function Home() {
    */
   const iniziale: RichiestaCalcolo = {
     ral: 30_000,
-    codiceCatastale: comuni.find((c) => c.calcolabile)?.codiceCatastale ?? '',
+    codiceCatastale: CODICE_COMUNE_INIZIALE,
     tipoContratto: 'indeterminato',
     mensilita: MENSILITA_INIZIALE,
     lingua,
