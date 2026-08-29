@@ -18,6 +18,7 @@ import type { Passo, Risultato } from '../core/types'
 import { assunzioni } from '../data/assunzioni'
 import { lombardia, milano } from '../data/caso-base'
 import { regime2026 } from '../data/regime-2026'
+import { italiano } from '../data/testi'
 import { fixtureRal30000Milano } from './ral-30000-milano'
 
 const TOLLERANZA = 0.01 // D-025
@@ -56,6 +57,7 @@ test('confronto diagnostico fra motore e fixture', () => {
     regime2026,
     { regionale: lombardia, comunale: milano },
     assunzioni,
+    italiano,
   )
 
   const atteso = appiattisci(fixtureRal30000Milano.passi)

@@ -42,8 +42,10 @@ export const prospettoRegionaleMef: Fonte = {
   consultataIl: '2026-08-28',
   provenienza: 'importata',
   estrattoIl: '2026-08-28',
-  nonVerificato:
-    'Su questa aliquota abbiamo una riserva. L\'elenco ministeriale indica la legge regionale che autorizza l\'addizionale, non l\'atto che ne ha fissato i valori per il 2026.',
+  nonVerificato: {
+    it: 'Su questa aliquota abbiamo una riserva. L\'elenco ministeriale indica la legge regionale che autorizza l\'addizionale, non l\'atto che ne ha fissato i valori per il 2026.',
+    en: 'We have a caveat on this rate. The ministerial list points to the regional law that authorises the addizionale, not to the act that set its 2026 figures.',
+  },
 }
 
 /**

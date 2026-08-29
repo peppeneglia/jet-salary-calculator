@@ -138,8 +138,10 @@ const inps3618_2023: Fonte = {
   atto: 'INPS, messaggio n. 3618 del 17/10/2023',
   consultataIl: '2026-08-28',
   provenienza: 'verificata',
-  nonVerificato:
-    'Il valore 5,84% è dichiarato testualmente dalle fonti INPS; la scomposizione 8,84 − 3,00 = 5,84 è una derivazione aritmetica, non scritta in nessuna delle due.',
+  nonVerificato: {
+    it: 'Il valore 5,84% è dichiarato testualmente dalle fonti INPS; la scomposizione 8,84 − 3,00 = 5,84 è una derivazione aritmetica, non scritta in nessuna delle due.',
+    en: 'The 5.84% figure is stated in so many words by the INPS sources; the breakdown 8.84 − 3.00 = 5.84 is an arithmetical derivation, written in neither of them.',
+  },
 }
 
 /** [Fonti §4.b] La circolare annuale su minimali e massimali dà il valore in euro della soglia. */
