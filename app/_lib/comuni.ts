@@ -456,6 +456,13 @@ const catalogo: readonly ComuneDelCatalogo[] = datiComuni.comuni.map((c): Comune
 
 const perCodice = new Map(catalogo.map((c) => [c.codiceCatastale, c]))
 
+/**
+ * Il nome dell'ente impositore regionale, preso dal dato e non dal catalogo
+ * già costruito: vale anche per il comune non calcolabile, che un ente ce l'ha.
+ */
+const entePerComune = new Map(datiComuni.comuni.map((c) => [c.codiceCatastale, c.enteRegionale]))
+const enteDi = (codice: string): string => entePerComune.get(codice) ?? ''
+
 /** Il codice catastale è la chiave: è quella del dataset MEF, non il nome. */
 export const risolviComune = (codiceCatastale: string): ComuneDelCatalogo | undefined =>
   perCodice.get(codiceCatastale.trim().toUpperCase())
@@ -477,6 +484,18 @@ export interface ComuneSelezionabile {
   readonly codiceCatastale: string
   readonly nome: string
   readonly provincia: string
+  /**
+   * ⚠️ **L'ente impositore regionale, non la regione geografica** (D-063).
+   *
+   * Per i 282 comuni delle Province autonome l'ente è la Provincia (D-056):
+   * scrivere *Trentino-Alto Adige* accanto a un comune trentino sarebbe
+   * **esattamente l'errore che D-037 esisteva per impedire**, e sarebbe
+   * credibile — che è la parte peggiore.
+   *
+   * Attraversa il confine perché la pagina lo mostra accanto al campo, e non è
+   * un'aliquota: è il nome di chi impone il tributo.
+   */
+  readonly enteRegionale: string
   readonly calcolabile: boolean
   readonly ragione?: Multilingua
 }
@@ -488,17 +507,17 @@ export interface ComuneSelezionabile {
  */
 const selezionabili: readonly ComuneSelezionabile[] = [...catalogo]
   .sort((a, b) => a.nome.localeCompare(b.nome, 'it') || a.provincia.localeCompare(b.provincia))
-  .map((c) =>
-    c.stato === 'calcolabile'
-      ? { codiceCatastale: c.codiceCatastale, nome: c.nome, provincia: c.provincia, calcolabile: true }
-      : {
-          codiceCatastale: c.codiceCatastale,
-          nome: c.nome,
-          provincia: c.provincia,
-          calcolabile: false,
-          ragione: c.ragione,
-        },
-  )
+  .map((c) => {
+    const identita = {
+      codiceCatastale: c.codiceCatastale,
+      nome: c.nome,
+      provincia: c.provincia,
+      enteRegionale: enteDi(c.codiceCatastale),
+    }
+    return c.stato === 'calcolabile'
+      ? { ...identita, calcolabile: true }
+      : { ...identita, calcolabile: false, ragione: c.ragione }
+  })
 
 export const comuniSelezionabili = (): readonly ComuneSelezionabile[] => selezionabili
 

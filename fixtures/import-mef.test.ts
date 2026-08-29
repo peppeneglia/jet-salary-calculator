@@ -404,7 +404,16 @@ describe('il confine verso il client', () => {
     // *«applicare al suo posto l'aliquota lombarda darebbe un numero credibile
     // e sbagliato»* — e cercarla lì dentro confonde la spiegazione col dato.
     // Quello che non deve attraversare il confine è un **valore**.
-    const ammessi = new Set(['codiceCatastale', 'nome', 'provincia', 'calcolabile', 'ragione'])
+    // ⚠️ `enteRegionale` è entrato con D-063: la pagina lo mostra accanto al
+    // comune, e non è un'aliquota — è il nome di chi impone il tributo.
+    const ammessi = new Set([
+      'codiceCatastale',
+      'nome',
+      'provincia',
+      'enteRegionale',
+      'calcolabile',
+      'ragione',
+    ])
     const estranei = [...new Set(lista.flatMap((c) => Object.keys(c)))].filter((k) => !ammessi.has(k))
     expect(estranei).toEqual([])
 

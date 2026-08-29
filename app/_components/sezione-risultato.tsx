@@ -39,6 +39,28 @@ export function SezioneRisultato({ risultato }: { risultato: Risultato }) {
       })}
     >
       <div className="space-y-6">
+        {/*
+          ⚠️ **Il risultato riscrive i propri input** (D-063).
+
+          È il presidio di D-036, spostato e reso più forte. Prima un'etichetta
+          accanto al campo diceva *questa cifra è un esempio*; adesso il numero
+          dichiara **da cosa nasce**, e lo fa anche quando i dati sono davvero
+          quelli dell'utente — dove serve a confermare cosa è stato calcolato.
+
+          Un numero che dichiara la propria origine non può essere scambiato
+          per proprio.
+        */}
+        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm text-inchiostro-tenue">
+          <span className="font-medium text-inchiostro-nota">{t('risultato.riepilogoTitolo')}</span>
+          <span className="cifre font-medium text-inchiostro">{inEuro(input.ral)}</span>
+          <span aria-hidden>·</span>
+          <span className="font-medium text-inchiostro">{enti.comunale.nome}</span>
+          <span aria-hidden>·</span>
+          <span>{etichettaContratto(input.tipoContratto, t)}</span>
+          <span aria-hidden>·</span>
+          <span>{t('risultato.riepilogoMensilita', { n: risultato.mensilita })}</span>
+        </div>
+
         <div className="rounded-blocco border border-verde-bordo bg-verde-velo px-4 py-6 text-center sm:px-6 sm:py-7">
           <p className="text-sm font-medium text-inchiostro-tenue">{t('risultato.nettoAnnuo')}</p>
           <p className="cifre mt-1 text-3xl font-semibold tracking-tight text-verde-testo break-words sm:text-5xl">

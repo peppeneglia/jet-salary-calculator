@@ -213,13 +213,25 @@ export function SezioneInput({
   const [errori, setErrori] = useState<{ ral?: Errore; comune?: Errore }>({})
 
   /**
-   * ⚠️ Conseguenza di D-036, da gestire in pagina.
+   * ⚠️ **Il presidio di D-036 si è spostato, non è caduto** (D-063).
    *
-   * Il campo si apre con una RAL che l'utente non ha inserito. Finché non la
-   * tocca, va detto che è un esempio: senza, qualcuno legge un netto che non
-   * ha chiesto e lo prende per proprio.
+   * Il campo si apre con valori che l'utente non ha inserito. Prima glielo
+   * diceva un'etichetta accanto al campo; adesso lo dice **il risultato**, che
+   * si apre riscrivendo gli input da cui viene. È più forte, e vale anche
+   * quando i dati sono davvero i suoi.
+   *
+   * Qui resta solo l'attenuazione visiva, con la condizione che la rende
+   * sicura: **attenuato sì, segnaposto no.** Un valore reale reso come un
+   * segnaposto è indistinguibile da un campo vuoto, e chi preme il bottone non
+   * saprebbe se sta calcolando il proprio caso o l'esempio.
+   *
+   * ⚠️ **L'attenuazione è di peso, non di colore.** Il testo tenue e i
+   * modificatori alpha sono esclusi da D-046, e la regola eslint li blocca
+   * comunque. Il peso non tocca il contrasto: resta quello misurato.
    */
   const ralIntatta = ral === String(iniziale.ral)
+  const comuneIntatto = comuneScelto.codiceCatastale === iniziale.codiceCatastale
+  const peso = (intatto: boolean) => (intatto ? 'font-normal' : 'font-semibold')
 
   const invia = (e: React.FormEvent) => {
     e.preventDefault()
@@ -250,19 +262,19 @@ export function SezioneInput({
   }
 
   return (
-    <Sezione numero="1" titolo={t('input.titolo')} occhiello={t('input.occhiello')}>
+    <Sezione numero="1" titolo={t('input.titolo')}>
       {/*
         `noValidate`: la validazione è nostra, e deve restare nostra. Vedi la
         nota su `errori`.
       */}
       <form onSubmit={invia} noValidate className="space-y-6">
-        <div className="grid gap-6 sm:grid-cols-2">
-          <Campo
-            etichetta={t('input.ralEtichetta')}
-            htmlFor={idRal}
-            idEtichetta={idEtichettaRal}
-            marcatore={ralIntatta ? t('input.ralMarcatore') : undefined}
-          >
+        {/*
+          ⚠️ **La RAL sta da sola in cima** (D-063). È l'input primario: tutto
+          il resto qualifica il calcolo, questo lo determina. Affiancata al
+          comune diventava una delle quattro cose da compilare, e non lo è.
+        */}
+        <div className="sm:max-w-sm">
+          <Campo etichetta={t('input.ralEtichetta')} htmlFor={idRal} idEtichetta={idEtichettaRal}>
             {/*
               ⚠️ **L'anello di fuoco sta sulla cornice, non sull'input.**
 
@@ -322,7 +334,7 @@ export function SezioneInput({
                 }}
                 /* `text-base` come minimo: sotto i 16px iOS ingrandisce la
                    pagina al fuoco del campo e non la rimpicciolisce più. */
-                className="cifre fuoco-delegato min-h-11 w-full rounded-voce bg-transparent px-3 py-2.5 text-base outline-none sm:text-lg"
+                className={`cifre fuoco-delegato min-h-11 w-full rounded-voce bg-transparent px-3 py-2.5 text-base outline-none sm:text-lg ${peso(ralIntatta)}`}
               />
               <span id={idUnitaRal} className="pr-3.5 pl-1 text-inchiostro-tenue">
                 €
@@ -335,11 +347,17 @@ export function SezioneInput({
               </Avviso>
             ) : (
               <p id={idAiutoRal} className="mt-2 text-xs leading-relaxed text-inchiostro-tenue">
-                {ralIntatta ? t('input.ralAiutoEsempio') : t('input.ralAiuto')}
+                {t('input.ralAiuto')}
               </p>
             )}
           </Campo>
+        </div>
 
+        {/*
+          Comune, contratto e mensilità sulla stessa riga dove ci stanno: sono
+          i tre campi che **qualificano** il calcolo, non quello che lo fa.
+        */}
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <Campo etichetta={t('input.comuneEtichetta')} htmlFor={idComune}>
             <SceltaComune
               id={idComune}
@@ -347,11 +365,27 @@ export function SezioneInput({
               comuneCorrente={comuneScelto}
               invalido={errori.comune !== undefined}
               descrittoDa={errori.comune ? idErroreComune : idAiutoComune}
+              attenuato={comuneIntatto}
               onCambia={(comune) => {
                 setComuneScelto(comune)
                 if (errori.comune) setErrori((p) => ({ ...p, comune: undefined }))
               }}
             />
+
+            {/*
+              ⚠️ **L'ente impositore, non la regione geografica** (D-063).
+
+              Per i 282 comuni delle Province autonome l'ente è la Provincia
+              (D-056): scrivere «Trentino-Alto Adige» qui sarebbe esattamente
+              l'errore che D-037 esisteva per impedire, e sarebbe credibile.
+
+              Non è un campo: è derivato dal comune, e non si modifica.
+            */}
+            {comuneScelto.enteRegionale ? (
+              <p className="mt-2 text-xs text-inchiostro-nota">
+                {t('input.comuneEnte', { ente: comuneScelto.enteRegionale })}
+              </p>
+            ) : null}
 
             {errori.comune ? (
               <Avviso id={idErroreComune} misura="compatta" vivo>
@@ -376,43 +410,36 @@ export function SezioneInput({
               </p>
             )}
           </Campo>
-        </div>
 
-        <Campo etichetta={t('input.contrattoEtichetta')}>
-          <Segmenti
-            nome="tipoContratto"
-            opzioni={TIPI}
-            valore={tipoContratto}
-            etichettaDi={(x) => etichettaContratto(x, t)}
-            onCambia={setTipoContratto}
-          />
           {/*
-            D-011: un input che non fa nulla è peggio di un input assente. Questo
-            campo cambia davvero un numero, ma in uno solo dei tre casi — e senza
-            la nota che spiega perché, la cosa si legge come un difetto.
-          */}
-          <p className="mt-3 max-w-prose rounded-voce border border-bordo-decorativo bg-fondo px-3 py-2.5 text-xs leading-relaxed text-inchiostro-tenue">
-            <strong className="font-medium text-inchiostro">
-              {t('input.contrattoNotaTitolo')}
-            </strong>{' '}
-            {t('input.contrattoNotaCorpo')}{' '}
-            <strong className="font-medium text-inchiostro">
-              {t('input.contrattoNotaApprendistato')}
-            </strong>
-            {t('input.contrattoNotaCoda')}
-          </p>
-        </Campo>
+            ⚠️ **Le due note sono uscite di qui** (D-063). Quella sul contratto
+            sta accanto ai contributi, quella sulle mensilità accanto alle tre
+            divisioni: si leggono **mentre** l'effetto di cui parlano è sotto
+            gli occhi, invece che prima di averlo visto.
 
-        <Campo etichetta={t('input.mensilitaEtichetta')} marcatore={t('input.mensilitaMarcatore')}>
-          <Segmenti
-            nome="mensilita"
-            opzioni={MENSILITA}
-            valore={mensilita}
-            etichettaDi={(m) => String(m)}
-            onCambia={setMensilita}
-          />
-          <p className="mt-2 text-xs text-inchiostro-tenue">{t('input.mensilitaAiuto')}</p>
-        </Campo>
+            D-011 non è indebolita: chiedeva che l'input non restasse senza
+            spiegazione, non che la spiegazione stesse qui.
+          */}
+          <Campo etichetta={t('input.contrattoEtichetta')}>
+            <Segmenti
+              nome="tipoContratto"
+              opzioni={TIPI}
+              valore={tipoContratto}
+              etichettaDi={(x) => etichettaContratto(x, t)}
+              onCambia={setTipoContratto}
+            />
+          </Campo>
+
+          <Campo etichetta={t('input.mensilitaEtichetta')} marcatore={t('input.mensilitaMarcatore')}>
+            <Segmenti
+              nome="mensilita"
+              opzioni={MENSILITA}
+              valore={mensilita}
+              etichettaDi={(m) => String(m)}
+              onCambia={setMensilita}
+            />
+          </Campo>
+        </div>
 
         <button
           type="submit"

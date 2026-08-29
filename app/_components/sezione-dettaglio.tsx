@@ -118,6 +118,24 @@ export function SezioneDettaglio({ risultato }: { risultato: Risultato }) {
                       <RigaPasso key={p.id} passo={p} />
                     ))}
                   </ul>
+
+                  {/*
+                    ⚠️ **La nota sul contratto sta qui, e non accanto al campo**
+                    (D-063). D-011 chiede che l'input non resti senza
+                    spiegazione, perché un campo che sembra non fare nulla si
+                    legge come un difetto. Ma accanto al campo la nota si legge
+                    **prima** di aver visto l'effetto; qui si legge nell'istante
+                    in cui si cambia contratto e il numero non si muove, con i
+                    contributi sotto gli occhi.
+                  */}
+                  {blocco.natura === 'previdenza' ? (
+                    <p className="mt-4 rounded-voce border border-bordo-decorativo bg-carta px-3 py-2.5 text-xs leading-relaxed text-inchiostro-tenue">
+                      <strong className="font-medium text-inchiostro">
+                        {t('risultato.notaContrattoTitolo')}
+                      </strong>{' '}
+                      {t('risultato.notaContrattoCorpo')}
+                    </p>
+                  ) : null}
                 </div>
               </li>
             )

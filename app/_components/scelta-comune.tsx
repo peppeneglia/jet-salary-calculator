@@ -81,6 +81,7 @@ const normalizza = (s: string): string =>
 export function SceltaComune({
   id,
   comuneCorrente,
+  attenuato,
   invalido,
   descrittoDa,
   campo,
@@ -96,6 +97,12 @@ export function SceltaComune({
    * di *Milano (MI)*, oppure un campo vuoto (D-058).
    */
   comuneCorrente: ComuneSelezionabile
+  /**
+   * Il valore iniziale è reale, e va reso **in secondo piano ma leggibile**
+   * (D-063). L'attenuazione è di peso e non di colore: il contrasto resta
+   * quello misurato in D-046.
+   */
+  attenuato: boolean
   invalido: boolean
   descrittoDa: string
   /** Il riferimento all'input, perché chi invia il modulo possa portarci il fuoco. */
@@ -295,7 +302,9 @@ export function SceltaComune({
             `text-base` e non meno: sotto i 16px iOS ingrandisce la pagina al
             fuoco del campo e non la rimpicciolisce più.
           */
-          className="fuoco-delegato min-h-11 w-full rounded-voce bg-transparent px-3 py-2.5 text-base outline-none sm:text-lg"
+          className={`fuoco-delegato min-h-11 w-full rounded-voce bg-transparent px-3 py-2.5 text-base outline-none sm:text-lg ${
+            attenuato && bozza === null ? 'font-normal' : 'font-semibold'
+          }`}
         />
         <button
           type="button"

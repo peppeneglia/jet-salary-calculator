@@ -65,15 +65,11 @@ const it = {
 
   input: {
     titolo: 'I tuoi dati',
-    occhiello: 'Impiegato del settore privato, assunto per tutto l’anno.',
-    ralEtichetta: 'Retribuzione annua lorda',
-    ralMarcatore: 'esempio da modificare',
-    ralAiutoEsempio:
-      'Abbiamo messo una cifra di esempio per mostrarti come funziona. Sostituiscila con la tua: è quella scritta sul contratto, prima di ogni trattenuta.',
+    ralEtichetta: 'Retribuzione annua lorda (RAL)',
     ralAiuto: 'È lo stipendio annuo scritto sul contratto, prima di ogni trattenuta.',
     comuneEtichetta: 'Comune in cui vivi',
-    comuneAiuto:
-      'Serve per le addizionali di Regione e Comune. Conta dove avevi il domicilio fiscale al 1° gennaio. Scrivi le prime lettere per cercarlo. Per ora l’elenco contiene i comuni che abbiamo verificato uno per uno.',
+    comuneAiuto: 'Conta dove avevi il domicilio fiscale al 1° gennaio.',
+    comuneEnte: 'Addizionale regionale di {{ente}}',
     comuneSegnaposto: 'Cerca un comune',
     comuneNessunRisultato: 'Nessun comune con questo nome, per ora.',
     comuneElencoInArrivo: 'Sto caricando l’elenco dei comuni…',
@@ -84,15 +80,8 @@ const it = {
     comuneMarcatoreNonDisponibile: 'non disponibile',
     comuneNonCalcolabile: 'Per {{comune}} non possiamo calcolare il netto.',
     contrattoEtichetta: 'Tipo di contratto',
-    contrattoNotaTitolo: 'Determinato e indeterminato danno lo stesso netto.',
-    contrattoNotaCorpo:
-      'Non è una scorciatoia: sui contratti a termine c’è un contributo in più, ma lo paga l’azienda e non passa dalla tua busta paga.',
-    contrattoNotaApprendistato: 'L’apprendistato invece cambia',
-    contrattoNotaCoda: ': lì la legge riduce i contributi a carico tuo, e il netto sale davvero.',
     mensilitaEtichetta: 'In quante mensilità',
     mensilitaMarcatore: 'facoltativo',
-    mensilitaAiuto:
-      'Cambia in quante parti si divide lo stipendio, non quanto prendi in un anno.',
     facoltativo: 'facoltativo',
     calcola: 'Calcola il netto',
     inCorso: 'Calcolo in corso…',
@@ -102,6 +91,11 @@ const it = {
     titolo: 'Il risultato',
     occhiello: '{{contratto}}, {{comune}}, anno {{anno}}.',
     annoPaese: 'Anno d’imposta {{anno}} · Italia',
+    riepilogoTitolo: 'Calcolato su',
+    riepilogoMensilita: '{{n}} mensilità',
+    notaContrattoTitolo: 'Determinato e indeterminato danno lo stesso netto.',
+    notaContrattoCorpo:
+      'Sui contratti a termine c’è un contributo in più, ma lo paga l’azienda e non passa dalla tua busta paga. L’apprendistato invece cambia: lì la legge riduce i contributi a carico tuo, e il netto sale.',
     nettoAnnuo: 'Netto annuo',
     daUnaRal: 'da una RAL di {{importo}}',
     suMensilita: 'su {{n}} mensilità',
@@ -291,15 +285,11 @@ const en: Risorse = {
 
   input: {
     titolo: 'Your details',
-    occhiello: 'An office employee in the private sector, employed for the whole year.',
-    ralEtichetta: 'RAL — gross annual salary',
-    ralMarcatore: 'example, change it',
-    ralAiutoEsempio:
-      'We have put in an example figure to show you how this works. Replace it with yours: it is the one written in your contract, before any deduction.',
+    ralEtichetta: 'Gross annual salary (RAL)',
     ralAiuto: 'The annual salary written in your contract, before any deduction.',
     comuneEtichetta: 'Where you live',
-    comuneAiuto:
-      'Needed for the regional and municipal addizionali. What counts is where you were tax-resident on 1 January. Type the first few letters to search. For now the list holds the municipalities we have checked one by one.',
+    comuneAiuto: 'What counts is where you were tax-resident on 1 January.',
+    comuneEnte: 'Regional addizionale of {{ente}}',
     comuneSegnaposto: 'Search for a municipality',
     comuneNessunRisultato: 'No municipality by that name, for now.',
     comuneElencoInArrivo: 'Loading the list of municipalities…',
@@ -310,15 +300,8 @@ const en: Risorse = {
     comuneMarcatoreNonDisponibile: 'not available',
     comuneNonCalcolabile: 'We cannot work out net pay for {{comune}}.',
     contrattoEtichetta: 'Type of contract',
-    contrattoNotaTitolo: 'Fixed-term and permanent give the same net pay.',
-    contrattoNotaCorpo:
-      'This is not a shortcut: fixed-term contracts carry an extra contribution, but the employer pays it and it never passes through your payslip.',
-    contrattoNotaApprendistato: 'Apprendistato (apprenticeship) does change things',
-    contrattoNotaCoda: ': there the law lowers the contributions you pay, and your net pay really does go up.',
     mensilitaEtichetta: 'Paid over how many instalments',
     mensilitaMarcatore: 'optional',
-    mensilitaAiuto:
-      'This changes how your salary is split up, not how much you get in a year.',
     facoltativo: 'optional',
     calcola: 'Work out my net pay',
     inCorso: 'Working it out…',
@@ -328,6 +311,11 @@ const en: Risorse = {
     titolo: 'The result',
     occhiello: '{{contratto}}, {{comune}}, tax year {{anno}}.',
     annoPaese: 'Tax year {{anno}} · Italy',
+    riepilogoTitolo: 'Worked out from',
+    riepilogoMensilita: '{{n}} instalments',
+    notaContrattoTitolo: 'Fixed-term and permanent give the same net pay.',
+    notaContrattoCorpo:
+      'Fixed-term contracts carry an extra contribution, but the employer pays it and it never passes through your payslip. Apprendistato (apprenticeship) does change things: there the law lowers the contributions you pay, and your net pay goes up.',
     nettoAnnuo: 'Net pay for the year',
     daUnaRal: 'from a RAL of {{importo}}',
     suMensilita: 'over {{n}} instalments',
