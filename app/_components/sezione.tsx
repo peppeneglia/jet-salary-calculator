@@ -18,11 +18,11 @@ export function Sezione({
   children: React.ReactNode
 }) {
   return (
-    <section className="rounded-sezione border border-bordo bg-carta p-6 sm:p-8">
+    <section className="rounded-sezione border border-bordo-decorativo bg-carta p-4 sm:p-8">
       <header className="flex items-baseline gap-3">
         <span
           aria-hidden
-          className="cifre rounded-voce border border-bordo px-2 py-0.5 text-xs font-medium text-inchiostro-tenue"
+          className="cifre rounded-voce border border-bordo-decorativo px-2 py-0.5 text-xs font-medium text-inchiostro-tenue"
         >
           {numero}
         </span>

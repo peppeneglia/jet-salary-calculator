@@ -66,9 +66,9 @@ function BloccoParametro({ parametro }: { parametro: Parametro }) {
   const { t } = useTraduzione()
 
   return (
-    <div className="mt-3 rounded-voce border border-bordo bg-fondo px-3 py-2">
+    <div className="mt-3 rounded-voce border border-bordo-decorativo bg-fondo px-3 py-2">
       {/* «Parametro» è vocabolario interno: chi legge vede un valore. */}
-      <p className="text-xs font-medium text-inchiostro-tenue/80">{t('passo.valoreApplicato')}</p>
+      <p className="text-xs font-medium text-inchiostro-nota">{t('passo.valoreApplicato')}</p>
       <p className="mt-0.5 text-sm text-inchiostro">
         <ValoreParametro parametro={parametro} />
       </p>
@@ -81,7 +81,7 @@ function BloccoParametro({ parametro }: { parametro: Parametro }) {
 
 function Etichetta({ children }: { children: React.ReactNode }) {
   return (
-    <span className="rounded-voce border border-bordo bg-carta px-2 py-0.5 text-xs font-medium text-inchiostro-tenue">
+    <span className="rounded-voce border border-bordo-decorativo bg-carta px-2 py-0.5 text-xs font-medium text-inchiostro-tenue">
       {children}
     </span>
   )
@@ -126,7 +126,7 @@ function Valore({ passo }: { passo: Passo }) {
       <span className="cifre text-lg text-inchiostro-tenue">{inEuro(esito.esce)}</span>
     ) : (
       <span className="cifre text-lg text-inchiostro-tenue">
-        <span className="text-base text-inchiostro-tenue/70">{inEuro(esito.entra)} → </span>
+        <span className="text-base text-inchiostro-nota">{inEuro(esito.entra)} → </span>
         {inEuro(esito.esce)}
       </span>
     )
@@ -171,8 +171,8 @@ export function RigaPasso({ passo, annidato = false }: { passo: Passo; annidato?
     <li
       className={
         annidato
-          ? 'rounded-voce border border-bordo bg-carta px-4 py-3'
-          : 'rounded-blocco border border-bordo bg-carta px-5 py-4'
+          ? 'rounded-voce border border-bordo-decorativo bg-carta px-3 py-3 sm:px-4'
+          : 'rounded-blocco border border-bordo-decorativo bg-carta px-4 py-4 sm:px-5'
       }
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
@@ -188,7 +188,7 @@ export function RigaPasso({ passo, annidato = false }: { passo: Passo; annidato?
         </p>
       ) : null}
 
-      <p className="mt-2 text-sm leading-relaxed text-inchiostro-tenue">{passo.spiegazione}</p>
+      <p className="mt-2 max-w-prose text-sm leading-relaxed text-inchiostro-tenue">{passo.spiegazione}</p>
 
       <Ragione passo={passo} />
 
@@ -212,14 +212,14 @@ export function RigaPasso({ passo, annidato = false }: { passo: Passo; annidato?
         sotto le righe che gli appartengono.
       */}
       <details className="mt-3 text-xs">
-        <summary className="cursor-pointer text-inchiostro-tenue/80 hover:text-inchiostro">
+        <summary className="inline-flex min-h-9 cursor-pointer items-center rounded-voce text-inchiostro-nota hover:text-inchiostro">
           {t('passo.regolaNormativa')}
         </summary>
         <p className="mt-1 leading-relaxed text-inchiostro-tenue">{passo.regola}</p>
       </details>
 
       {passo.dettaglio && passo.dettaglio.length > 0 ? (
-        <ul className="mt-3 space-y-2 border-l-2 border-bordo pl-4">
+        <ul className="mt-3 space-y-2 border-l-2 border-bordo-decorativo pl-2.5 sm:pl-4">
           {passo.dettaglio.map((p) => (
             <RigaPasso key={p.id} passo={p} annidato />
           ))}

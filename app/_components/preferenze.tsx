@@ -49,10 +49,22 @@ const NOME_LINGUA: Readonly<Record<CodiceLingua, string>> = {
 /**
  * Un gruppo di scelte sulla fascia verde.
  *
- * Radio veri e `sr-only`, non `div` cliccabili: le frecce funzionano, il fuoco
- * si vede, e il gruppo si annuncia come tale. È la stessa forma dei segmenti
- * del modulo, con i colori della cornice — che sul verde non cambiano con il
- * tema, perché la fascia non cambia.
+ * Radio veri e `sr-only`, non `div` cliccabili: le frecce funzionano e il
+ * gruppo si annuncia come tale. È la stessa forma dei segmenti del modulo, con
+ * i colori della cornice — che sul verde non cambiano con il tema, perché la
+ * fascia non cambia.
+ *
+ * ⚠️ **Qui c'era scritto che il fuoco si vedeva, e non era vero.** L'input
+ * è `sr-only`, cioè un rettangolo di 1px fuori schermo, e la regola globale
+ * `:focus-visible` gli disegnava l'anello sopra: sul segmento visibile non
+ * arrivava niente. La forma era giusta — radio veri, frecce funzionanti — ma
+ * chi navigava da tastiera non poteva sapere dove fosse. Il commento
+ * descriveva l'intenzione e non il risultato, che è il modo in cui un difetto
+ * così sopravvive a una rilettura.
+ *
+ * Ora l'anello lo porta la label, con `fuoco-dentro`; `fuoco-delegato`
+ * spegne quello dell'input. Sul verde l'anello è `su-verde` e non
+ * `verde-testo`, che lì sparirebbe nel fondo.
  */
 function Gruppo<T extends string>({
   nome,
@@ -69,23 +81,30 @@ function Gruppo<T extends string>({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-      <span id={`etichetta-${nome}`} className="text-xs font-medium text-su-verde/75">
+      <span id={`etichetta-${nome}`} className="text-xs font-medium text-su-verde-tenue">
         {nome}
       </span>
+      {/*
+        Il bordo è `bordo-controllo-contro` e non `bordo-controllo`: qui il
+        gruppo poggia sulla cornice verde, e un grigio neutro su #66C239 non
+        arriva a 3:1 in nessuna variante. Il token dedicato vale **4,08**
+        (D-047). Prima non c'era bordo affatto: il gruppo si distingueva solo
+        per un velo al 10%, che è sotto qualunque soglia.
+      */}
       <div
         role="radiogroup"
         aria-labelledby={`etichetta-${nome}`}
-        className="flex gap-1 rounded-voce bg-su-verde/10 p-0.5"
+        className="flex gap-1 rounded-voce border border-bordo-controllo-contro bg-su-verde/10 p-0.5"
       >
         {opzioni.map((o) => {
           const scelto = o === valore
           return (
             <label
               key={o}
-              className={`cursor-pointer rounded-voce px-2.5 py-1 text-xs transition-colors ${
+              className={`fuoco-dentro flex min-h-9 cursor-pointer items-center rounded-voce px-3 py-1.5 text-xs transition-colors active:scale-[0.97] ${
                 scelto
                   ? 'bg-su-verde font-medium text-su-verde-contro'
-                  : 'text-su-verde/80 hover:text-su-verde'
+                  : 'text-su-verde-tenue hover:bg-su-verde/10 hover:text-su-verde'
               }`}
             >
               <input
@@ -94,7 +113,7 @@ function Gruppo<T extends string>({
                 value={o}
                 checked={scelto}
                 onChange={() => onCambia(o)}
-                className="sr-only"
+                className="fuoco-delegato sr-only"
               />
               {etichettaDi(o)}
             </label>

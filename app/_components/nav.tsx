@@ -40,10 +40,10 @@ export function Nav({ posizione }: { posizione: 'testa' | 'piede' }) {
             key={v.href}
             href={v.href}
             aria-current={corrente ? 'page' : undefined}
-            className={`rounded-voce px-3 py-1.5 text-sm font-medium transition-colors ${
+            className={`flex min-h-10 items-center rounded-voce px-3 py-1.5 text-sm font-medium transition-colors active:scale-[0.97] ${
               corrente
                 ? 'bg-su-verde text-su-verde-contro'
-                : 'text-su-verde/75 hover:bg-su-verde/10 hover:text-su-verde'
+                : 'text-su-verde-tenue hover:bg-su-verde/10 hover:text-su-verde'
             }`}
           >
             {t(v.chiave)}

@@ -93,7 +93,7 @@ export default async function CosaNonCopre() {
           ))}
         </ul>
 
-        <div className="mt-8 rounded-sezione border border-bordo bg-carta p-6 sm:p-8">
+        <div className="mt-8 rounded-sezione border border-bordo-decorativo bg-carta p-6 sm:p-8">
           <h2 className="text-lg font-semibold tracking-tight text-inchiostro">
             {t('nonCopre.percheTitolo')}
           </h2>

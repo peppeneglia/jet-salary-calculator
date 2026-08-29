@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import Link from 'next/link'
 import { Wix_Madefor_Display } from 'next/font/google'
 import { Nav } from './_components/nav'
@@ -18,6 +18,29 @@ const wixMadefor = Wix_Madefor_Display({
   subsets: ['latin'],
   display: 'swap',
 })
+
+/**
+ * Il viewport, dichiarato e non lasciato al default.
+ *
+ * `maximumScale` e `userScalable` **restano fuori di proposito**: bloccare lo
+ * zoom su un telefono è la violazione di accessibilità più comune del web
+ * mobile (WCAG 1.4.4), e su una pagina che contiene citazioni normative a 12px
+ * sarebbe indifendibile.
+ *
+ * `viewportFit: 'cover'` più i padding in `safe-area-inset` servono ai
+ * telefoni con notch o barra gestuale: senza, la cornice verde finirebbe sotto
+ * gli angoli arrotondati dello schermo.
+ *
+ * `themeColor` è il verde del marchio in entrambi i temi, perché la cornice
+ * non cambia con il tema: la barra del browser diventa la continuazione della
+ * testata invece di interromperla.
+ */
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#66C239',
+}
 
 /**
  * Titolo e descrizione seguono la lingua di chi apre la pagina.
@@ -53,14 +76,24 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 function Marchio({ grande }: { grande?: boolean }) {
   return (
-    <Link href="/" className="flex items-center gap-2.5 rounded-voce">
+    <Link
+      href="/"
+      className="-mx-1 flex min-h-11 items-center gap-2.5 rounded-voce px-1 transition-opacity active:opacity-70"
+    >
+      {/*
+        ⚠️ **Le barre salgono.** Scendevano, ed è la stessa figura letta al
+        contrario: un grafico che cala accanto al nome di un calcolatore di
+        stipendi dice *il tuo stipendio scende*, che è il messaggio opposto a
+        quello del prodotto. La direzione di un grafico è contenuto, non
+        decorazione.
+      */}
       <span aria-hidden className="flex items-end gap-0.75">
-        <span className="h-5 w-1.5 rounded-full bg-su-verde" />
-        <span className="h-3.5 w-1.5 rounded-full bg-su-verde" />
         <span className="h-2 w-1.5 rounded-full bg-su-verde" />
+        <span className="h-3.5 w-1.5 rounded-full bg-su-verde" />
+        <span className="h-5 w-1.5 rounded-full bg-su-verde" />
       </span>
       <span
-        className={`font-semibold tracking-tight text-su-verde ${grande ? 'text-lg' : 'text-base'}`}
+        className={`font-semibold tracking-tight text-su-verde ${grande ? 'text-base sm:text-lg' : 'text-sm sm:text-base'}`}
       >
         Jet Salary Calculator
       </span>
@@ -70,8 +103,8 @@ function Marchio({ grande }: { grande?: boolean }) {
 
 function Intestazione() {
   return (
-    <div className="mx-auto w-full max-w-4xl px-3 pt-3 sm:px-4 sm:pt-4">
-      <header className="su-verde flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-sezione bg-verde px-5 py-4 sm:px-6">
+    <div className="mx-auto w-full max-w-4xl px-2.5 pt-2.5 sm:px-4 sm:pt-4">
+      <header className="su-verde flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-sezione bg-verde px-4 py-3 sm:px-6 sm:py-4">
         <Marchio grande />
         <Nav posizione="testa" />
       </header>
@@ -84,24 +117,38 @@ async function Chiusura() {
   const { tema } = await preferenze()
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-3 pb-3 sm:px-4 sm:pb-4">
-      <footer className="su-verde rounded-sezione bg-verde px-5 py-6 sm:px-6 sm:py-7">
-        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+    <div className="mx-auto w-full max-w-4xl px-2.5 pb-2.5 sm:px-4 sm:pb-4">
+      <footer className="su-verde rounded-sezione bg-verde px-4 py-6 sm:px-6 sm:py-7">
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
           <Marchio />
           <Nav posizione="piede" />
         </div>
 
-        <div className="mt-6 grid gap-6 border-t border-su-verde/15 pt-6 sm:grid-cols-2">
-          <p className="text-sm leading-relaxed text-su-verde/80">{t('piede.notaAnnuale')}</p>
-          <div>
-            <p className="text-sm leading-relaxed text-su-verde/80">{t('piede.invito')}</p>
-            <Link
-              href="/cosa-non-copre"
-              className="mt-3 inline-block rounded-voce bg-su-verde px-4 py-2 text-sm font-semibold text-su-verde-contro transition-opacity hover:opacity-90"
-            >
-              {t('piede.linkNonCopre')}
-            </Link>
-          </div>
+        {/*
+          ⚠️ **Due righe tolte, e non è una potatura estetica.**
+
+          *«Ci sono cose che questo calcolatore non tiene in conto…»* era
+          un'introduzione al bottone che le sta accanto — e il bottone dice già
+          *Cosa questo calcolatore non copre*. Due frasi per un solo gesto: la
+          prima non aggiungeva niente che la seconda non dicesse.
+
+          *Anno d'imposta 2026 · Italia* se n'è andato dal piede perché lì
+          qualificava **la pagina**, mentre qualifica **un numero**: ora sta
+          accanto al netto, dove chi legge la cifra lo vede senza scorrere. E
+          l'anno non è più scritto nella stringa: arriva da
+          `risultato.annoImposta`, quindi non può restare indietro rispetto al
+          regime che il motore ha applicato.
+        */}
+        <div className="mt-6 grid items-start gap-x-6 gap-y-5 border-t border-su-verde/15 pt-6 sm:grid-cols-[1fr_auto]">
+          <p className="max-w-prose text-sm leading-relaxed text-su-verde-tenue">
+            {t('piede.notaAnnuale')}
+          </p>
+          <Link
+            href="/cosa-non-copre"
+            className="inline-flex min-h-11 items-center rounded-voce bg-su-verde px-4 py-2 text-sm font-semibold text-su-verde-contro transition-opacity hover:opacity-90 active:opacity-75"
+          >
+            {t('piede.linkNonCopre')}
+          </Link>
         </div>
 
         {/*
@@ -118,9 +165,8 @@ async function Chiusura() {
           come un loro prodotto. Sta in pagina e non nell'email, perché chi apre
           il link l'email non la legge.
         */}
-        <div className="mt-5 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 border-t border-su-verde/15 pt-5 text-sm text-su-verde/75">
+        <div className="mt-5 border-t border-su-verde/15 pt-5 text-sm text-su-verde-tenue">
           <p className="leading-relaxed">{t('piede.indipendente')}</p>
-          <p className="font-medium whitespace-nowrap">{t('piede.annoPaese')}</p>
         </div>
       </footer>
     </div>
@@ -150,7 +196,7 @@ export default async function RootLayout({ children }: LayoutProps<'/'>) {
       data-theme={temaEsplicito}
       className={`${wixMadefor.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col font-sans">
+      <body className="flex min-h-full flex-col font-sans [padding-left:env(safe-area-inset-left)] [padding-right:env(safe-area-inset-right)]">
         <ProviderLingua lingua={lingua}>
           <Intestazione />
           <div className="flex-1">{children}</div>

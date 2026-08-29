@@ -38,7 +38,7 @@ export async function generateMetadata(): Promise<Metadata> {
 function Nota({ testo }: { testo: string }) {
   return (
     <li className="leading-relaxed text-inchiostro-tenue">
-      <span aria-hidden className="mr-2 text-inchiostro-tenue/50">
+      <span aria-hidden className="mr-2 text-inchiostro-nota">
         —
       </span>
       {testo}
@@ -62,7 +62,7 @@ function SchedaNorma({
   }
 }) {
   return (
-    <li className="rounded-blocco border border-bordo bg-carta px-5 py-5">
+    <li className="rounded-blocco border border-bordo-decorativo bg-carta px-5 py-5">
       <h3 className="text-base font-semibold tracking-tight text-inchiostro">
         {scheda.atto}
         {scheda.riferimento ? (
@@ -72,8 +72,8 @@ function SchedaNorma({
 
       <p className="mt-2 leading-relaxed text-inchiostro-tenue">{scheda.dispone[lingua]}</p>
 
-      <div className="mt-4 rounded-voce border border-bordo bg-fondo px-4 py-3">
-        <p className="text-xs font-medium text-inchiostro-tenue/80">{etichette.cosaDetermina}</p>
+      <div className="mt-4 rounded-voce border border-bordo-decorativo bg-fondo px-4 py-3">
+        <p className="text-xs font-medium text-inchiostro-nota">{etichette.cosaDetermina}</p>
         <p className="mt-1 text-sm leading-relaxed text-inchiostro">{scheda.effetto[lingua]}</p>
       </div>
 
@@ -86,7 +86,7 @@ function SchedaNorma({
         <dl className="mt-4 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
           {scheda.vigenza ? (
             <div>
-              <dt className="text-xs font-medium text-inchiostro-tenue/80">
+              <dt className="text-xs font-medium text-inchiostro-nota">
                 {etichette.inVigore}
               </dt>
               <dd className="text-inchiostro">{scheda.vigenza[lingua]}</dd>
@@ -94,7 +94,7 @@ function SchedaNorma({
           ) : null}
           {scheda.ultimaModifica ? (
             <div>
-              <dt className="text-xs font-medium text-inchiostro-tenue/80">
+              <dt className="text-xs font-medium text-inchiostro-nota">
                 {etichette.ultimaModifica}
               </dt>
               <dd className="text-inchiostro">{scheda.ultimaModifica[lingua]}</dd>
@@ -105,7 +105,7 @@ function SchedaNorma({
 
       {scheda.note && scheda.note.length > 0 ? (
         <div className="mt-4">
-          <p className="text-xs font-medium text-inchiostro-tenue/80">{etichette.ambiguita}</p>
+          <p className="text-xs font-medium text-inchiostro-nota">{etichette.ambiguita}</p>
           <ul className="mt-2 space-y-2 text-sm">
             {scheda.note.map((n) => (
               <Nota key={n.it.slice(0, 48)} testo={n[lingua]} />
@@ -114,7 +114,7 @@ function SchedaNorma({
         </div>
       ) : null}
 
-      <div className="mt-4 flex flex-wrap items-baseline gap-x-4 gap-y-1 border-t border-bordo pt-3 text-xs text-inchiostro-tenue">
+      <div className="mt-4 flex flex-wrap items-baseline gap-x-4 gap-y-1 border-t border-bordo-decorativo pt-3 text-xs text-inchiostro-tenue">
         <span>{etichette.lettaIl}</span>
         {scheda.portale ? (
           scheda.url ? (
@@ -122,7 +122,7 @@ function SchedaNorma({
               href={scheda.url}
               target="_blank"
               rel="noreferrer noopener"
-              className="underline decoration-bordo-forte underline-offset-2 hover:decoration-inchiostro"
+              className="underline decoration-bordo-decorativo-forte underline-offset-2 hover:decoration-inchiostro"
             >
               {scheda.portale}
             </a>
@@ -131,7 +131,7 @@ function SchedaNorma({
           )
         ) : null}
         {scheda.identificativo ? (
-          <span className="text-inchiostro-tenue/70">{scheda.identificativo}</span>
+          <span className="text-inchiostro-nota">{scheda.identificativo}</span>
         ) : null}
       </div>
     </li>
@@ -162,7 +162,7 @@ export default async function Norme() {
             <a
               key={s.id}
               href={`#${s.id}`}
-              className="rounded-voce border border-bordo bg-carta px-3 py-1.5 text-sm font-medium text-inchiostro-tenue transition-colors hover:border-bordo-forte hover:text-inchiostro"
+              className="rounded-voce border border-bordo-decorativo bg-carta px-3 py-1.5 text-sm font-medium text-inchiostro-tenue transition-colors hover:border-bordo-decorativo-forte hover:text-inchiostro"
             >
               {s.titolo[lingua]}
             </a>
@@ -175,7 +175,7 @@ export default async function Norme() {
           <section
             key={sezione.id}
             id={sezione.id}
-            className="scroll-mt-6 rounded-sezione border border-bordo bg-fondo p-5 sm:p-6"
+            className="scroll-mt-6 rounded-sezione border border-bordo-decorativo bg-fondo p-5 sm:p-6"
           >
             <h2 className="text-xl font-semibold tracking-tight text-inchiostro sm:text-2xl">
               {sezione.titolo[lingua]}
@@ -202,7 +202,7 @@ export default async function Norme() {
           </section>
         ))}
 
-        <div className="rounded-sezione border border-bordo bg-carta p-6 sm:p-8">
+        <div className="rounded-sezione border border-bordo-decorativo bg-carta p-6 sm:p-8">
           <h2 className="text-lg font-semibold tracking-tight text-inchiostro">
             {t('norme.vuotoTitolo')}
           </h2>

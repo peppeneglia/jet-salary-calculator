@@ -37,7 +37,7 @@ function Citazione({ fonte }: { fonte: Fonte }) {
             href={fonte.url}
             target="_blank"
             rel="noreferrer noopener"
-            className="underline decoration-bordo-forte underline-offset-2 hover:decoration-inchiostro"
+            className="underline decoration-bordo-decorativo-forte underline-offset-2 hover:decoration-inchiostro"
           >
             {testo}
           </a>
@@ -45,7 +45,7 @@ function Citazione({ fonte }: { fonte: Fonte }) {
           testo
         )}
       </span>{' '}
-      <span className="whitespace-nowrap text-inchiostro-tenue/70">
+      <span className="text-inchiostro-nota">
         {/*
           Le due provenienze non sono un dettaglio di import: sono una
           decisione di prodotto (D-005). Milano e Lombardia sono verificate
@@ -74,7 +74,7 @@ export function Fonti({ fonti, titolo }: { fonti: readonly Fonte[]; titolo: stri
 
   return (
     <div className="text-xs">
-      <p className="font-medium text-inchiostro-tenue/80">{titolo}</p>
+      <p className="font-medium text-inchiostro-nota">{titolo}</p>
       <ul className="mt-1 space-y-1">
         {fonti.map((f, i) => (
           <Citazione key={`${f.atto}-${f.riferimento ?? ''}-${i}`} fonte={f} />

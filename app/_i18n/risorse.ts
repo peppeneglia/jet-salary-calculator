@@ -45,10 +45,8 @@ const it = {
   piede: {
     notaAnnuale:
       'Il risultato è il netto di un anno intero, per uno stipendio percepito tutto nell’anno. Non è l’importo di una singola busta paga: quella risponde a una domanda diversa, e il numero che ci leggi sarà un altro.',
-    invito: 'Ci sono cose che questo calcolatore non tiene in conto, e preferiamo dirtele.',
     linkNonCopre: 'Cosa questo calcolatore non copre',
     indipendente: 'Progetto indipendente. Non è un prodotto Jet HR e non è affiliato all’azienda.',
-    annoPaese: 'Anno d’imposta 2026 · Italia',
   },
 
   preferenze: {
@@ -75,8 +73,10 @@ const it = {
     ralAiuto: 'È lo stipendio annuo scritto sul contratto, prima di ogni trattenuta.',
     comuneEtichetta: 'Comune in cui vivi',
     comuneAiuto:
-      'Serve per le addizionali di Regione e Comune. Conta dove avevi il domicilio fiscale al 1° gennaio. Per ora l’elenco contiene i comuni che abbiamo verificato uno per uno.',
-    comuneNonDisponibile: ' — calcolo non disponibile',
+      'Serve per le addizionali di Regione e Comune. Conta dove avevi il domicilio fiscale al 1° gennaio. Scrivi le prime lettere per cercarlo. Per ora l’elenco contiene i comuni che abbiamo verificato uno per uno.',
+    comuneSegnaposto: 'Cerca un comune',
+    comuneNessunRisultato: 'Nessun comune con questo nome, per ora.',
+    comuneMarcatoreNonDisponibile: 'non disponibile',
     comuneNonCalcolabile: 'Per {{comune}} non possiamo calcolare il netto.',
     contrattoEtichetta: 'Tipo di contratto',
     contrattoNotaTitolo: 'Determinato e indeterminato danno lo stesso netto.',
@@ -96,6 +96,7 @@ const it = {
   risultato: {
     titolo: 'Il risultato',
     occhiello: '{{contratto}}, {{comune}}, anno {{anno}}.',
+    annoPaese: 'Anno d’imposta {{anno}} · Italia',
     nettoAnnuo: 'Netto annuo',
     daUnaRal: 'da una RAL di {{importo}}',
     suMensilita: 'su {{n}} mensilità',
@@ -265,10 +266,8 @@ const en: Risorse = {
   piede: {
     notaAnnuale:
       'The figure is net pay for a full year, on a salary earned entirely within that year. It is not the amount of a single payslip: that answers a different question, and the number you read on it will be another one.',
-    invito: 'There are things this calculator does not account for, and we would rather tell you.',
     linkNonCopre: 'What this calculator does not cover',
     indipendente: 'An independent project. Not a Jet HR product and not affiliated with the company.',
-    annoPaese: 'Tax year 2026 · Italy',
   },
 
   preferenze: {
@@ -295,8 +294,10 @@ const en: Risorse = {
     ralAiuto: 'The annual salary written in your contract, before any deduction.',
     comuneEtichetta: 'Where you live',
     comuneAiuto:
-      'Needed for the regional and municipal addizionali. What counts is where you were tax-resident on 1 January. For now the list holds the municipalities we have checked one by one.',
-    comuneNonDisponibile: ' — calculation not available',
+      'Needed for the regional and municipal addizionali. What counts is where you were tax-resident on 1 January. Type the first few letters to search. For now the list holds the municipalities we have checked one by one.',
+    comuneSegnaposto: 'Search for a municipality',
+    comuneNessunRisultato: 'No municipality by that name, for now.',
+    comuneMarcatoreNonDisponibile: 'not available',
     comuneNonCalcolabile: 'We cannot work out net pay for {{comune}}.',
     contrattoEtichetta: 'Type of contract',
     contrattoNotaTitolo: 'Fixed-term and permanent give the same net pay.',
@@ -316,6 +317,7 @@ const en: Risorse = {
   risultato: {
     titolo: 'The result',
     occhiello: '{{contratto}}, {{comune}}, tax year {{anno}}.',
+    annoPaese: 'Tax year {{anno}} · Italy',
     nettoAnnuo: 'Net pay for the year',
     daUnaRal: 'from a RAL of {{importo}}',
     suMensilita: 'over {{n}} instalments',

@@ -44,9 +44,9 @@ export function VoceAssunzione({
         : t('assunzioni.direzionePiuBasso')
 
   return (
-    <li className="rounded-blocco border border-bordo bg-carta px-5 py-4">
+    <li className="rounded-blocco border border-bordo-decorativo bg-carta px-5 py-4">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="cifre rounded-voce border border-bordo bg-fondo px-2 py-0.5 text-xs font-medium text-inchiostro-tenue">
+        <span className="cifre rounded-voce border border-bordo-decorativo bg-fondo px-2 py-0.5 text-xs font-medium text-inchiostro-tenue">
           {assunzione.id}
         </span>
         {/*

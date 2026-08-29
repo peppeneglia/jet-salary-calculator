@@ -9,35 +9,71 @@ import { messaggioErrore } from '../_lib/errori'
 import { etichettaContratto } from '../_lib/testi'
 import { leggiRal, validaComune } from '../_lib/validazione'
 import { Avviso } from './avviso'
+import { SceltaComune } from './scelta-comune'
 import { Sezione } from './sezione'
 
 const TIPI: readonly TipoContratto[] = ['indeterminato', 'determinato', 'apprendistato']
 const MENSILITA: readonly Mensilita[] = [12, 13, 14]
 
+/**
+ * L'involucro di un campo: etichetta, marcatore facoltativo, controllo.
+ *
+ * ⚠️ **Due markup e non uno, perché sono due cose diverse.**
+ *
+ * Con `htmlFor` c'è un controllo solo, e l'elemento giusto è `<label>`.
+ *
+ * Senza, il campo è un **gruppo di radio** — contratto, mensilità — e
+ * `<label>` era sbagliato: un `<label>` senza `for` e senza controllo dentro
+ * è una label orfana, che non etichetta niente. Reggeva soltanto perché il
+ * `role="radiogroup"` più in basso portava un `aria-label` con lo stesso
+ * testo: l'etichetta visibile e quella accessibile erano due stringhe separate
+ * che si somigliavano per abitudine, non per costruzione.
+ *
+ * `<fieldset>` più `<legend>` è il markup che l'HTML ha per questo, e non
+ * richiede ARIA: il gruppo si annuncia da sé, e l'etichetta annunciata **è**
+ * quella che si legge. Da qui la sparizione di `role="radiogroup"` e del suo
+ * `aria-label` in `Segmenti`.
+ */
 function Campo({
   etichetta,
   htmlFor,
+  idEtichetta,
   marcatore,
   children,
 }: {
   etichetta: string
   htmlFor?: string
+  /** Serve quando l'etichetta entra in un `aria-labelledby` composto. */
+  idEtichetta?: string
   /** Chip accanto all'etichetta: «facoltativo», «esempio da modificare». */
   marcatore?: string
   children: React.ReactNode
 }) {
+  const testo = (
+    <>
+      {etichetta}
+      {marcatore ? (
+        <span className="rounded-voce border border-bordo-decorativo bg-fondo px-2 py-0.5 text-xs font-normal text-inchiostro-tenue">
+          {marcatore}
+        </span>
+      ) : null}
+    </>
+  )
+  const classi = 'flex flex-wrap items-baseline gap-2 text-sm font-medium text-inchiostro'
+
+  if (htmlFor === undefined) {
+    return (
+      <fieldset className="min-w-0">
+        <legend className={classi}>{testo}</legend>
+        <div className="mt-2">{children}</div>
+      </fieldset>
+    )
+  }
+
   return (
     <div>
-      <label
-        htmlFor={htmlFor}
-        className="flex flex-wrap items-baseline gap-2 text-sm font-medium text-inchiostro"
-      >
-        {etichetta}
-        {marcatore ? (
-          <span className="rounded-voce border border-bordo bg-fondo px-2 py-0.5 text-xs font-normal text-inchiostro-tenue">
-            {marcatore}
-          </span>
-        ) : null}
+      <label id={idEtichetta} htmlFor={htmlFor} className={classi}>
+        {testo}
       </label>
       <div className="mt-2">{children}</div>
     </div>
@@ -58,6 +94,10 @@ function Segmenti<T extends string | number>({
   etichettaDi,
   onCambia,
 }: {
+  /**
+   * L'attributo `name` dei radio. **Una chiave stabile, non l'etichetta
+   * tradotta**: prima era il testo visibile, e cambiava con la lingua.
+   */
   nome: string
   opzioni: readonly T[]
   valore: T
@@ -65,16 +105,30 @@ function Segmenti<T extends string | number>({
   onCambia: (o: T) => void
 }) {
   return (
-    <div role="radiogroup" aria-label={nome} className="flex gap-2">
+    /* Niente `role="radiogroup"`: il gruppo è il `<fieldset>` di `Campo`. */
+    <div className="flex gap-2">
       {opzioni.map((o) => {
         const scelto = o === valore
         return (
+          /*
+            ⚠️ **`fuoco-dentro` sulla label, `fuoco-delegato` sull'input.**
+            L'input è `sr-only`, cioè un rettangolo di 1px fuori schermo:
+            l'anello di fuoco ci finiva sopra, e sul segmento visibile non
+            arrivava niente. Chi naviga da tastiera non aveva modo di sapere
+            dove fosse — su quattro gruppi di controlli della pagina.
+
+            Il bordo è `bordo-controllo` (D-047): con `bordo-decorativo` il
+            segmento non selezionato stava a 1,24:1 contro la carta, cioè non
+            si vedeva che fosse un controllo.
+
+            `min-h-11` sono i 44px delle linee guida touch; `py-2.5` ne dava 38.
+          */
           <label
             key={String(o)}
-            className={`flex-1 cursor-pointer rounded-voce border px-3 py-2.5 text-center text-sm transition-colors ${
+            className={`fuoco-dentro flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-voce border px-3 py-2.5 text-center text-sm transition-colors active:scale-[0.98] ${
               scelto
                 ? 'border-inchiostro bg-inchiostro font-medium text-carta'
-                : 'border-bordo bg-carta text-inchiostro-tenue hover:border-bordo-forte'
+                : 'border-bordo-controllo bg-carta text-inchiostro-tenue hover:border-bordo-controllo-forte hover:text-inchiostro'
             }`}
           >
             <input
@@ -83,7 +137,7 @@ function Segmenti<T extends string | number>({
               value={String(o)}
               checked={scelto}
               onChange={() => onCambia(o)}
-              className="sr-only"
+              className="fuoco-delegato sr-only"
             />
             {etichettaDi(o)}
           </label>
@@ -113,14 +167,21 @@ export function SezioneInput({
   const idAiutoRal = `${idRal}-aiuto`
   const idErroreComune = `${idComune}-errore`
   const idAiutoComune = `${idComune}-aiuto`
+  const idEtichettaRal = `${idRal}-etichetta`
+  const idUnitaRal = `${idRal}-unita`
 
   const campoRal = useRef<HTMLInputElement>(null)
-  const campoComune = useRef<HTMLSelectElement>(null)
+  const campoComune = useRef<HTMLInputElement>(null)
 
   const [ral, setRal] = useState(String(iniziale.ral))
   const [codiceCatastale, setCodiceCatastale] = useState(iniziale.codiceCatastale)
   const [tipoContratto, setTipoContratto] = useState<TipoContratto>(iniziale.tipoContratto)
-  const [mensilita, setMensilita] = useState<Mensilita>(iniziale.mensilita ?? 13)
+  /*
+    Nessun ripiego: `iniziale` porta sempre il campo (D-052), e il valore da cui
+    si parte lo decide `MENSILITA_INIZIALE` in `_lib/calcolo.ts`. Un `?? 12`
+    qui sarebbe la terza sede dello stesso numero.
+  */
+  const [mensilita, setMensilita] = useState<Mensilita>(iniziale.mensilita)
 
   /**
    * Gli errori del modulo, per campo — D-043.
@@ -187,11 +248,33 @@ export function SezioneInput({
           <Campo
             etichetta={t('input.ralEtichetta')}
             htmlFor={idRal}
+            idEtichetta={idEtichettaRal}
             marcatore={ralIntatta ? t('input.ralMarcatore') : undefined}
           >
+            {/*
+              ⚠️ **L'anello di fuoco sta sulla cornice, non sull'input.**
+
+              L'input è largo quanto il campo meno il simbolo €, che gli sta
+              accanto come fratello. Con l'anello disegnato sull'input e
+              `outline-offset: 2px`, il bordo verde tagliava dentro il simbolo
+              di valuta: si leggeva come un difetto di allineamento, ed era
+              invece la geometria dell'anello.
+
+              `outline-none` non bastava a spegnerlo: le utility di Tailwind
+              stanno in `@layer utilities` e la regola `:focus-visible` globale
+              è senza layer, quindi vince. Serve `fuoco-delegato`, che è quella
+              regola scritta con la stessa forza.
+
+              ⚠️ **Il bordo passa da 1,24:1 a 3,29:1, e al fuoco a 6,56**
+              (D-047). Prima andava da `bordo` a `bordo-forte`, cioè da 1,24 a
+              1,49: una transizione che nessun occhio distingue, su un campo che
+              già da fermo non si vedeva.
+            */}
             <div
-              className={`flex items-center rounded-voce border bg-carta ${
-                errori.ral ? 'border-avviso-bordo' : 'border-bordo focus-within:border-bordo-forte'
+              className={`fuoco-dentro flex items-center rounded-voce border bg-carta transition-colors ${
+                errori.ral
+                  ? 'border-avviso-bordo'
+                  : 'border-bordo-controllo hover:border-bordo-controllo-forte focus-within:border-bordo-controllo-forte'
               }`}
             >
               <input
@@ -203,6 +286,20 @@ export function SezioneInput({
                 autoComplete="off"
                 aria-invalid={errori.ral ? true : undefined}
                 aria-describedby={errori.ral ? idErroreRal : idAiutoRal}
+                /*
+                  ⚠️ **L'unità entra nel nome accessibile del campo.** Il
+                  simbolo € era `aria-hidden` e stava **dopo** l'input: chi usa
+                  un lettore di schermo sentiva *Retribuzione annua lorda* e non
+                  sapeva in che unità scrivere — su un campo dove la differenza
+                  fra euro e migliaia di euro è tutto il risultato.
+
+                  `aria-labelledby` che punta a etichetta **e** simbolo compone
+                  il nome dai due pezzi che già esistono in pagina: nessuna
+                  stringa nuova da tradurre, e niente `aria-label` che
+                  sovrascriverebbe l'etichetta visibile con una copia a parte
+                  destinata a divergere.
+                */
+                aria-labelledby={`${idEtichettaRal} ${idUnitaRal}`}
                 value={ral}
                 onChange={(e) => {
                   setRal(e.target.value)
@@ -211,9 +308,11 @@ export function SezioneInput({
                   // rimprovero su un valore già corretto.
                   if (errori.ral) setErrori((p) => ({ ...p, ral: undefined }))
                 }}
-                className="cifre w-full rounded-voce bg-transparent px-3 py-2.5 text-lg outline-none"
+                /* `text-base` come minimo: sotto i 16px iOS ingrandisce la
+                   pagina al fuoco del campo e non la rimpicciolisce più. */
+                className="cifre fuoco-delegato min-h-11 w-full rounded-voce bg-transparent px-3 py-2.5 text-base outline-none sm:text-lg"
               />
-              <span aria-hidden className="pr-3 text-inchiostro-tenue">
+              <span id={idUnitaRal} className="pr-3.5 pl-1 text-inchiostro-tenue">
                 €
               </span>
             </div>
@@ -230,28 +329,18 @@ export function SezioneInput({
           </Campo>
 
           <Campo etichetta={t('input.comuneEtichetta')} htmlFor={idComune}>
-            <select
-              ref={campoComune}
+            <SceltaComune
               id={idComune}
-              name="codiceCatastale"
-              aria-invalid={errori.comune ? true : undefined}
-              aria-describedby={errori.comune ? idErroreComune : idAiutoComune}
-              value={codiceCatastale}
-              onChange={(e) => {
-                setCodiceCatastale(e.target.value)
+              campo={campoComune}
+              comuni={comuni}
+              valore={codiceCatastale}
+              invalido={errori.comune !== undefined}
+              descrittoDa={errori.comune ? idErroreComune : idAiutoComune}
+              onCambia={(codice) => {
+                setCodiceCatastale(codice)
                 if (errori.comune) setErrori((p) => ({ ...p, comune: undefined }))
               }}
-              className={`w-full rounded-voce border bg-carta px-3 py-2.5 text-lg outline-none ${
-                errori.comune ? 'border-avviso-bordo' : 'border-bordo focus:border-bordo-forte'
-              }`}
-            >
-              {comuni.map((c) => (
-                <option key={c.codiceCatastale} value={c.codiceCatastale}>
-                  {c.nome} ({c.provincia})
-                  {c.calcolabile ? '' : t('input.comuneNonDisponibile')}
-                </option>
-              ))}
-            </select>
+            />
 
             {errori.comune ? (
               <Avviso id={idErroreComune} misura="compatta" vivo>
@@ -280,7 +369,7 @@ export function SezioneInput({
 
         <Campo etichetta={t('input.contrattoEtichetta')}>
           <Segmenti
-            nome={t('input.contrattoEtichetta')}
+            nome="tipoContratto"
             opzioni={TIPI}
             valore={tipoContratto}
             etichettaDi={(x) => etichettaContratto(x, t)}
@@ -291,7 +380,7 @@ export function SezioneInput({
             campo cambia davvero un numero, ma in uno solo dei tre casi — e senza
             la nota che spiega perché, la cosa si legge come un difetto.
           */}
-          <p className="mt-3 rounded-voce border border-bordo bg-fondo px-3 py-2.5 text-xs leading-relaxed text-inchiostro-tenue">
+          <p className="mt-3 max-w-prose rounded-voce border border-bordo-decorativo bg-fondo px-3 py-2.5 text-xs leading-relaxed text-inchiostro-tenue">
             <strong className="font-medium text-inchiostro">
               {t('input.contrattoNotaTitolo')}
             </strong>{' '}
@@ -305,7 +394,7 @@ export function SezioneInput({
 
         <Campo etichetta={t('input.mensilitaEtichetta')} marcatore={t('input.mensilitaMarcatore')}>
           <Segmenti
-            nome={t('input.mensilitaEtichetta')}
+            nome="mensilita"
             opzioni={MENSILITA}
             valore={mensilita}
             etichettaDi={(m) => String(m)}
@@ -317,7 +406,15 @@ export function SezioneInput({
         <button
           type="submit"
           disabled={inCorso}
-          className="w-full rounded-voce bg-verde px-6 py-3.5 text-base font-semibold text-su-verde transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+          /*
+            ⚠️ **Il bottone verde pieno non si vedeva** (D-047): #66C239
+            contro la carta bianca vale 2,25:1, sotto il 3:1 che WCAG 1.4.11
+            chiede al contorno di un controllo. `bordo-azione` è il rim che lo
+            delimita — 5,25 sul tema chiaro. Sul tema scuro il token coincide
+            col riempimento, perché lì il verde su carta scura vale già 7,68 e
+            un rim aggiungerebbe una riga che non serve.
+          */
+          className="min-h-12 w-full rounded-voce border border-bordo-azione bg-verde px-6 py-3.5 text-base font-semibold text-su-verde transition-opacity hover:opacity-90 active:opacity-75 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
         >
           {inCorso ? t('input.inCorso') : t('input.calcola')}
         </button>

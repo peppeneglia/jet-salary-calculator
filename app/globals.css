@@ -25,8 +25,92 @@
   --color-fondo: #f6f7f4;
   --color-inchiostro: #14181a;
   --color-inchiostro-tenue: #5f6a63;
-  --color-bordo: #e4e8e1;
-  --color-bordo-forte: #cfd6cb;
+
+  /*
+   * La terza voce della scala di testo — D-046.
+   *
+   * ⚠️ **Esiste perché al suo posto c'era un modificatore alpha.** Le etichette
+   * di servizio — *Il valore applicato*, *Da dove viene il numero*, la data di
+   * consultazione, il sommario della regola — erano scritte
+   * `text-inchiostro-tenue/80` e `/70`, cioè tinte derivate al volo dentro i
+   * componenti e **mai misurate**. Misurate valgono 3,66 e 3,00 contro il 4,5
+   * richiesto, su testo da 12px che non ha appello alla soglia del testo
+   * grande.
+   *
+   * Dove cadevano è la parte che pesa: sono le righe che dicono **da dove
+   * viene il numero**. La parte meno leggibile della pagina era quella che
+   * dimostra la ricerca.
+   *
+   * ⚠️ **Rifatto con margine** (D-046, revisione). La prima scelta — #68736C —
+   * valeva 4,93 / 4,59 / 4,58 su carta, fondo e velo: sopra la soglia di 4,5,
+   * ma **dell'1,8%**. Un margine così è indistinguibile da nessun margine: il
+   * primo ritocco a un tono di superficie lo porta sotto senza che nessuno se
+   * ne accorga, e la documentazione continuerebbe a dichiararlo verificato.
+   * Un valore verificato una volta e mai più non è verificato.
+   *
+   * Misurato ora: #616C65 vale **5,47 / 5,08 / 5,08**; sul tema scuro #94A199
+   * vale **6,43 / 7,03 / 6,04**. Peggiore 5,08 e 6,04 contro 4,5.
+   *
+   * ⚠️ **Da qui esce un problema che il token non può risolvere da solo.**
+   * `inchiostro-tenue` sul chiaro sta a 5,23 sulla superficie peggiore, e
+   * questo token a 5,08: **la distinzione è del 3%, cioè invisibile.** Il tema
+   * chiaro non ha spazio per un terzo gradino *più tenue* sopra un pavimento
+   * di 5,0 — o i due si fondono, o l'intera scala dei grigi va ridistanziata
+   * verso il basso. È una decisione di prodotto e sta al Decision log, non a
+   * questo file. Nel frattempo entrambi sono largamente sopra soglia, che è la
+   * cosa che qui doveva essere garantita.
+   */
+  --color-inchiostro-nota: #616c65;
+
+  /*
+   * ── I bordi sono due famiglie, non una — D-047 ─────────────────────────
+   *
+   * ⚠️ **Separare due superfici e rendere percepibile un controllo sono due
+   * requisiti con due soglie diverse.** Un token solo può soddisfarne uno, e
+   * infatti ne soddisfaceva uno: `bordo` valeva **1,24:1** su carta e
+   * `bordo-forte` **1,49:1**, contro il 3:1 che WCAG 1.4.11 chiede agli
+   * elementi d'interfaccia non testuali.
+   *
+   * Per un campo di testo quel bordo è **l'unica cosa che dice che lì si
+   * scrive**: niente ombra, per la scelta di profondità di D-035, e niente
+   * riempimento diverso dalla carta. A 1,24:1 il campo non esiste
+   * visivamente.
+   *
+   * Conseguenza che si vedeva senza misurare: `focus-within` passava da
+   * `bordo` a `bordo-forte`, cioè da 1,24 a 1,49. Nessun occhio distingue quel
+   * salto — era codice senza effetto.
+   *
+   * `decorativo` conserva i valori di prima, ed è giusto che li conservi:
+   * alzarli avrebbe rigato la pagina, ed è la ragione per cui il difetto è
+   * rimasto tanto.
+   */
+  --color-bordo-decorativo: #e4e8e1;
+  --color-bordo-decorativo-forte: #cfd6cb;
+
+  /*
+   * ⚠️ **Rifatto con margine** (D-047, revisione). La prima scelta — #849187 —
+   * valeva 3,29 su carta e **3,06 su fondo**, contro una soglia di 3,00:
+   * il 2%. Sulla soglia non è sopra la soglia — è dentro l'errore del
+   * prossimo ritocco.
+   *
+   * Misurato ora: #788579 vale **3,87 / 3,60 / 3,59** su carta, fondo e velo;
+   * sul tema scuro #727D74 vale **4,03 / 4,40 / 3,79**. Peggiore 3,59 e 3,79
+   * contro 3,00.
+   *
+   * Il salto verso `bordo-controllo-forte` resta percepibile: 3,59 → 6,09 sul
+   * chiaro, 3,79 → 7,56 sullo scuro.
+   */
+  --color-bordo-controllo: #788579;
+  /* Il salto al fuoco e al passaggio del mouse: 6,56 e 6,10. Da 3,29 si vede. */
+  --color-bordo-controllo-forte: #556058;
+
+  /*
+   * Il bordo di un controllo **sulla cornice verde**, che non cambia con il
+   * tema: i selettori di lingua e tema stanno lì. Un grigio neutro sul verde
+   * non arriva a 3:1 in nessuna variante, quindi il ruolo ha un token proprio.
+   * Misurato: **4,08** su #66C239.
+   */
+  --color-bordo-controllo-contro: #374e2b;
 
   /*
    * Il verde ha un significato solo: quello che resta al dipendente.
@@ -38,6 +122,24 @@
    */
   --color-verde: #66c239;
   --color-verde-testo: #3d7a20;
+
+  /*
+   * ⚠️ **Il bottone verde pieno non è percepibile sul tema chiaro, ed è la
+   * stessa soglia dei bordi** (D-047). #66C239 contro la carta bianca vale
+   * **2,25:1**: il riempimento da solo non delimita il controllo.
+   *
+   * Il rimedio è un rim, e il rim non può essere il grigio di
+   * `bordo-controllo` — un contorno grigio su un pieno verde si legge come un
+   * errore di stampa. È lo stesso verde scurito del testo: **5,25** su carta
+   * chiara, **4,88** su fondo.
+   *
+   * ⚠️ **Sul tema scuro vale il verde pieno, e non è una svista.** Lì #66C239
+   * contro `carta` scura vale già **7,68**: il riempimento delimita da sé, e
+   * un rim più scuro aggiungerebbe una riga che non serve. Il token c'è in
+   * entrambi i temi, ma in uno dei due coincide con il riempimento — cioè non
+   * disegna niente. Il componente non deve saperlo.
+   */
+  --color-bordo-azione: #3d7a20;
   --color-verde-velo: #f1f9ec;
   --color-verde-bordo: #cfe9bd;
 
@@ -52,6 +154,13 @@
    */
   --color-su-verde: #14181a;
   --color-su-verde-contro: #ffffff;
+
+  /*
+   * Il testo secondario **sulla cornice**, che prima era `su-verde/75` e
+   * `su-verde/80` — due tinte derivate per lo stesso ruolo, nessuna delle due
+   * misurata. Una sola, misurata: **5,03** su #66C239.
+   */
+  --color-su-verde-tenue: #2b4020;
 
   /*
    * Avviso: tutto ciò che chiede qualcosa a chi legge o qualifica un risultato.
@@ -105,10 +214,15 @@
     --color-fondo: #0e1210;
     --color-inchiostro: #e8eee8;
     --color-inchiostro-tenue: #9faca3;
-    --color-bordo: #2a312c;
-    --color-bordo-forte: #3b443e;
+    --color-inchiostro-nota: #94a199;
 
+    --color-bordo-decorativo: #2a312c;
+    --color-bordo-decorativo-forte: #3b443e;
+    --color-bordo-controllo: #727d74;
+    --color-bordo-controllo-forte: #a8b4ab;
+  
     --color-verde-testo: #66c239;
+    --color-bordo-azione: #66c239;
     --color-verde-velo: #16240f;
     --color-verde-bordo: #33512a;
 
@@ -125,10 +239,15 @@
   --color-fondo: #0e1210;
   --color-inchiostro: #e8eee8;
   --color-inchiostro-tenue: #9faca3;
-  --color-bordo: #2a312c;
-  --color-bordo-forte: #3b443e;
+  --color-inchiostro-nota: #94a199;
+
+  --color-bordo-decorativo: #2a312c;
+  --color-bordo-decorativo-forte: #3b443e;
+  --color-bordo-controllo: #727d74;
+  --color-bordo-controllo-forte: #a8b4ab;
 
   --color-verde-testo: #66c239;
+  --color-bordo-azione: #66c239;
   --color-verde-velo: #16240f;
   --color-verde-bordo: #33512a;
 
@@ -169,4 +288,156 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/*
+ * ── Il fuoco delegato ──────────────────────────────────────────────────────
+ *
+ * ⚠️ **Serve perché `outline-none` di Tailwind non vince.** Le utility stanno
+ * in `@layer utilities`, la regola `:focus-visible` qui sopra è senza layer, e
+ * il non-layered batte il layered: un input con `outline-none` riceve
+ * comunque l'anello. Dove l'input **non è** l'elemento che si vede — il campo
+ * importo, che ha il simbolo di valuta come fratello dentro la stessa cornice;
+ * i segmenti, il cui `<input>` è `sr-only` — l'anello finiva sull'elemento
+ * sbagliato: sopra il simbolo € nel primo caso, su un rettangolo di 1px fuori
+ * schermo nel secondo, cioè invisibile.
+ *
+ * Le due classi si usano in coppia: `fuoco-delegato` sull'input toglie
+ * l'anello, `fuoco-dentro` sul contenitore lo rimette dove si vede.
+ */
+.fuoco-delegato:focus-visible {
+  outline: none;
+}
+
+.fuoco-dentro:has(:focus-visible) {
+  outline: 2px solid var(--color-verde-testo);
+  outline-offset: 2px;
+}
+
+/* Dentro la cornice verde il verde del testo sparirebbe nel fondo. */
+.su-verde .fuoco-dentro:has(:focus-visible) {
+  outline-color: var(--color-su-verde);
+}
+
+/*
+ * ── Scrollbar ──────────────────────────────────────────────────────────────
+ *
+ * Stessa larghezza della barra di sistema (15px in Chromium, `auto` in
+ * Firefox): la barra non deve cambiare la larghezza utile della pagina, cambia
+ * solo colore.
+ *
+ * ⚠️ **Il pollice è `inchiostro`, non `verde`, ed è la regola del progetto che
+ * lo impone.** Il verde ha un significato solo — quello che resta al
+ * dipendente — e una barra di scorrimento non è un dato: è cromatura. Averla
+ * verde avrebbe diluito il segnale esattamente come farebbe un bottone verde
+ * di troppo. `inchiostro` è per giunta un token che segue il tema: nero sul
+ * chiaro, chiaro sullo scuro, senza una seconda regola.
+ *
+ * Il rientro di 3px viene dal bordo trasparente più `background-clip:
+ * padding-box`, così il pollice si legge come una pillola e non come un blocco
+ * pieno — e resta corretto su qualsiasi fondo, perché il rientro è trasparente
+ * e non dipinto del colore della pagina.
+ */
+* {
+  scrollbar-width: auto;
+  scrollbar-color: var(--color-inchiostro) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 15px;
+  height: 15px;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-inchiostro);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  border-radius: 999px;
+}
+
+/*
+ * ── Cursore ────────────────────────────────────────────────────────────────
+ *
+ * Tre forme — freccia, mano, cursore di testo — disegnate in SVG e incorporate
+ * come data URI.
+ *
+ * ⚠️ **Le dimensioni sono quelle di sistema, e la tela di 32×32 non dice
+ * niente sulla dimensione.** Un file di cursore è sempre 32×32: quello che
+ * conta è quanto della tela occupa il disegno. La freccia di Windows sta in
+ * circa **12×19px**, la mano in **18×20**, il cursore di testo in **6×16** —
+ * e sono quelle le misure qui sotto. Una prima versione disegnava la freccia a
+ * 18×25: era la stessa forma, ma un cursore più grande del normale non si
+ * legge come identità, si legge come difetto di rendering.
+ *
+ * Cambia il colore, non la taglia.
+ *
+ * Ogni forma è disegnata due volte: la prima passata, scura e con un bordo,
+ * produce la sagoma; la seconda, verde e senza bordo, riempie l'interno. È il
+ * modo di ottenere un contorno esterno senza che i bordi interni delle parti
+ * sovrapposte restino visibili — e il contorno scuro è ciò che tiene il
+ * cursore leggibile anche quando passa sopra il verde del marchio.
+ *
+ * ⚠️ **Solo su puntatore fine.** Su touch il cursore non esiste, e la regola
+ * costerebbe soltanto il download di tre immagini.
+ */
+@media (hover: hover) and (pointer: fine) {
+  html,
+  body {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M3 2 3 19 7 15.2 9.7 21.4 12.7 20.1 10.1 14.1 15.6 14.1Z' fill='%2366C239' stroke='%2314181A' stroke-width='1.6' stroke-linejoin='round' paint-order='stroke'/%3E%3C/svg%3E")
+        3 2,
+      auto;
+  }
+
+  a,
+  button,
+  summary,
+  label[for],
+  [role='button'],
+  [role='option'],
+  fieldset label,
+  [role='radiogroup'] label,
+  .cursore-mano {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cdefs%3E%3Cg id='m'%3E%3Crect x='6.2' y='2' width='3.8' height='11.5' rx='1.9'/%3E%3Crect x='9.7' y='7.4' width='3.7' height='6.5' rx='1.85'/%3E%3Crect x='13.1' y='8.1' width='3.7' height='5.8' rx='1.85'/%3E%3Crect x='16.5' y='9.3' width='3.5' height='4.6' rx='1.75'/%3E%3Cpath d='M6.2 10.6v3.4l-2.2-2.2a1.7 1.7 0 0 0-2.4 2.4l4 4.1A6.1 6.1 0 0 0 10.1 22h3.9a6.1 6.1 0 0 0 6.1-6.1V11.8H6.2Z'/%3E%3C/g%3E%3C/defs%3E%3Cuse href='%23m' fill='%2314181A' stroke='%2314181A' stroke-width='2.2' stroke-linejoin='round'/%3E%3Cuse href='%23m' fill='%2366C239'/%3E%3C/svg%3E")
+        8 2,
+      pointer;
+  }
+
+  input[type='text'],
+  input[type='search'],
+  textarea,
+  .cursore-testo {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cdefs%3E%3Cpath id='t' d='M6 5.5h6M6 21.5h6M9 5.5v16'/%3E%3C/defs%3E%3Cg fill='none' stroke-linecap='round'%3E%3Cuse href='%23t' stroke='%2314181A' stroke-width='4' stroke-linejoin='round'/%3E%3Cuse href='%23t' stroke='%2366C239' stroke-width='1.8'/%3E%3C/g%3E%3C/svg%3E")
+        9 13,
+      text;
+  }
+
+  [disabled],
+  [aria-disabled='true'] {
+    cursor: not-allowed;
+  }
+}
+
+/*
+ * ── Mobile ─────────────────────────────────────────────────────────────────
+ *
+ * Il riquadro azzurro del tap su iOS e Android contraddice gli stati che la
+ * pagina disegna da sé: si toglie, e al suo posto c'è `:active` sui controlli.
+ *
+ * `overflow-x: clip` sul body è una **rete**, non una soluzione: le cause di
+ * traboccamento si correggono dove nascono. Serve perché su questa pagina il
+ * contenuto lungo è dato — una citazione normativa non si accorcia — e una
+ * pagina che scorre in orizzontale su telefono è il difetto che si nota per
+ * primo.
+ */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  overflow-x: clip;
 }

@@ -15,7 +15,7 @@
 import { Calcolatore } from './_components/calcolatore'
 import { traduzione } from './_i18n/server'
 import type { RichiestaCalcolo } from './_lib/api'
-import { eseguiCalcolo } from './_lib/calcolo'
+import { MENSILITA_INIZIALE, eseguiCalcolo } from './_lib/calcolo'
 import { comuniSelezionabili } from './_lib/comuni'
 
 export default async function Home() {
@@ -35,16 +35,16 @@ export default async function Home() {
     ral: 30_000,
     codiceCatastale: comuni.find((c) => c.calcolabile)?.codiceCatastale ?? '',
     tipoContratto: 'indeterminato',
-    mensilita: 13,
+    mensilita: MENSILITA_INIZIALE,
     lingua,
   }
 
   const esito = eseguiCalcolo(iniziale)
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6 sm:py-14">
+    <div className="mx-auto w-full max-w-4xl px-3 py-8 sm:px-6 sm:py-14">
       <div className="mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight text-inchiostro sm:text-4xl">
+        <h1 className="text-2xl font-semibold tracking-tight text-inchiostro sm:text-4xl">
           {t('home.titolo')}
         </h1>
         <p className="mt-3 max-w-2xl leading-relaxed text-inchiostro-tenue">{t('home.occhiello')}</p>

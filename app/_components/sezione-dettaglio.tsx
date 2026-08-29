@@ -39,8 +39,8 @@ function SchedaEnte<P>({ ente, tributo }: { ente: EnteRisolto<P>; tributo: strin
   const { t } = useTraduzione()
 
   return (
-    <div className="rounded-blocco border border-bordo bg-carta px-5 py-4">
-      <p className="text-xs font-medium text-inchiostro-tenue/80">{tributo}</p>
+    <div className="rounded-blocco border border-bordo-decorativo bg-carta px-5 py-4">
+      <p className="text-xs font-medium text-inchiostro-nota">{tributo}</p>
       <p className="mt-0.5 font-medium text-inchiostro">{ente.nome}</p>
 
       {ente.stato === 'nonIstituito' ? (
@@ -97,7 +97,7 @@ export function SezioneDettaglio({ risultato }: { risultato: Risultato }) {
             const natura = etichettaNatura(blocco.natura, t)
             return (
               <li key={`${blocco.natura}-${i}`}>
-                <div className="rounded-sezione border border-bordo bg-fondo p-4 sm:p-5">
+                <div className="rounded-blocco border border-bordo-decorativo bg-fondo p-3 sm:p-5">
                   <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                     <h3 className="text-lg font-semibold tracking-tight text-inchiostro">
                       {natura.titolo}
@@ -125,9 +125,17 @@ export function SezioneDettaglio({ risultato }: { risultato: Risultato }) {
         </ol>
 
         <div>
-          <h3 className="text-sm font-semibold tracking-tight text-inchiostro">
+          {/*
+            ⚠️ **`h4` e non `h3`.** Il blocco degli enti sta gerarchicamente
+            sotto i gruppi di natura, non accanto a loro: era `h3` come i
+            titoli delle nature, quindi un lettore di schermo lo annunciava
+            allo stesso livello di *Previdenza* o *Imposte erariali*, mentre
+            visivamente sta a 14px contro i 18px di quelli. Markup e occhio
+            dicevano due cose diverse, e la dimensione era quella giusta.
+          */}
+          <h4 className="text-sm font-semibold tracking-tight text-inchiostro">
             {t('dettaglio.entiTitolo')}
-          </h3>
+          </h4>
           <p className="mt-1 text-sm leading-relaxed text-inchiostro-tenue">
             {t('dettaglio.entiOcchiello')}
           </p>
