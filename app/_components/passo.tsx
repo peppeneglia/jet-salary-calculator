@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * Un passo della traccia, reso.
  *
@@ -5,6 +7,12 @@
  * derivato: ogni cifra in questo file esce da un campo di `Passo`. Il segno
  * arriva già dal motore — `effettoSulNetto` è negativo per le voci che
  * sottraggono — e qui si decide solo come scriverlo.
+ *
+ * **E nessuna prosa, nemmeno adesso che le lingue sono due.** `etichetta`,
+ * `regola`, `spiegazione` e `ragione` arrivano dal motore già nella lingua
+ * giusta (D-041): qui si traducono soltanto le etichette che la traccia non
+ * porta — *Non dovuto*, *Il valore applicato* — che sono vocabolario di
+ * interfaccia.
  *
  * Le tre varianti di `Esito` si rendono in tre modi diversi, ed è il punto:
  *
@@ -21,10 +29,14 @@
  */
 
 import type { Parametro, Passo } from '../../core/types'
-import { inEuro, inEuroConSegno, inPercentuale } from '../_lib/formato'
+import { useTraduzione } from '../_i18n/provider'
+import { formato } from '../_lib/formato'
 import { Fonti } from './fonte'
 
 function ValoreParametro({ parametro }: { parametro: Parametro }) {
+  const { t, lingua } = useTraduzione()
+  const { inEuro, inPercentuale } = formato(lingua)
+
   switch (parametro.tipo) {
     case 'aliquota':
       return <span className="cifre">{inPercentuale(parametro.valore)}</span>
@@ -37,7 +49,7 @@ function ValoreParametro({ parametro }: { parametro: Parametro }) {
       return parametro.valore.forma === 'unica' ? (
         <span className="cifre">{inPercentuale(parametro.valore.aliquota)}</span>
       ) : (
-        <span>aliquote a scaglioni</span>
+        <span>{t('passo.aliquoteAScaglioni')}</span>
       )
     case 'formula':
       return (
@@ -51,15 +63,17 @@ function ValoreParametro({ parametro }: { parametro: Parametro }) {
 
 /** Il parametro usato dal passo, con la fonte che dice da dove viene il numero. */
 function BloccoParametro({ parametro }: { parametro: Parametro }) {
+  const { t } = useTraduzione()
+
   return (
     <div className="mt-3 rounded-voce border border-bordo bg-fondo px-3 py-2">
       {/* «Parametro» è vocabolario interno: chi legge vede un valore. */}
-      <p className="text-xs font-medium text-inchiostro-tenue/80">Il valore applicato</p>
+      <p className="text-xs font-medium text-inchiostro-tenue/80">{t('passo.valoreApplicato')}</p>
       <p className="mt-0.5 text-sm text-inchiostro">
         <ValoreParametro parametro={parametro} />
       </p>
       <div className="mt-2">
-        <Fonti fonti={[parametro.fonte]} titolo="Da dove viene il numero" />
+        <Fonti fonti={[parametro.fonte]} titolo={t('passo.daDoveVieneIlNumero')} />
       </div>
     </div>
   )
@@ -82,16 +96,20 @@ function Etichetta({ children }: { children: React.ReactNode }) {
  * direbbe una cosa vera e priva di senso.
  */
 function Valore({ passo }: { passo: Passo }) {
+  const { t, lingua } = useTraduzione()
+  const { inEuro, inEuroConSegno } = formato(lingua)
   const esito = passo.esito
 
   if (esito.stato === 'nonDovuto') {
-    return <Etichetta>Non dovuto</Etichetta>
+    return <Etichetta>{t('passo.nonDovuto')}</Etichetta>
   }
 
   if (esito.stato === 'verifica') {
     return (
       <span className="flex items-center gap-2">
-        <Etichetta>{esito.superata ? 'Presupposto soddisfatto' : 'Presupposto assente'}</Etichetta>
+        <Etichetta>
+          {esito.superata ? t('passo.presuppostoSoddisfatto') : t('passo.presuppostoAssente')}
+        </Etichetta>
         <span className="cifre text-sm text-inchiostro-tenue">{inEuro(esito.grandezzaLetta)}</span>
       </span>
     )
@@ -118,7 +136,7 @@ function Valore({ passo }: { passo: Passo }) {
   return (
     <span
       className={`cifre text-lg font-semibold ${
-        esito.segno === 'aggiunge' ? 'text-verde-scuro' : 'text-inchiostro'
+        esito.segno === 'aggiunge' ? 'text-verde-testo' : 'text-inchiostro'
       }`}
     >
       {inEuroConSegno(esito.effettoSulNetto)}
@@ -145,6 +163,8 @@ function Ragione({ passo }: { passo: Passo }) {
 }
 
 export function RigaPasso({ passo, annidato = false }: { passo: Passo; annidato?: boolean }) {
+  const { t, lingua } = useTraduzione()
+  const { inEuro } = formato(lingua)
   const esito = passo.esito
 
   return (
@@ -156,9 +176,7 @@ export function RigaPasso({ passo, annidato = false }: { passo: Passo; annidato?
       }
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h4
-          className={`font-medium text-inchiostro ${annidato ? 'text-sm' : 'text-base'}`}
-        >
+        <h4 className={`font-medium text-inchiostro ${annidato ? 'text-sm' : 'text-base'}`}>
           {passo.etichetta}
         </h4>
         <Valore passo={passo} />
@@ -166,7 +184,7 @@ export function RigaPasso({ passo, annidato = false }: { passo: Passo; annidato?
 
       {esito.stato === 'applicato' && esito.segno !== 'neutro' ? (
         <p className="mt-0.5 text-xs text-inchiostro-tenue">
-          calcolata su <span className="cifre">{inEuro(esito.entra)}</span>
+          {t('passo.calcolataSu')} <span className="cifre">{inEuro(esito.entra)}</span>
         </p>
       ) : null}
 
@@ -183,7 +201,7 @@ export function RigaPasso({ passo, annidato = false }: { passo: Passo; annidato?
             così* sta sul passo, la fonte che dice *il numero è questo* sta sul
             parametro (D-026).
           */}
-          <Fonti fonti={passo.fonti} titolo="La regola applicata" />
+          <Fonti fonti={passo.fonti} titolo={t('passo.regolaApplicata')} />
         </div>
       ) : null}
 
@@ -195,7 +213,7 @@ export function RigaPasso({ passo, annidato = false }: { passo: Passo; annidato?
       */}
       <details className="mt-3 text-xs">
         <summary className="cursor-pointer text-inchiostro-tenue/80 hover:text-inchiostro">
-          La regola, in linguaggio normativo
+          {t('passo.regolaNormativa')}
         </summary>
         <p className="mt-1 leading-relaxed text-inchiostro-tenue">{passo.regola}</p>
       </details>

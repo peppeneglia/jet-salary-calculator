@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * La citazione di una fonte, come dato e non come nota a piè di pagina.
  *
@@ -5,12 +7,26 @@
  * numero uno è la ricerca, e va dimostrata **dentro l'artefatto**, non in un
  * README. Provenienza e data di consultazione arrivano dal dato — se un
  * domani cambiano, la pagina cambia da sola.
+ *
+ * ⚠️ **Cosa non si traduce, ed è sostanza** (D-041): `atto` e `riferimento`
+ * restano in italiano in entrambe le lingue. *L. 30/12/2024 n. 207, art. 1
+ * c. 6* è la chiave con cui si cerca il testo su Normattiva; tradurla la
+ * renderebbe inservibile proprio a chi volesse verificarla. Cambia la cornice
+ * — *verificata il*, *importata* — non la citazione.
+ *
+ * La data invece **segue la lingua**: la stessa consultazione si scrive
+ * `28/08/2026` o `28 Aug 2026`, e la fonte la porta in ISO 8601 proprio perché
+ * la forma non sia decisa nel dato.
  */
 
 import type { Fonte } from '../../core/types'
-import { inData } from '../_lib/formato'
+import { useTraduzione } from '../_i18n/provider'
+import { formato } from '../_lib/formato'
+import { Avviso } from './avviso'
 
 function Citazione({ fonte }: { fonte: Fonte }) {
+  const { t, lingua } = useTraduzione()
+  const { inData } = formato(lingua)
   const testo = fonte.riferimento ? `${fonte.atto}, ${fonte.riferimento}` : fonte.atto
 
   return (
@@ -36,13 +52,18 @@ function Citazione({ fonte }: { fonte: Fonte }) {
           sulle delibere, il resto arriverà importato a una data dichiarata.
         */}
         {fonte.provenienza === 'verificata'
-          ? `· verificata il ${inData(fonte.consultataIl)}`
-          : `· importata${fonte.estrattoIl ? `, estratta il ${inData(fonte.estrattoIl)}` : ''}, consultata il ${inData(fonte.consultataIl)}`}
+          ? t('fonte.verificata', { data: inData(fonte.consultataIl) })
+          : fonte.estrattoIl
+            ? t('fonte.importataConEstrazione', {
+                estratta: inData(fonte.estrattoIl),
+                data: inData(fonte.consultataIl),
+              })
+            : t('fonte.importata', { data: inData(fonte.consultataIl) })}
       </span>
       {fonte.nonVerificato ? (
-        <span className="mt-1 block rounded-voce bg-amber-50 px-2 py-1 text-amber-900">
-          Riserva sulla fonte: {fonte.nonVerificato}
-        </span>
+        <Avviso misura="compatta">
+          {t('fonte.riserva')} {fonte.nonVerificato[lingua]}
+        </Avviso>
       ) : null}
     </li>
   )

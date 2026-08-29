@@ -19,7 +19,7 @@
  * motore non fa sparire in silenzio ciò che non modella (D-033).
  */
 
-import type { EntiRisolti } from '../../core/types'
+import type { EntiRisolti, Multilingua } from '../../core/types'
 import { lombardia, milano } from '../../data/caso-base'
 
 /**
@@ -47,7 +47,7 @@ export type ComuneDelCatalogo =
       readonly codiceCatastale: string
       readonly nome: string
       readonly provincia: string
-      readonly ragione: string
+      readonly ragione: Multilingua
     }
 
 /**
@@ -63,8 +63,10 @@ export type ComuneDelCatalogo =
  * Il testo è condiviso dai due comuni perché la ragione è la stessa: non
  * riguarda Trento o Bolzano, riguarda l'assetto del Trentino-Alto Adige.
  */
-const trentinoAltoAdige =
-  'In Trentino-Alto Adige l’addizionale «regionale» non la fissa la regione: la stabiliscono le due Province autonome, separatamente, ciascuna con le proprie aliquote. La regione, come soggetto che impone il tributo, non esiste. Il calcolatore conosce l’addizionale comunale di questi due comuni ma non quella provinciale, e applicare al suo posto l’aliquota lombarda produrrebbe un numero credibile e sbagliato. Preferiamo dirtelo.'
+const trentinoAltoAdige: Multilingua = {
+  it: 'In Trentino-Alto Adige l’addizionale «regionale» non la fissa la regione: la stabiliscono le due Province autonome, separatamente, ciascuna con le proprie aliquote. La regione, come soggetto che impone il tributo, non esiste. Il calcolatore conosce l’addizionale comunale di questi due comuni ma non quella provinciale, e applicare al suo posto l’aliquota lombarda produrrebbe un numero credibile e sbagliato. Preferiamo dirtelo.',
+  en: 'In Trentino-Alto Adige the “regional” surcharge is not set by the region: it is set by the two autonomous Provinces, separately, each with its own rates. The region, as the authority levying the tax, does not exist. The calculator knows the addizionale comunale of these two municipalities but not the provincial one, and putting the Lombardy rate in its place would produce a credible, wrong number. We would rather tell you.',
+}
 
 const catalogo: readonly ComuneDelCatalogo[] = [
   {
@@ -112,7 +114,7 @@ export interface ComuneSelezionabile {
   readonly nome: string
   readonly provincia: string
   readonly calcolabile: boolean
-  readonly ragione?: string
+  readonly ragione?: Multilingua
 }
 
 export const comuniSelezionabili = (): readonly ComuneSelezionabile[] =>

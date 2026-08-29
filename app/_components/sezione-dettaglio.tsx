@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * «Dove vanno i tuoi soldi» — D-034.
  *
@@ -17,8 +19,9 @@
  */
 
 import type { EnteRisolto, Risultato } from '../../core/types'
+import { useTraduzione } from '../_i18n/provider'
 import { disponiInBlocchi } from '../_lib/blocchi'
-import { NATURE } from '../_lib/testi'
+import { etichettaNatura } from '../_lib/testi'
 import { Fonti } from './fonte'
 import { RigaPasso } from './passo'
 import { Sezione } from './sezione'
@@ -33,6 +36,8 @@ import { Sezione } from './sezione'
  * inclusa.
  */
 function SchedaEnte<P>({ ente, tributo }: { ente: EnteRisolto<P>; tributo: string }) {
+  const { t } = useTraduzione()
+
   return (
     <div className="rounded-blocco border border-bordo bg-carta px-5 py-4">
       <p className="text-xs font-medium text-inchiostro-tenue/80">{tributo}</p>
@@ -40,19 +45,17 @@ function SchedaEnte<P>({ ente, tributo }: { ente: EnteRisolto<P>; tributo: strin
 
       {ente.stato === 'nonIstituito' ? (
         <p className="mt-2 text-sm leading-relaxed text-inchiostro-tenue">
-          Qui questa addizionale non esiste proprio. È diverso da un’aliquota fissata a zero: in un
-          caso il tributo non è mai stato introdotto, nell’altro è stato introdotto e poi azzerato.
-          Per te il risultato è lo stesso, ma non sono la stessa cosa.
+          {t('dettaglio.enteNonIstituito')}
         </p>
       ) : null}
 
       {ente.stato === 'deliberato' ? (
         <>
           <p className="mt-2 text-sm leading-relaxed text-inchiostro-tenue">
-            Aliquote decise dall’ente per il {ente.annoDelibera}.
+            {t('dettaglio.enteDeliberato', { anno: ente.annoDelibera })}
           </p>
           <div className="mt-3">
-            <Fonti fonti={[ente.fonte]} titolo="Da dove vengono le aliquote" />
+            <Fonti fonti={[ente.fonte]} titolo={t('dettaglio.fontiAliquote')} />
           </div>
         </>
       ) : null}
@@ -60,13 +63,11 @@ function SchedaEnte<P>({ ente, tributo }: { ente: EnteRisolto<P>; tributo: strin
       {ente.stato === 'ereditato' ? (
         <>
           <p className="mt-2 text-sm leading-relaxed text-inchiostro-tenue">
-            Per quest’anno l’ente non ha deliberato nuove aliquote, quindi per legge restano quelle
-            del {ente.annoDiProvenienza}. Non vuol dire che non si paga: si continua con le
-            aliquote precedenti, ed è quello che succede alla maggior parte dei comuni.
+            {t('dettaglio.enteEreditato', { anno: ente.annoDiProvenienza })}
           </p>
           <div className="mt-3 space-y-2">
-            <Fonti fonti={[ente.normaDiFallback]} titolo="La norma che lo prevede" />
-            <Fonti fonti={[ente.fonte]} titolo="Da dove vengono le aliquote" />
+            <Fonti fonti={[ente.normaDiFallback]} titolo={t('dettaglio.fontiFallback')} />
+            <Fonti fonti={[ente.fonte]} titolo={t('dettaglio.fontiAliquote')} />
           </div>
         </>
       ) : null}
@@ -75,42 +76,42 @@ function SchedaEnte<P>({ ente, tributo }: { ente: EnteRisolto<P>; tributo: strin
 }
 
 export function SezioneDettaglio({ risultato }: { risultato: Risultato }) {
+  const { t } = useTraduzione()
   const blocchi = disponiInBlocchi(risultato.passi)
 
   return (
-    <Sezione
-      numero="3"
-      titolo="Dove vanno i tuoi soldi"
-      occhiello="Ogni voce con la regola che la determina e la norma da cui viene il numero. Ci sono anche i passaggi intermedi: servono a far tornare i conti."
-    >
+    <Sezione numero="3" titolo={t('dettaglio.titolo')} occhiello={t('dettaglio.occhiello')}>
       <div className="space-y-8">
         <ol className="space-y-4">
-          {blocchi.map((blocco, i) =>
-            blocco.tipo === 'passaggio' ? (
+          {blocchi.map((blocco, i) => {
+            if (blocco.tipo === 'passaggio') {
               /*
                 Un passo senza natura non è una voce: è un passaggio. Sta al
                 proprio posto nella sequenza, non raccolto in fondo — e un gate
                 si mostra anche quando si apre, altrimenti apparirebbe solo per
                 dare cattive notizie.
               */
-              <RigaPasso key={blocco.passo.id} passo={blocco.passo} />
-            ) : (
+              return <RigaPasso key={blocco.passo.id} passo={blocco.passo} />
+            }
+
+            const natura = etichettaNatura(blocco.natura, t)
+            return (
               <li key={`${blocco.natura}-${i}`}>
                 <div className="rounded-sezione border border-bordo bg-fondo p-4 sm:p-5">
                   <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                     <h3 className="text-lg font-semibold tracking-tight text-inchiostro">
-                      {NATURE[blocco.natura].titolo}
+                      {natura.titolo}
                     </h3>
                     <p
                       className={`text-sm font-medium ${
-                        blocco.natura === 'aggiunge' ? 'text-verde-scuro' : 'text-inchiostro-tenue'
+                        blocco.natura === 'aggiunge' ? 'text-verde-testo' : 'text-inchiostro-tenue'
                       }`}
                     >
-                      {NATURE[blocco.natura].destinazione}
+                      {natura.destinazione}
                     </p>
                   </div>
                   <p className="mt-1 text-sm leading-relaxed text-inchiostro-tenue">
-                    {NATURE[blocco.natura].spiegazione}
+                    {natura.spiegazione}
                   </p>
                   <ul className="mt-4 space-y-3">
                     {blocco.passi.map((p) => (
@@ -119,21 +120,20 @@ export function SezioneDettaglio({ risultato }: { risultato: Risultato }) {
                   </ul>
                 </div>
               </li>
-            ),
-          )}
+            )
+          })}
         </ol>
 
         <div>
           <h3 className="text-sm font-semibold tracking-tight text-inchiostro">
-            Chi incassa le addizionali, e come sono state fissate
+            {t('dettaglio.entiTitolo')}
           </h3>
           <p className="mt-1 text-sm leading-relaxed text-inchiostro-tenue">
-            Le addizionali dipendono da dove vivi, e non tutti gli enti le fissano allo stesso
-            modo: alcuni deliberano ogni anno, altri lasciano in vigore quelle dell’anno prima.
+            {t('dettaglio.entiOcchiello')}
           </p>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <SchedaEnte ente={risultato.enti.regionale} tributo="Addizionale regionale" />
-            <SchedaEnte ente={risultato.enti.comunale} tributo="Addizionale comunale" />
+            <SchedaEnte ente={risultato.enti.regionale} tributo={t('dettaglio.tributoRegionale')} />
+            <SchedaEnte ente={risultato.enti.comunale} tributo={t('dettaglio.tributoComunale')} />
           </div>
         </div>
       </div>

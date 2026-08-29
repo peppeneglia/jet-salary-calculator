@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * Il numero, e le sue tre divisioni.
  *
@@ -13,30 +15,37 @@
  */
 
 import type { Mensilita, Risultato } from '../../core/types'
-import { inEuro } from '../_lib/formato'
-import { CONTRATTI } from '../_lib/testi'
+import { useTraduzione } from '../_i18n/provider'
+import { formato } from '../_lib/formato'
+import { etichettaContratto } from '../_lib/testi'
 import { BloccoAssunzioni } from './assunzioni'
 import { Sezione } from './sezione'
 
 const DIVISIONI: readonly Mensilita[] = [12, 13, 14]
 
 export function SezioneRisultato({ risultato }: { risultato: Risultato }) {
+  const { t, lingua } = useTraduzione()
+  const { inEuro } = formato(lingua)
   const { enti, input } = risultato
 
   return (
     <Sezione
       numero="2"
-      titolo="Il risultato"
-      occhiello={`${CONTRATTI[input.tipoContratto]}, ${enti.comunale.nome}, anno ${risultato.annoImposta}.`}
+      titolo={t('risultato.titolo')}
+      occhiello={t('risultato.occhiello', {
+        contratto: etichettaContratto(input.tipoContratto, t),
+        comune: enti.comunale.nome,
+        anno: risultato.annoImposta,
+      })}
     >
       <div className="space-y-6">
         <div className="rounded-blocco border border-verde-bordo bg-verde-velo px-6 py-7 text-center">
-          <p className="text-sm font-medium text-inchiostro-tenue">Netto annuo</p>
-          <p className="cifre mt-1 text-4xl font-semibold tracking-tight text-verde-scuro sm:text-5xl">
+          <p className="text-sm font-medium text-inchiostro-tenue">{t('risultato.nettoAnnuo')}</p>
+          <p className="cifre mt-1 text-4xl font-semibold tracking-tight text-verde-testo sm:text-5xl">
             {inEuro(risultato.nettoAnnuo)}
           </p>
           <p className="cifre mt-2 text-sm text-inchiostro-tenue">
-            da una RAL di {inEuro(input.ral)}
+            {t('risultato.daUnaRal', { importo: inEuro(input.ral) })}
           </p>
         </div>
 
@@ -49,18 +58,18 @@ export function SezioneRisultato({ risultato }: { risultato: Risultato }) {
                   key={m}
                   aria-current={scelta ? 'true' : undefined}
                   className={`rounded-blocco border px-4 py-4 text-center ${
-                    scelta
-                      ? 'border-verde-bordo bg-verde-velo'
-                      : 'border-bordo bg-carta'
+                    scelta ? 'border-verde-bordo bg-verde-velo' : 'border-bordo bg-carta'
                   }`}
                 >
                   <p className="text-xs font-medium text-inchiostro-tenue">
-                    su {m} mensilità
-                    {scelta ? <span className="sr-only"> — la mensilità selezionata</span> : null}
+                    {t('risultato.suMensilita', { n: m })}
+                    {scelta ? (
+                      <span className="sr-only">{t('risultato.mensilitaSelezionata')}</span>
+                    ) : null}
                   </p>
                   <p
                     className={`cifre mt-1 font-semibold tracking-tight ${
-                      scelta ? 'text-2xl text-verde-scuro' : 'text-xl text-inchiostro-tenue'
+                      scelta ? 'text-2xl text-verde-testo' : 'text-xl text-inchiostro-tenue'
                     }`}
                   >
                     {inEuro(risultato.nettoMensile[m])}
@@ -71,10 +80,9 @@ export function SezioneRisultato({ risultato }: { risultato: Risultato }) {
           </div>
           <p className="mt-3 text-xs leading-relaxed text-inchiostro-tenue">
             <strong className="font-medium text-inchiostro">
-              È sempre lo stesso stipendio, diviso in modi diversi.
+              {t('risultato.notaMensilitaTitolo')}
             </strong>{' '}
-            Il totale dell’anno non cambia: cambia quanto ti arriva ogni volta. Chi ha quattordici
-            mensilità non guadagna meno di chi ne ha dodici.
+            {t('risultato.notaMensilitaCorpo')}
           </p>
         </div>
 
@@ -87,8 +95,8 @@ export function SezioneRisultato({ risultato }: { risultato: Risultato }) {
         <BloccoAssunzioni
           assunzioni={risultato.assunzioni}
           collocazione="accanto-al-numero"
-          titolo="Cosa vuol dire esattamente questa cifra"
-          occhiello="Come va letta questa cifra, per il calcolo che hai appena fatto."
+          titolo={t('risultato.assunzioniTitolo')}
+          occhiello={t('risultato.assunzioniOcchiello')}
         />
       </div>
     </Sezione>

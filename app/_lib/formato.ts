@@ -5,51 +5,129 @@
  * calcolo lavora a precisione piena e tronca alla quarta cifra solo dove lo
  * impone la norma, che è logica di `core/`. Qui si decide come si scrive un
  * numero, mai quanto vale.
+ *
+ * ⚠️ **La lingua entra qui come entra nel motore.** Non esiste una funzione
+ * `inEuro(n)` senza lingua: `1.234,56 €` e `€1,234.56` sono lo stesso importo
+ * scritto due volte, e quale delle due si scriva non è una costante del modulo.
+ * `formato(lingua)` restituisce l'insieme coerente — importi, aliquote e date
+ * nella stessa convenzione — perché la regola di D-038 vale anche qui: una
+ * riga non può avere due separatori decimali diversi.
+ *
+ * Il tag BCP 47 arriva da `data/tag-lingua.ts`, che è la sua unica sede:
+ * scriverlo anche qui creerebbe due posti che devono restare d'accordo.
  */
 
-const importo = new Intl.NumberFormat('it-IT', {
-  style: 'currency',
-  currency: 'EUR',
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-})
+import type { CodiceLingua } from '../../core/types'
+import { TAG } from '../../data/tag-lingua'
+
+export interface Formato {
+  /** Un importo con il simbolo di valuta. */
+  readonly inEuro: (n: number) => string
+  /**
+   * Il segno è dato dal motore, non ricostruito qui: `effettoSulNetto` è già
+   * negativo per le voci che sottraggono. `signDisplay` lo rende visibile anche
+   * quando è positivo, che è il punto delle voci del ramo che aggiunge.
+   */
+  readonly inEuroConSegno: (n: number) => string
+  /**
+   * Le aliquote sono in punti percentuali, non in frazione: 9,19% è il numero
+   * 9.19. Va scritto con il separatore della lingua, come ogni altro numero.
+   */
+  readonly inPercentuale: (n: number) => string
+  /** Le date arrivano in ISO 8601 e si mostrano nella forma della lingua. */
+  readonly inData: (iso: string) => string
+  /** Il tag BCP 47 in uso, per chi deve costruirsi un formattatore proprio. */
+  readonly tag: string
+}
+
+const cache = new Map<CodiceLingua, Formato>()
+
+const monta = (lingua: CodiceLingua): Formato => {
+  const tag = TAG[lingua]
+
+  const importo = new Intl.NumberFormat(tag, {
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+
+  const importoConSegno = new Intl.NumberFormat(tag, {
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+    signDisplay: 'exceptZero',
+  })
+
+  const percentuale = new Intl.NumberFormat(tag, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  })
+
+  /**
+   * `28/08/2026` in italiano, `28 Aug 2026` in inglese. Il mese scritto a
+   * lettere non è vezzo: `08/09` è ambiguo fra due convenzioni, e su una pagina
+   * che dichiara quando una fonte è stata letta l'ambiguità costa.
+   */
+  const data = new Intl.DateTimeFormat(
+    tag,
+    lingua === 'it'
+      ? { day: '2-digit', month: '2-digit', year: 'numeric' }
+      : { day: 'numeric', month: 'short', year: 'numeric' },
+  )
+
+  return {
+    tag,
+    inEuro: (n) => importo.format(n),
+    inEuroConSegno: (n) => importoConSegno.format(n),
+    inPercentuale: (n) => `${percentuale.format(n)}%`,
+    inData: (iso) => {
+      const d = new Date(`${iso}T00:00:00Z`)
+      return Number.isNaN(d.getTime()) ? iso : data.format(d)
+    },
+  }
+}
+
+export const formato = (lingua: CodiceLingua): Formato => {
+  const esistente = cache.get(lingua)
+  if (esistente !== undefined) return esistente
+  const nuovo = monta(lingua)
+  cache.set(lingua, nuovo)
+  return nuovo
+}
 
 /**
- * Il segno è dato dal motore, non ricostruito qui: `effettoSulNetto` è già
- * negativo per le voci che sottraggono. `signDisplay` lo rende visibile anche
- * quando è positivo, che è il punto delle voci del ramo che aggiunge.
+ * Legge un importo scritto a mano.
+ *
+ * ⚠️ **Non è validazione, è lettura**: dice quale numero ha scritto chi digita,
+ * non se quel numero vada bene. Il giudizio sta in `validazione.ts`.
+ *
+ * Chi scrive uno stipendio in italiano scrive `30.000`, e in inglese `30,000`:
+ * sono lo stesso importo, e rifiutarli entrambi perché contengono un separatore
+ * sarebbe pedanteria. Si tolgono spazi e separatore delle migliaia della
+ * lingua, si porta il separatore decimale a punto, e si legge. Tutto ciò che
+ * resta non numerico fa fallire la lettura, e a quel punto c'è un messaggio che
+ * dice cosa scrivere.
  */
-const importoConSegno = new Intl.NumberFormat('it-IT', {
-  style: 'currency',
-  currency: 'EUR',
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-  signDisplay: 'exceptZero',
-})
+export const leggiImporto = (testo: string, lingua: CodiceLingua): number | undefined => {
+  const grezzo = testo.trim()
+  if (grezzo === '') return undefined
 
-/**
- * Le aliquote sono in punti percentuali, non in frazione: 9,19% è il numero
- * 9.19. Va scritto con la virgola, come ogni altro numero della pagina.
- */
-const percentuale = new Intl.NumberFormat('it-IT', {
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 2,
-})
+  const migliaia = lingua === 'it' ? '.' : ','
+  const decimale = lingua === 'it' ? ',' : '.'
 
-const dataIta = new Intl.DateTimeFormat('it-IT', {
-  day: '2-digit',
-  month: '2-digit',
-  year: 'numeric',
-})
+  const normalizzato = grezzo
+    .replace(/[\s  ]/g, '')
+    .replace(/€/g, '')
+    .split(migliaia)
+    .join('')
+    .replace(decimale, '.')
 
-export const inEuro = (n: number): string => importo.format(n)
+  if (!/^-?\d*\.?\d*$/.test(normalizzato) || normalizzato === '' || normalizzato === '-') {
+    return undefined
+  }
 
-export const inEuroConSegno = (n: number): string => importoConSegno.format(n)
-
-export const inPercentuale = (n: number): string => `${percentuale.format(n)}%`
-
-/** Le date delle fonti arrivano in ISO 8601 e si mostrano nel formato italiano. */
-export const inData = (iso: string): string => {
-  const d = new Date(`${iso}T00:00:00Z`)
-  return Number.isNaN(d.getTime()) ? iso : dataIta.format(d)
+  const n = Number(normalizzato)
+  return Number.isFinite(n) ? n : undefined
 }

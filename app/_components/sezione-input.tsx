@@ -1,10 +1,14 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { useId, useRef, useState } from 'react'
 import type { Mensilita, TipoContratto } from '../../core/types'
-import type { RichiestaCalcolo } from '../_lib/api'
+import { useTraduzione } from '../_i18n/provider'
+import type { Errore, RichiestaCalcolo } from '../_lib/api'
 import type { ComuneSelezionabile } from '../_lib/comuni'
-import { CONTRATTI } from '../_lib/testi'
+import { messaggioErrore } from '../_lib/errori'
+import { etichettaContratto } from '../_lib/testi'
+import { leggiRal, validaComune } from '../_lib/validazione'
+import { Avviso } from './avviso'
 import { Sezione } from './sezione'
 
 const TIPI: readonly TipoContratto[] = ['indeterminato', 'determinato', 'apprendistato']
@@ -101,13 +105,36 @@ export function SezioneInput({
   inCorso: boolean
   onCalcola: (richiesta: RichiestaCalcolo) => void
 }) {
+  const { t, lingua } = useTraduzione()
+
   const idRal = useId()
   const idComune = useId()
+  const idErroreRal = `${idRal}-errore`
+  const idAiutoRal = `${idRal}-aiuto`
+  const idErroreComune = `${idComune}-errore`
+  const idAiutoComune = `${idComune}-aiuto`
+
+  const campoRal = useRef<HTMLInputElement>(null)
+  const campoComune = useRef<HTMLSelectElement>(null)
 
   const [ral, setRal] = useState(String(iniziale.ral))
   const [codiceCatastale, setCodiceCatastale] = useState(iniziale.codiceCatastale)
   const [tipoContratto, setTipoContratto] = useState<TipoContratto>(iniziale.tipoContratto)
   const [mensilita, setMensilita] = useState<Mensilita>(iniziale.mensilita ?? 13)
+
+  /**
+   * Gli errori del modulo, per campo — D-043.
+   *
+   * ⚠️ **La validazione nativa del browser è spenta** (`noValidate`), e il campo
+   * RAL è `type="text"` e non `type="number"`. Due ragioni, e nessuna delle due
+   * è estetica: le bolle del browser stanno fuori dalla nostra grafica e
+   * parlano la lingua del sistema operativo, non quella scelta in fondo alla
+   * pagina; e `type="number"` **rifiuta le lettere prima ancora che arrivino**,
+   * il che sembra un vantaggio ma rende impossibile spiegare cosa scrivere a
+   * chi ha incollato un valore con dentro un simbolo. Un campo che non accetta
+   * un errore non può nemmeno correggerlo.
+   */
+  const [errori, setErrori] = useState<{ ral?: Errore; comune?: Errore }>({})
 
   /**
    * ⚠️ Conseguenza di D-036, da gestire in pagina.
@@ -123,91 +150,140 @@ export function SezioneInput({
 
   const invia = (e: React.FormEvent) => {
     e.preventDefault()
-    onCalcola({ ral: Number(ral), codiceCatastale, tipoContratto, mensilita })
+
+    const lettura = leggiRal(ral, lingua)
+    const erroreComune = validaComune(codiceCatastale)
+
+    if (!lettura.ok || erroreComune !== undefined) {
+      setErrori({
+        ral: lettura.ok ? undefined : lettura.errore,
+        comune: erroreComune,
+      })
+      // Il fuoco va sul primo campo da correggere: chi naviga da tastiera non
+      // deve cercare dove sia il problema.
+      if (!lettura.ok) campoRal.current?.focus()
+      else campoComune.current?.focus()
+      return
+    }
+
+    setErrori({})
+    onCalcola({
+      ral: lettura.valore,
+      codiceCatastale,
+      tipoContratto,
+      mensilita,
+      lingua,
+    })
   }
 
   return (
-    <Sezione
-      numero="1"
-      titolo="I tuoi dati"
-      occhiello="Impiegato del settore privato, assunto per tutto l’anno."
-    >
-      <form onSubmit={invia} className="space-y-6">
+    <Sezione numero="1" titolo={t('input.titolo')} occhiello={t('input.occhiello')}>
+      {/*
+        `noValidate`: la validazione è nostra, e deve restare nostra. Vedi la
+        nota su `errori`.
+      */}
+      <form onSubmit={invia} noValidate className="space-y-6">
         <div className="grid gap-6 sm:grid-cols-2">
           <Campo
-            etichetta="Retribuzione annua lorda"
+            etichetta={t('input.ralEtichetta')}
             htmlFor={idRal}
-            marcatore={ralIntatta ? 'esempio da modificare' : undefined}
+            marcatore={ralIntatta ? t('input.ralMarcatore') : undefined}
           >
-            <div className="flex items-center rounded-voce border border-bordo bg-carta focus-within:border-bordo-forte">
+            <div
+              className={`flex items-center rounded-voce border bg-carta ${
+                errori.ral ? 'border-avviso-bordo' : 'border-bordo focus-within:border-bordo-forte'
+              }`}
+            >
               <input
+                ref={campoRal}
                 id={idRal}
                 name="ral"
-                type="number"
+                type="text"
                 inputMode="decimal"
-                min={1}
-                step={100}
-                required
+                autoComplete="off"
+                aria-invalid={errori.ral ? true : undefined}
+                aria-describedby={errori.ral ? idErroreRal : idAiutoRal}
                 value={ral}
-                onChange={(e) => setRal(e.target.value)}
+                onChange={(e) => {
+                  setRal(e.target.value)
+                  // L'errore sparisce appena si mette mano al campo: tenerlo
+                  // finché non si ripreme il bottone farebbe leggere un
+                  // rimprovero su un valore già corretto.
+                  if (errori.ral) setErrori((p) => ({ ...p, ral: undefined }))
+                }}
                 className="cifre w-full rounded-voce bg-transparent px-3 py-2.5 text-lg outline-none"
               />
               <span aria-hidden className="pr-3 text-inchiostro-tenue">
                 €
               </span>
             </div>
-            <p className="mt-2 text-xs leading-relaxed text-inchiostro-tenue">
-              {ralIntatta
-                ? 'Abbiamo messo una cifra di esempio per mostrarti come funziona. Sostituiscila con la tua: è quella scritta sul contratto, prima di ogni trattenuta.'
-                : 'È lo stipendio annuo scritto sul contratto, prima di ogni trattenuta.'}
-            </p>
+
+            {errori.ral ? (
+              <Avviso id={idErroreRal} misura="compatta" vivo>
+                {messaggioErrore(errori.ral, t, lingua)}
+              </Avviso>
+            ) : (
+              <p id={idAiutoRal} className="mt-2 text-xs leading-relaxed text-inchiostro-tenue">
+                {ralIntatta ? t('input.ralAiutoEsempio') : t('input.ralAiuto')}
+              </p>
+            )}
           </Campo>
 
-          <Campo etichetta="Comune in cui vivi" htmlFor={idComune}>
+          <Campo etichetta={t('input.comuneEtichetta')} htmlFor={idComune}>
             <select
+              ref={campoComune}
               id={idComune}
               name="codiceCatastale"
-              required
+              aria-invalid={errori.comune ? true : undefined}
+              aria-describedby={errori.comune ? idErroreComune : idAiutoComune}
               value={codiceCatastale}
-              onChange={(e) => setCodiceCatastale(e.target.value)}
-              className="w-full rounded-voce border border-bordo bg-carta px-3 py-2.5 text-lg outline-none focus:border-bordo-forte"
+              onChange={(e) => {
+                setCodiceCatastale(e.target.value)
+                if (errori.comune) setErrori((p) => ({ ...p, comune: undefined }))
+              }}
+              className={`w-full rounded-voce border bg-carta px-3 py-2.5 text-lg outline-none ${
+                errori.comune ? 'border-avviso-bordo' : 'border-bordo focus:border-bordo-forte'
+              }`}
             >
               {comuni.map((c) => (
                 <option key={c.codiceCatastale} value={c.codiceCatastale}>
-                  {c.nome} ({c.provincia}){c.calcolabile ? '' : ' — calcolo non disponibile'}
+                  {c.nome} ({c.provincia})
+                  {c.calcolabile ? '' : t('input.comuneNonDisponibile')}
                 </option>
               ))}
             </select>
 
-            {/*
+            {errori.comune ? (
+              <Avviso id={idErroreComune} misura="compatta" vivo>
+                {messaggioErrore(errori.comune, t, lingua)}
+              </Avviso>
+            ) : /*
               D-037: i comuni non calcolabili si marcano **prima** della
               selezione, non solo nella risposta d'errore. Chi apre l'elenco
               vede il limite, e chi sceglie Trento o Bolzano ne legge la ragione
               senza dover premere niente.
-            */}
-            {comuneScelto && !comuneScelto.calcolabile && comuneScelto.ragione ? (
-              <p className="mt-2 rounded-voce border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs leading-relaxed text-amber-900">
+            */
+            comuneScelto && !comuneScelto.calcolabile && comuneScelto.ragione ? (
+              <Avviso id={idAiutoComune} misura="compatta">
                 <strong className="font-semibold">
-                  Per {comuneScelto.nome} non possiamo calcolare il netto.
+                  {t('input.comuneNonCalcolabile', { comune: comuneScelto.nome })}
                 </strong>{' '}
-                {comuneScelto.ragione}
-              </p>
+                {comuneScelto.ragione[lingua]}
+              </Avviso>
             ) : (
-              <p className="mt-2 text-xs leading-relaxed text-inchiostro-tenue">
-                Serve per le addizionali di Regione e Comune. Conta dove avevi il domicilio fiscale
-                al 1° gennaio. Per ora l’elenco contiene i comuni che abbiamo verificato uno per
-                uno.
+              <p id={idAiutoComune} className="mt-2 text-xs leading-relaxed text-inchiostro-tenue">
+                {t('input.comuneAiuto')}
               </p>
             )}
           </Campo>
         </div>
 
-        <Campo etichetta="Tipo di contratto">
+        <Campo etichetta={t('input.contrattoEtichetta')}>
           <Segmenti
-            nome="Tipo di contratto"
+            nome={t('input.contrattoEtichetta')}
             opzioni={TIPI}
             valore={tipoContratto}
-            etichettaDi={(t) => CONTRATTI[t]}
+            etichettaDi={(x) => etichettaContratto(x, t)}
             onCambia={setTipoContratto}
           />
           {/*
@@ -217,34 +293,33 @@ export function SezioneInput({
           */}
           <p className="mt-3 rounded-voce border border-bordo bg-fondo px-3 py-2.5 text-xs leading-relaxed text-inchiostro-tenue">
             <strong className="font-medium text-inchiostro">
-              Determinato e indeterminato danno lo stesso netto.
+              {t('input.contrattoNotaTitolo')}
             </strong>{' '}
-            Non è una scorciatoia: sui contratti a termine c’è un contributo in più, ma lo paga
-            l’azienda e non passa dalla tua busta paga.{' '}
-            <strong className="font-medium text-inchiostro">L’apprendistato invece cambia</strong>:
-            lì la legge riduce i contributi a carico tuo, e il netto sale davvero.
+            {t('input.contrattoNotaCorpo')}{' '}
+            <strong className="font-medium text-inchiostro">
+              {t('input.contrattoNotaApprendistato')}
+            </strong>
+            {t('input.contrattoNotaCoda')}
           </p>
         </Campo>
 
-        <Campo etichetta="In quante mensilità" marcatore="facoltativo">
+        <Campo etichetta={t('input.mensilitaEtichetta')} marcatore={t('input.mensilitaMarcatore')}>
           <Segmenti
-            nome="Mensilità"
+            nome={t('input.mensilitaEtichetta')}
             opzioni={MENSILITA}
             valore={mensilita}
             etichettaDi={(m) => String(m)}
             onCambia={setMensilita}
           />
-          <p className="mt-2 text-xs text-inchiostro-tenue">
-            Cambia in quante parti si divide lo stipendio, non quanto prendi in un anno.
-          </p>
+          <p className="mt-2 text-xs text-inchiostro-tenue">{t('input.mensilitaAiuto')}</p>
         </Campo>
 
         <button
           type="submit"
           disabled={inCorso}
-          className="w-full rounded-voce bg-verde px-6 py-3.5 text-base font-semibold text-inchiostro transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+          className="w-full rounded-voce bg-verde px-6 py-3.5 text-base font-semibold text-su-verde transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
         >
-          {inCorso ? 'Calcolo in corso…' : 'Calcola il netto'}
+          {inCorso ? t('input.inCorso') : t('input.calcola')}
         </button>
       </form>
     </Sezione>

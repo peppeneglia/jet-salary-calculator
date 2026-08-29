@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * Le assunzioni dichiarate, rese in pagina.
  *
@@ -12,16 +14,17 @@
  *   considerato;
  * - nella pagina «Cosa questo calcolatore non copre», con il catalogo intero e
  *   la condizione di ciascuna scritta accanto.
+ *
+ * ⚠️ **È qui, e in nessun altro posto, che il testo di un'assunzione sceglie la
+ * propria lingua.** Il catalogo porta entrambe (D-041) e il motore le lascia
+ * intatte, proprio perché una delle due pagine non passa dal motore: con la
+ * risoluzione a monte le strade sarebbero due, e la stessa voce potrebbe
+ * leggersi diversa a seconda di dove compare.
  */
 
 import type { Assunzione } from '../../core/types'
+import { useTraduzione } from '../_i18n/provider'
 import { Fonti } from './fonte'
-
-const DIREZIONE: Readonly<Record<Assunzione['direzione'], string>> = {
-  nessuna: 'Non cambia la cifra',
-  'netto-reale-piu-alto': 'In questo caso prendi più di quanto calcoliamo',
-  'netto-reale-piu-basso': 'In questo caso prendi meno di quanto calcoliamo',
-}
 
 export function VoceAssunzione({
   assunzione,
@@ -31,6 +34,15 @@ export function VoceAssunzione({
   /** Quando la voce si applica. Usata dal catalogo, dove le condizioni contano. */
   quando?: string
 }) {
+  const { t, lingua } = useTraduzione()
+
+  const direzione =
+    assunzione.direzione === 'nessuna'
+      ? t('assunzioni.direzioneNessuna')
+      : assunzione.direzione === 'netto-reale-piu-alto'
+        ? t('assunzioni.direzionePiuAlto')
+        : t('assunzioni.direzionePiuBasso')
+
   return (
     <li className="rounded-blocco border border-bordo bg-carta px-5 py-4">
       <div className="flex flex-wrap items-center gap-2">
@@ -42,19 +54,19 @@ export function VoceAssunzione({
           si sposta la trasforma da lacuna in limite conosciuto.
         */}
         <span className="rounded-voce bg-fondo px-2 py-0.5 text-xs text-inchiostro-tenue">
-          {DIREZIONE[assunzione.direzione]}
+          {direzione}
         </span>
       </div>
 
-      {quando ? (
-        <p className="mt-2 text-xs font-medium text-inchiostro">{quando}</p>
-      ) : null}
+      {quando ? <p className="mt-2 text-xs font-medium text-inchiostro">{quando}</p> : null}
 
-      <p className="mt-2 text-sm leading-relaxed text-inchiostro-tenue">{assunzione.testo}</p>
+      <p className="mt-2 text-sm leading-relaxed text-inchiostro-tenue">
+        {assunzione.testo[lingua]}
+      </p>
 
       {assunzione.fonte ? (
         <div className="mt-3">
-          <Fonti fonti={[assunzione.fonte]} titolo="Riferimento" />
+          <Fonti fonti={[assunzione.fonte]} titolo={t('fonte.riferimento')} />
         </div>
       ) : null}
     </li>

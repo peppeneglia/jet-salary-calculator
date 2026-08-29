@@ -3,15 +3,27 @@
  *
  * Il motore emette `natura`, che è un identificatore di dominio: `previdenza`,
  * `erariale`, `locale`, `aggiunge`. Come si chiamano in pagina è una scelta di
- * prodotto, e sta qui.
+ * prodotto, e sta qui — cioè in `app/`, perché è vocabolario di interfaccia e
+ * non del calcolo.
  *
  * Le quattro nature **sono quattro destinazioni** — la pensione futura, lo
  * Stato, Regione e Comune, e il lavoratore stesso. È ciò che rende coerente il
  * titolo della sezione (D-034), e per questo ogni gruppo porta entrambi i
  * nomi: quello tecnico e quello che risponde alla domanda «dove vanno».
+ *
+ * ⚠️ **Dal 29/08/2026 le frasi non sono più qui: qui c'è la mappa.** I testi
+ * stanno in `_i18n/risorse.ts`, in due lingue; questo file dice **quale chiave**
+ * corrisponde a quale natura. È la stessa divisione che il motore ha con
+ * `data/testi.ts`: la struttura da una parte, la prosa dall'altra.
+ *
+ * I titoli dei quattro gruppi sono la **prima occorrenza in pagina** dei nomi
+ * degli istituti italiani, ed è lì che l'inglese porta la glossa fra parentesi
+ * (D-041). Le voci sotto usano il nome nudo.
  */
 
+import type { TFunction } from 'i18next'
 import type { Natura, TipoContratto } from '../../core/types'
+import type { SPAZIO } from '../_i18n/istanza'
 
 export interface EtichettaNatura {
   /** Il nome della categoria, in linguaggio tecnico. */
@@ -27,35 +39,44 @@ export interface EtichettaNatura {
  */
 export const ORDINE_NATURE: readonly Natura[] = ['previdenza', 'erariale', 'locale', 'aggiunge']
 
-export const NATURE: Readonly<Record<Natura, EtichettaNatura>> = {
-  previdenza: {
-    titolo: 'Contributi previdenziali',
-    destinazione: 'alla tua pensione futura',
-    spiegazione:
-      'Non sono tasse. Vanno all’INPS e costruiscono la tua pensione: escono dallo stipendio adesso e tornano dopo, sotto forma di assegno. È il motivo per cui li teniamo separati dalle imposte.',
-  },
-  erariale: {
-    titolo: 'IRPEF',
-    destinazione: 'allo Stato',
-    spiegazione:
-      'L’imposta sul reddito che va allo Stato. Cresce per scaglioni: la parte di reddito oltre una certa soglia è tassata di più, ma solo quella parte, non tutto. Le detrazioni la riducono, e non possono portarla sotto zero: se valgono più dell’imposta, l’eccedenza si perde.',
-  },
-  locale: {
-    titolo: 'Addizionale regionale e comunale',
-    destinazione: 'alla sanità regionale e al bilancio del tuo Comune',
-    spiegazione:
-      'Le stesse imposte, incassate da Regione e Comune. Si calcolano sullo stesso reddito dell’IRPEF, non su quello che resta dopo averla pagata. Le aliquote le decide ogni ente, quindi due persone con lo stesso stipendio in due comuni diversi pagano cifre diverse.',
-  },
-  aggiunge: {
-    titolo: 'Voci che aggiungono',
-    destinazione: 'restano a te',
-    spiegazione:
-      'Somme che il datore ti versa in busta e che non vengono tassate. Non sono uno sconto sulle imposte: sono soldi in più. Per questo qui il segno è positivo.',
-  },
+type T = TFunction<typeof SPAZIO>
+
+export const etichettaNatura = (natura: Natura, t: T): EtichettaNatura => {
+  switch (natura) {
+    case 'previdenza':
+      return {
+        titolo: t('nature.previdenzaTitolo'),
+        destinazione: t('nature.previdenzaDestinazione'),
+        spiegazione: t('nature.previdenzaSpiegazione'),
+      }
+    case 'erariale':
+      return {
+        titolo: t('nature.erarialeTitolo'),
+        destinazione: t('nature.erarialeDestinazione'),
+        spiegazione: t('nature.erarialeSpiegazione'),
+      }
+    case 'locale':
+      return {
+        titolo: t('nature.localeTitolo'),
+        destinazione: t('nature.localeDestinazione'),
+        spiegazione: t('nature.localeSpiegazione'),
+      }
+    case 'aggiunge':
+      return {
+        titolo: t('nature.aggiungeTitolo'),
+        destinazione: t('nature.aggiungeDestinazione'),
+        spiegazione: t('nature.aggiungeSpiegazione'),
+      }
+  }
 }
 
-export const CONTRATTI: Readonly<Record<TipoContratto, string>> = {
-  indeterminato: 'Tempo indeterminato',
-  determinato: 'Tempo determinato',
-  apprendistato: 'Apprendistato',
+export const etichettaContratto = (tipo: TipoContratto, t: T): string => {
+  switch (tipo) {
+    case 'indeterminato':
+      return t('contratti.indeterminato')
+    case 'determinato':
+      return t('contratti.determinato')
+    case 'apprendistato':
+      return t('contratti.apprendistato')
+  }
 }
