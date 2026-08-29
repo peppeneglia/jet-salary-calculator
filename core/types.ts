@@ -258,8 +258,21 @@ export interface Input {
    */
   readonly codiceCatastale: string
   readonly tipoContratto: TipoContratto
-  /** Facoltativo: in assenza vale 13. Il valore risolto sta in `Risultato`. */
-  readonly mensilita?: Mensilita
+  /**
+   * In quante parti si divide lo stipendio.
+   *
+   * ⚠️ **Obbligatorio, e lo è diventato** (D-052). Era facoltativo, e il
+   * motore assumeva 13 quando mancava. Un motore che assume un valore che il
+   * chiamante non ha dichiarato restituisce **un numero che nessuno ha
+   * chiesto**: è la colpa di D-036 in scala ridotta, e senza l'etichetta in
+   * pagina che lì la dichiara.
+   *
+   * Il valore iniziale del prodotto — oggi 12 — non sta qui e non sta in
+   * `data/`: **nessuna legge fissa il numero di mensilità**, lo fissano il CCNL
+   * o chi consulta. Vive in `app/_lib/calcolo.ts`, il livello che già valida
+   * l'input. Il valore risolto sta in `Risultato`.
+   */
+  readonly mensilita: Mensilita
 }
 
 // ---------------------------------------------------------------------------

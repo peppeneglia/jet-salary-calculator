@@ -269,7 +269,9 @@ export function calcolaNetto(
   const { f, p, t } = prosa
 
   const ral: number = input.ral
-  const mensilita: Mensilita = input.mensilita ?? 13
+  // D-052: nessun default qui. Il campo è obbligatorio nel tipo, e il valore
+  // iniziale del prodotto vive nel livello che valida l'input.
+  const mensilita: Mensilita = input.mensilita
 
   // -------------------------------------------------------------------------
   // 1. RAL

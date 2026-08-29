@@ -355,6 +355,11 @@ const input = (ral: number, extra: Partial<Input> = {}): Input => ({
   ral: euro(ral),
   codiceCatastale: 'X000',
   tipoContratto: 'indeterminato',
+  // D-052: il campo è obbligatorio, quindi anche qui va dichiarato. Il valore
+  // è indifferente a tutto ciò che questi scenari verificano — le mensilità
+  // dividono il netto annuo, non lo determinano — ed è esattamente quello che
+  // il primo test di questo blocco asserisce.
+  mensilita: 13,
   ...extra,
 })
 
@@ -414,8 +419,40 @@ describe('le mensilità sono viste della stessa grandezza', () => {
     expect(dodici.nettoAnnuo).toBe(quattordici.nettoAnnuo)
   })
 
-  test('la mensilità assente vale 13', () => {
-    expect(calcolaNetto(input(30_000, { mensilita: undefined }), regime, entiStandard, assunzioni, lingua).mensilita).toBe(13)
+  /**
+   * ⚠️ **Questo test ha cambiato oggetto, non è stato aggiustato** (D-052).
+   *
+   * Asseriva *«la mensilità assente vale 13»*. Era vero, e proteggeva la cosa
+   * sbagliata: dopo D-050 l'interfaccia partiva da 12 mentre il motore
+   * continuava ad assumere 13, e **la suite difendeva quello che il prodotto
+   * aveva già smentito**. Un test verde su un comportamento superato è peggio
+   * di nessun test, perché dà la stessa fiducia senza la stessa copertura.
+   *
+   * L'asserzione nuova è più forte perché **non invecchia con una scelta di
+   * prodotto**: che il motore non accetti un input senza mensilità resta vero
+   * qualunque numero il prodotto decida di mostrare per primo.
+   *
+   * Il rifiuto è del compilatore e non del runtime, ed è la forma giusta: il
+   * motore è TypeScript puro e non fa validazione — quella sta un livello
+   * sopra, in `app/_lib/calcolo.ts`, che risponde 400. `@ts-expect-error`
+   * fallisce la build se un giorno il campo tornasse facoltativo, che è
+   * precisamente la regressione da impedire.
+   */
+  test('il motore rifiuta un input senza mensilità', () => {
+    const senzaMensilita = {
+      ral: euro(30_000),
+      codiceCatastale: 'X000',
+      tipoContratto: 'indeterminato',
+    } as const
+
+    // @ts-expect-error — `mensilita` è obbligatorio in `Input` (D-052).
+    const costruisci = (): Input => senzaMensilita
+    expect(costruisci).toBeTypeOf('function')
+
+    // E quando c'è, il motore la riporta intatta: non la reinterpreta.
+    for (const m of mensilita) {
+      expect(calcolaNetto(input(30_000, { mensilita: m }), regime, entiStandard, assunzioni, lingua).mensilita).toBe(m)
+    }
   })
 })
 

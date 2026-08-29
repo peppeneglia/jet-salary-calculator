@@ -13,7 +13,12 @@ export interface RichiestaCalcolo {
   readonly codiceCatastale: string
   readonly tipoContratto: TipoContratto
   /** Facoltativo: in assenza vale 13. Il default lo risolve il motore. */
-  readonly mensilita?: Mensilita
+  /**
+   * ⚠️ **Obbligatorio** (D-052). Chi chiama `POST /api/calcola` deve
+   * dichiararlo: è una rottura voluta del contratto, e rende esplicito un
+   * presupposto che prima stava nascosto in una firma.
+   */
+  readonly mensilita: Mensilita
   /**
    * La lingua in cui si vuole la traccia.
    *

@@ -37,6 +37,28 @@ const CONTRATTI: readonly TipoContratto[] = ['indeterminato', 'determinato', 'ap
 const MENSILITA: readonly Mensilita[] = [12, 13, 14]
 
 /**
+ * Il valore da cui parte il modulo — D-050, D-052.
+ *
+ * ⚠️ **Sta qui e non nel motore, ed è il punto di D-052.** Prima il numero
+ * viveva in due sedi: l'interfaccia partiva da 12 e `core/calcola.ts` assumeva
+ * 13 quando il campo mancava, **con un test che asseriva il 13**. Due livelli
+ * rispondevano in modo diverso alla stessa domanda, e la suite proteggeva
+ * quello che il prodotto aveva già smentito. Il difetto non era il numero: era
+ * il numero scritto due volte.
+ *
+ * ⚠️ **E non sta in `data/`.** Il numero di mensilità non è un parametro
+ * normativo: nessuna legge lo fissa, lo fissano il CCNL o la scelta di chi
+ * consulta. È lo stesso argomento con cui D-031 ha tenuto le assunzioni fuori
+ * da `Regime` — non si confonde *quanto vale una cosa per legge* con *cosa
+ * questo prodotto mostra per primo*.
+ *
+ * **Dodici e non tredici**: tredici è la mensilità più diffusa, ma non è
+ * quella neutra. Partire da 13 fa leggere un primo numero che porta già dentro
+ * un'ipotesi sul contratto che nessuno ha dichiarato.
+ */
+export const MENSILITA_INIZIALE: Mensilita = 12
+
+/**
  * L'esito porta con sé lo stato HTTP, così l'handler non deve ridecidere cosa
  * significa un errore: le tre famiglie di codici sono tre cose diverse e
  * meritano tre risposte diverse.
@@ -79,16 +101,25 @@ export function eseguiCalcolo(corpo: unknown, linguaRichiesta?: CodiceLingua): E
     return ko({ codice: 'contratto-non-valido' }, 400)
   }
 
-  // Mensilità: facoltativa. Assente significa «usa il default», non «zero» —
-  // e il default lo risolve il motore, non questa funzione.
+  /*
+   * Mensilità: **obbligatoria** — D-052.
+   *
+   * ⚠️ Era facoltativa, e l'assenza significava «usa il default», che il
+   * motore risolveva in 13. Chi chiamava l'API senza il campo riceveva un
+   * netto mensile costruito su un presupposto che non aveva dichiarato e che
+   * niente, nella risposta, gli diceva. Adesso l'assenza è un errore come le
+   * altre: `mensilita-non-valida`, 400.
+   *
+   * Il valore iniziale del modulo — `MENSILITA_INIZIALE` — vive in questo
+   * file, ma **non è un ripiego applicato qui**: è quello che la pagina mette
+   * nel campo prima che l'utente lo tocchi. Applicarlo anche alle richieste in
+   * arrivo rimetterebbe in piedi esattamente il difetto appena chiuso.
+   */
   const mensilitaGrezza = campi.mensilita
-  let mensilita: Mensilita | undefined
-  if (mensilitaGrezza !== undefined && mensilitaGrezza !== null) {
-    if (typeof mensilitaGrezza !== 'number' || !MENSILITA.includes(mensilitaGrezza as Mensilita)) {
-      return ko({ codice: 'mensilita-non-valida' }, 400)
-    }
-    mensilita = mensilitaGrezza as Mensilita
+  if (typeof mensilitaGrezza !== 'number' || !MENSILITA.includes(mensilitaGrezza as Mensilita)) {
+    return ko({ codice: 'mensilita-non-valida' }, 400)
   }
+  const mensilita = mensilitaGrezza as Mensilita
 
   // Comune
   const codiceCatastale = campi.codiceCatastale
