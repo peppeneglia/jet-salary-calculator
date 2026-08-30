@@ -12,6 +12,62 @@ const nextConfig: NextConfig = {
    * dove è parte del documento invece di esserne un'aggiunta automatica.
    */
   agentRules: false,
+
+  /**
+   * ⚠️ **`X-Powered-By: Next.js` esce per impostazione predefinita.** Dice a
+   * chiunque quale framework e quindi quale superficie ha davanti, senza dare
+   * nulla in cambio a chi legge la pagina. Si spegne qui.
+   */
+  poweredByHeader: false,
+
+  /**
+   * Le intestazioni **uguali per ogni richiesta**.
+   *
+   * ⚠️ **La Content-Security-Policy non è qui, ed è deliberato:** ha un nonce
+   * diverso a ogni richiesta e vive in `proxy.ts`. Queste invece non dipendono
+   * dalla richiesta, e stando qui coprono anche gli asset statici, che il proxy
+   * non attraversa.
+   *
+   * **Cosa chiude ciascuna, perché un elenco di intestazioni senza motivazione
+   * è cargo cult:**
+   *
+   * - `X-Content-Type-Options` — impedisce al browser di indovinare il tipo di
+   *   una risposta. Riguarda direttamente `GET /api/comuni`, che serve 83 KiB
+   *   di JSON dichiarato `application/json`: senza, un browser potrebbe
+   *   interpretarlo diversamente da come lo dichiariamo.
+   * - `Referrer-Policy` — la RAL non passa mai per l'URL (il calcolo è una
+   *   POST), quindi non c'è un reddito da far trapelare. Ma `/norme?sezioni=…`
+   *   sì, ed è comunque il valore che non regala il percorso di navigazione a
+   *   un dominio esterno.
+   * - `X-Frame-Options` — ridondante rispetto a `frame-ancestors 'none'` della
+   *   CSP, e si tiene lo stesso: è ciò che protegge i browser che non
+   *   applicano la direttiva più recente.
+   * - `Permissions-Policy` — il calcolatore non chiede fotocamera, microfono,
+   *   posizione né sensori. Dichiararlo rende esplicito che non li userà, e
+   *   trasforma un futuro uso accidentale in un errore visibile.
+   * - `Strict-Transport-Security` — vale solo su https, dove il sito è
+   *   pubblicato. Su http è inerte, non dannosa.
+   */
+  async headers() {
+    return [
+      {
+        source: '/:percorso*',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
+          },
+        ],
+      },
+    ]
+  },
 }
 
 export default nextConfig
