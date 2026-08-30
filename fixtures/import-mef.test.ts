@@ -3,18 +3,20 @@
  *
  * Sta in `fixtures/` per la stessa ragione del confronto motore ↔ fixture: non
  * è un test del motore — `core/` non sa nulla di CSV — e non è logica di
- * `data/`, che non ne ha. È il **contratto fra l'import e i livelli che lo
- * consumano**, e i contratti non vivono dentro una delle due parti (D-030).
+ * `data/`, che non ne ha. È il contratto fra l'import e i livelli che lo
+ * consumano, e i contratti non vivono dentro una delle due parti (D-030).
  *
  * Copre tre cose, e la prima è la più importante:
  *
- * 1. **il caso base non si è mosso.** RAL 30.000 a Milano deve dare lo stesso
+ * 1. il caso base non si è mosso. RAL 30.000 a Milano deve dare lo stesso
  *    netto di prima dell'import, a quattro decimali;
- * 2. **il parametro scritto a mano e quello importato coincidono.** Milano e
- *    Lombardia sono gli unici due enti verificati sulle delibere (D-005): se
- *    l'import dicesse altro, la divergenza va **vista**, non risolta in
- *    silenzio da chi ha scritto l'import;
- * 3. **le invarianti dell'import reggono** — i tre stati, nessun clamp, ogni
+ * 2. l'import coincide con le misure registrate. I tre valori di Milano e
+ *    della Lombardia in `data/caso-base.ts` sono quelli letti sul prospetto e
+ *    registrati in *Fonti* §15. ⚠️ Dal 29/08 non è più un confronto fra due
+ *    sedi vive — l'applicazione prende Milano dall'import come tutti gli
+ *    altri — ma l'ancoraggio dell'import a ciò che è stato letto: se un import
+ *    futuro portasse altro, la divergenza va vista, non risolta in silenzio;
+ * 3. le invarianti dell'import reggono — i tre stati, nessun clamp, ogni
  *    comune con il proprio ente impositore.
  */
 
@@ -41,7 +43,7 @@ interface FormaJson {
 }
 
 /**
- * Il massimo va misurato su **tutte** le aliquote che l'ente può applicare.
+ * Il massimo va misurato su tutte le aliquote che l'ente può applicare.
  * Con la fascia intera (D-062) sono due insiemi: quelle per fascia e quelle
  * della progressione oltre l'ultima — e ignorare le seconde farebbe sparire
  * dal conteggio del tetto proprio gli enti che lo superano di più.
@@ -57,7 +59,6 @@ const massimo = (a: FormaJson): number => {
   return Math.max(...(a.scaglioni ?? []).map((s) => s.aliquota))
 }
 
-// ---------------------------------------------------------------------------
 
 describe('il caso base non si è mosso', () => {
   it('RAL 30.000 a Milano dà lo stesso netto di prima dell\'import', () => {
@@ -77,11 +78,12 @@ describe('il caso base non si è mosso', () => {
   it('il comune iniziale della pagina è Milano, non il primo del catalogo', () => {
     const primoDelCatalogo = datiComuni.comuni[0]
     expect(primoDelCatalogo.codiceCatastale).not.toBe(CODICE_COMUNE_INIZIALE)
-    expect(risolviComune(CODICE_COMUNE_INIZIALE)?.nome).toBe('MILANO')
+    // Il nome è quello leggibile (`_lib/nomi-comuni.ts`): il prospetto lo
+    // scrive `MILANO`, che è la convenzione di stampa di un archivio.
+    expect(risolviComune(CODICE_COMUNE_INIZIALE)?.nome).toBe('Milano')
   })
 })
 
-// ---------------------------------------------------------------------------
 
 describe('il parametro scritto a mano e quello importato coincidono', () => {
   const milanoImportato = datiComuni.comuni.find((c) => c.codiceCatastale === 'F205')
@@ -111,7 +113,6 @@ describe('il parametro scritto a mano e quello importato coincidono', () => {
   })
 })
 
-// ---------------------------------------------------------------------------
 
 describe('i tre stati di D-054 sono tre cose diverse', () => {
   it('gli stati coprono tutti e 7.897 i comuni, senza residui', () => {
@@ -144,11 +145,11 @@ describe('i tre stati di D-054 sono tre cose diverse', () => {
   })
 
   /**
-   * ⚠️ **D-056: i 282 comuni delle due Province autonome sono calcolabili.**
+   * ⚠️ D-056: i 282 comuni delle due Province autonome sono calcolabili.
    *
    * D-037 non è stata revocata — si è avverata la sua condizione di caduta,
    * *«cade quando entrano i parametri delle due Province»*. E ciò che chiamava
-   * «Trento e Bolzano» erano **166 comuni trentini e 116 altoatesini**:
+   * «Trento e Bolzano» erano 166 comuni trentini e 116 altoatesini:
    * l'ente impositore delle Province autonome non riguarda i due capoluoghi,
    * riguarda tutto il territorio.
    */
@@ -157,21 +158,25 @@ describe('i tre stati di D-054 sono tre cose diverse', () => {
     expect(taa).toHaveLength(282)
     for (const c of taa) expect(risolviComune(c.codiceCatastale)?.stato).toBe('calcolabile')
 
-    // Ciascuno prende l'ente della **propria** Provincia, non della regione.
+    // Ciascuno prende l'ente della propria Provincia, non della regione.
+    //
+    // ⚠️ Il nome atteso è quello leggibile di `data/nomi-enti.ts`, non la
+    // stringa del prospetto: `EnteRisolto.nome` è ciò che finisce in pagina.
+    // La stringa MEF resta la chiave con cui il comune punta al proprio ente,
+    // e quella è verificata dal test sulla mappatura provincia → ente.
     const trento = risolviComune('L378')
     const bolzano = risolviComune('A952')
-    expect(trento?.stato === 'calcolabile' && trento.enti.regionale.nome).toBe('PROVINCIA AUTONOMA DI TRENTO')
-    expect(bolzano?.stato === 'calcolabile' && bolzano.enti.regionale.nome).toBe('PROVINCIA AUTONOMA DI BOLZANO')
+    expect(trento?.stato === 'calcolabile' && trento.enti.regionale.nome).toBe('Provincia autonoma di Trento')
+    expect(bolzano?.stato === 'calcolabile' && bolzano.enti.regionale.nome).toBe('Provincia autonoma di Bolzano')
 
     // ⚠️ E il file MEF distingue i due modi di non pagare l'addizionale
-    // **comunale**, che l'import conserva: Trento non l'ha mai istituita,
+    // comunale, che l'import conserva: Trento non l'ha mai istituita,
     // Bolzano l'ha deliberata a zero. Sono due cose diverse e restano tali.
     expect(trento?.stato === 'calcolabile' && trento.enti.comunale.stato).toBe('nonIstituito')
     expect(datiComuni.comuni.find((c) => c.codiceCatastale === 'A952')?.parametri?.aliquota.aliquota).toBe(0)
   })
 })
 
-// ---------------------------------------------------------------------------
 
 describe('nessun clamp, mai', () => {
   it('il tetto comunale di 0,8 è superato, e i comuni sopra restano sopra', () => {
@@ -195,7 +200,6 @@ describe('nessun clamp, mai', () => {
   })
 })
 
-// ---------------------------------------------------------------------------
 
 describe('la soglia di esenzione regionale (D-057)', () => {
   it('la porta un ente su ventuno, ed è misurato non assunto', () => {
@@ -221,7 +225,7 @@ describe('la soglia di esenzione regionale (D-057)', () => {
   })
 
   /**
-   * ⚠️ **Il difetto che D-057 chiude era un numero sbagliato in produzione**,
+   * ⚠️ Il difetto che D-057 chiude era un numero sbagliato in produzione,
    * non una lacuna dichiarata: prima di questa passata un residente valdostano
    * sotto la soglia vedeva un'addizionale regionale che non doveva.
    */
@@ -240,7 +244,7 @@ describe('la soglia di esenzione regionale (D-057)', () => {
 
     const regionale = sotto.risultato.passi.find((p) => p.id === 'addizionale-regionale')!
     expect(regionale.esito.stato).toBe('nonDovuto')
-    // La soglia è resa come **verifica con la sua ragione**, non come voce a zero.
+    // La soglia è resa come verifica con la sua ragione, non come voce a zero.
     const verifica = regionale.dettaglio?.find((d) => d.id === 'soglia-esenzione-regionale')
     expect(verifica?.esito.stato).toBe('verifica')
   })
@@ -264,7 +268,6 @@ describe('la soglia di esenzione regionale (D-057)', () => {
   })
 })
 
-// ---------------------------------------------------------------------------
 
 describe('l’aliquota regionale per fascia intera (D-062)', () => {
   const regionale = (codice: string, ral: number) => {
@@ -323,7 +326,6 @@ describe('l’aliquota regionale per fascia intera (D-062)', () => {
   })
 })
 
-// ---------------------------------------------------------------------------
 
 describe('le detrazioni regionali (D-061)', () => {
   it('tre enti su ventuno le hanno legate al solo reddito, e sono tutte a cliff', () => {
@@ -343,7 +345,7 @@ describe('le detrazioni regionali (D-061)', () => {
   })
 
   /**
-   * ⚠️ **È il difetto che D-056 aveva reso attivo.** 430,50 = 1,23% × 35.000
+   * ⚠️ È il difetto che D-056 aveva reso attivo. 430,50 = 1,23% × 35.000
    * esatti: sotto quel reddito la detrazione azzera l'intera addizionale
    * regionale, e prima di D-061 i 116 comuni altoatesini la pagavano.
    */
@@ -362,13 +364,19 @@ describe('le detrazioni regionali (D-061)', () => {
   })
 
   /**
-   * ⚠️ **Ciò che il modello non copre si dichiara accanto al numero, non solo
-   * nel rapporto di anomalie.** E si dichiara **con il verso**: entrambe fanno
-   * risultare l'addizionale più alta del reale, quindi il netto mostrato è più
-   * basso di quello vero. È l'informazione utile a chi legge; il motivo per cui
-   * non le calcoliamo non lo è (D-039).
+   * ⚠️ Ciò che il modello non copre si dichiara accanto al numero, non solo
+   * nel rapporto di anomalie. E si dichiara con il verso: fa risultare
+   * l'addizionale più alta del reale, quindi il netto mostrato è più basso di
+   * quello vero. È l'informazione utile a chi legge; il motivo per cui non la
+   * calcoliamo non lo è (D-039).
+   *
+   * ⚠️ Erano due, ed è rimasta una. S-016 dichiarava la deduzione trentina
+   * come non applicata: D-064 l'ha implementata, quindi la voce deve essere
+   * sparita. Un'assunzione che sopravvive alla propria chiusura dice al lettore
+   * che il numero è più basso del vero quando non lo è più — ed è il motivo per
+   * cui questo test asserisce anche un'assenza.
    */
-  it('le due voci fuori perimetro compaiono solo a chi riguardano', () => {
+  it('la voce fuori perimetro compare solo a chi riguarda, e quella chiusa non compare più', () => {
     const assunzioniDi = (codice: string) => {
       const e = eseguiCalcolo({ ral: 60_000, codiceCatastale: codice, tipoContratto: 'indeterminato', mensilita: 13 })
       if (e.stato !== 'ok') throw new Error('ko')
@@ -380,15 +388,18 @@ describe('le detrazioni regionali (D-061)', () => {
     const milano = assunzioniDi('F205')
 
     expect(bolzano.map((a) => a.id)).toContain('S-015')
-    expect(trento.map((a) => a.id)).toContain('S-016')
 
-    // A Milano nessuna delle due: direbbero a un lombardo una cosa che non lo
-    // riguarda, ed è la ragione per cui la condizione è per ente.
+    // A Milano no: direbbe a un lombardo una cosa che non lo riguarda, ed è la
+    // ragione per cui la condizione è per ente.
     expect(milano.map((a) => a.id)).not.toContain('S-015')
-    expect(milano.map((a) => a.id)).not.toContain('S-016')
+
+    // S-016 è chiusa da D-064: non deve comparire a nessuno, Trento compreso.
+    for (const chi of [bolzano, trento, milano]) {
+      expect(chi.map((a) => a.id)).not.toContain('S-016')
+    }
 
     // Il verso è quello: il netto vero è più alto di quello mostrato.
-    for (const a of [...bolzano, ...trento].filter((x) => x.id === 'S-015' || x.id === 'S-016')) {
+    for (const a of bolzano.filter((x) => x.id === 'S-015')) {
       expect(a.direzione).toBe('netto-reale-piu-alto')
     }
   })
@@ -407,7 +418,132 @@ describe('le detrazioni regionali (D-061)', () => {
   })
 })
 
-// ---------------------------------------------------------------------------
+
+describe('la deduzione dalla base (D-064)', () => {
+  /** Un comune trentino: l'ente impositore è la Provincia, non la regione (D-056). */
+  const TRENTO = 'L378'
+
+  it('la porta un ente su ventuno, ed è misurato non assunto', () => {
+    const conDeduzione = datiRegioni.enti.filter((e) => e.deduzione !== null)
+    expect(conDeduzione).toHaveLength(1)
+    expect(conDeduzione[0].nome).toBe('PROVINCIA AUTONOMA DI TRENTO')
+    /*
+     * ⚠️ I due numeri coincidono, e sono due campi lo stesso. È tutta la
+     * ragione di D-064: `sogliaEsenzione` darebbe oggi lo stesso risultato al
+     * centesimo, e smetterebbe di darlo il giorno in cui la Provincia cambiasse
+     * uno dei due senza l'altro — senza che nulla se ne accorga.
+     */
+    expect(conDeduzione[0].deduzione).toEqual({ importo: 30_000, redditoMassimo: 30_000 })
+  })
+
+  it('arriva fino agli enti risolti di un comune trentino, con la propria riserva', () => {
+    const trento = risolviComune(TRENTO)
+    expect(trento?.stato).toBe('calcolabile')
+    if (trento?.stato !== 'calcolabile') return
+    const reg = trento.enti.regionale
+    if (reg.stato !== 'deliberato') return
+
+    expect(reg.parametri.deduzione?.importo).toBe(30_000)
+    expect(reg.parametri.deduzione?.redditoMassimo).toBe(30_000)
+
+    // D-059: il valore ha una fonte, è il livello statale a non risultare — e
+    // la riserva è propria, perché ciò che manca qui riguarda la base
+    // imponibile e non il quantum.
+    const riserva = reg.parametri.deduzione?.fonte.nonVerificato
+    expect(riserva?.it).toContain('non risulta')
+    expect(riserva?.en).toBeTruthy()
+    expect(riserva?.it).not.toBe(reg.fonte.nonVerificato?.it)
+  })
+
+  /*
+   * ⚠️ È il difetto che D-056 aveva reso attivo, come per Bolzano. Finché i
+   * 166 comuni trentini erano non calcolabili nessuno vedeva l'addizionale di
+   * troppo; dichiarandoli calcolabili l'abbiamo resa visibile.
+   *
+   * Le due RAL sono costruite a ritroso dalla soglia, che è su reddito
+   * imponibile e non su RAL: `RAL = RC / (1 − 0,0919)`, valida sotto la prima
+   * fascia pensionabile.
+   */
+  const RAL_SOTTO = 33_036.0
+  const RAL_SOPRA = 33_036.02
+
+  const calcolo = (ral: number) => {
+    const e = eseguiCalcolo({ ral, codiceCatastale: TRENTO, tipoContratto: 'indeterminato', mensilita: 13 })
+    if (e.stato !== 'ok') throw new Error('ko')
+    const rc = e.risultato.passi.find((p) => p.id === 'reddito-complessivo')!
+    const reg = e.risultato.passi.find((p) => p.id === 'addizionale-regionale')!
+    if (rc.esito.stato !== 'applicato') throw new Error('rc')
+    return { rc: rc.esito.esce as number, regionale: reg, netto: e.risultato.nettoAnnuo as number }
+  }
+
+  it('sotto la soglia la deduzione azzera la base, e l’addizionale è zero — end to end', () => {
+    const { rc, regionale } = calcolo(RAL_SOTTO)
+    expect(rc).toBeLessThanOrEqual(30_000)
+
+    // ⚠️ Non è «non dovuta»: è dovuta e vale zero. La differenza non è
+    // formale — un'esenzione sopprime il presupposto, una deduzione azzera la
+    // base. È la distinzione che D-064 esiste per tenere in piedi.
+    expect(regionale.esito.stato).toBe('applicato')
+    if (regionale.esito.stato !== 'applicato') return
+    expect(regionale.esito.esce).toBe(0)
+    expect(regionale.esito.effettoSulNetto).toBe(0)
+
+    const passo = regionale.dettaglio?.find((d) => d.id === 'deduzione-regionale')
+    expect(passo?.esito.stato).toBe('applicato')
+    if (passo?.esito.stato !== 'applicato') return
+    expect(passo.esito.entra).toBeCloseTo(rc, 6)
+    expect(passo.esito.esce).toBe(0)
+  })
+
+  it('sopra la soglia non spetta affatto, e si paga sull’intera base — è un cliff', () => {
+    const { rc, regionale } = calcolo(RAL_SOPRA)
+    expect(rc).toBeGreaterThan(30_000)
+
+    expect(regionale.esito.stato).toBe('applicato')
+    if (regionale.esito.stato !== 'applicato') return
+    // 1,23% sull'intero imponibile, non su quello che eccede i 30.000.
+    expect(regionale.esito.esce).toBeCloseTo((rc * 1.23) / 100, 6)
+
+    // La deduzione non decresce: sopra la soglia il passo dice che non spetta.
+    const passo = regionale.dettaglio?.find((d) => d.id === 'deduzione-regionale')
+    expect(passo?.esito.stato).toBe('nonDovuto')
+  })
+
+  /**
+   * ⚠️ Il gradino misurato, ed è il più grande del ramo locale. −369 euro
+   * di netto per due centesimi di RAL: il doppio di quello di Milano, e cade a
+   * una RAL di circa 33.036.
+   */
+  it('produce un gradino di circa −369 euro, il più grande del ramo locale', () => {
+    const sotto = calcolo(RAL_SOTTO)
+    const sopra = calcolo(RAL_SOPRA)
+
+    expect(sopra.netto).toBeLessThan(sotto.netto)
+    expect(sotto.netto - sopra.netto).toBeCloseTo(369, 0)
+  })
+
+  /**
+   * ⚠️ La prosa segue il calcolo, o le due verità divergono. Il passo
+   * ordinario dice *«si calcola sulla stessa base dell'IRPEF»*, e con la
+   * deduzione quella base non è più la stessa: la frase deve cambiare insieme
+   * al numero.
+   */
+  it('quando la deduzione spetta, la spiegazione non dice più «stessa base dell’IRPEF»', () => {
+    const { regionale: conDeduzione } = calcolo(RAL_SOTTO)
+    const { regionale: senza } = calcolo(RAL_SOPRA)
+    expect(conDeduzione.spiegazione).not.toBe(senza.spiegazione)
+    expect(conDeduzione.spiegazione).toContain('deduzione')
+  })
+
+  it('nessun altro ente la prende: a Milano il campo è null', () => {
+    const milano = risolviComune('F205')
+    if (milano?.stato !== 'calcolabile') throw new Error('ko')
+    const reg = milano.enti.regionale
+    if (reg.stato !== 'deliberato') return
+    expect(reg.parametri.deduzione).toBeNull()
+  })
+})
+
 
 describe('la mappatura è comune → ente impositore', () => {
   it('ogni comune punta a un ente presente nel prospetto regionale', () => {
@@ -424,18 +560,17 @@ describe('la mappatura è comune → ente impositore', () => {
   })
 })
 
-// ---------------------------------------------------------------------------
 
 describe('il confine verso il client', () => {
   it('la lista leggera porta quattro campi, più la ragione dove serve', () => {
     const lista = comuniSelezionabili()
     expect(lista).toHaveLength(7_897)
 
-    // ⚠️ Il controllo è **strutturale**, non una ricerca di stringa: la parola
+    // ⚠️ Il controllo è strutturale, non una ricerca di stringa: la parola
     // «aliquota» compare legittimamente dentro la ragione di Trento e Bolzano —
     // *«applicare al suo posto l'aliquota lombarda darebbe un numero credibile
     // e sbagliato»* — e cercarla lì dentro confonde la spiegazione col dato.
-    // Quello che non deve attraversare il confine è un **valore**.
+    // Quello che non deve attraversare il confine è un valore.
     // ⚠️ `enteRegionale` è entrato con D-063: la pagina lo mostra accanto al
     // comune, e non è un'aliquota — è il nome di chi impone il tributo.
     const ammessi = new Set([
@@ -455,22 +590,22 @@ describe('il confine verso il client', () => {
 
   it('i comuni non calcolabili portano la ragione già nella lista (D-037)', () => {
     const nonCalcolabili = comuniSelezionabili().filter((c) => !c.calcolabile)
-    // Dopo D-056 ne resta **uno**: Castegnero Nanto, dove il fallback del
+    // Dopo D-056 ne resta uno: Castegnero Nanto, dove il fallback del
     // c. 752 non si interrompe ma si biforca su due aliquote diverse. Chi apre
-    // l'elenco lo vede marcato **prima** di selezionarlo.
+    // l'elenco lo vede marcato prima di selezionarlo.
     expect(nonCalcolabili).toHaveLength(1)
     expect(nonCalcolabili[0].codiceCatastale).toBe('M439')
     for (const c of nonCalcolabili) expect(c.ragione?.it).toBeTruthy()
   })
 
   /**
-   * D-058: nel documento va **un comune solo**, e deve bastare a rendere il
+   * D-058: nel documento va un comune solo, e deve bastare a rendere il
    * campo leggibile prima che l'elenco arrivi.
    */
   it('nel documento entra un comune solo, completo (D-058)', () => {
     const iniziale = comuneIniziale()
     expect(iniziale.codiceCatastale).toBe(CODICE_COMUNE_INIZIALE)
-    expect(iniziale.nome).toBe('MILANO')
+    expect(iniziale.nome).toBe('Milano')
     expect(iniziale.provincia).toBe('MI')
     expect(iniziale.calcolabile).toBe(true)
     // Pesa quattro campi, contro i 7.897 dell'elenco intero.

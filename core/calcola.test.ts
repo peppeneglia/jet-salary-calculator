@@ -1,10 +1,10 @@
 /**
  * Test a prova di regressione sul motore.
  *
- * ⚠️ I parametri usati qui sono **sintetici**, scelti tondi e diversi da quelli
+ * ⚠️ I parametri usati qui sono sintetici, scelti tondi e diversi da quelli
  * reali proprio perché nessuno li scambi per parametri normativi: `core/` non
- * deve contenerne, nemmeno nei test. Questi casi verificano **invarianti di
- * struttura**, non numeri di legge — i valori attesi derivati dalla norma sono
+ * deve contenerne, nemmeno nei test. Questi casi verificano invarianti di
+ * struttura, non numeri di legge — i valori attesi derivati dalla norma sono
  * lavoro dei casi di test, che si costruiscono sulle discontinuità.
  */
 
@@ -30,9 +30,7 @@ import {
   type Regime,
 } from './types'
 
-// ---------------------------------------------------------------------------
 // Regime sintetico
-// ---------------------------------------------------------------------------
 
 const fonte: Fonte = {
   atto: 'Regime sintetico di test — nessun valore reale',
@@ -58,21 +56,19 @@ const fontiRegola: FontiRegola = {
   'trattamento-integrativo': [fonte],
 }
 
-// ---------------------------------------------------------------------------
 // Lingua sintetica
 //
-// ⚠️ Scritta per esteso e **non importata da `data/`**: `core/` non conosce i
+// ⚠️ Scritta per esteso e non importata da `data/`: `core/` non conosce i
 // livelli sopra di sé, e la suite che gira in questo file lo verifica su sé
 // stessa. Vale qui la stessa regola dei parametri: i testi reali stanno in
 // `data/testi.ts`, questi sono sintetici e non vanno scambiati per quelli.
 //
 // La tabella è un `Record` pieno, quindi una voce aggiunta a `IdTesto` senza
-// il suo testo **non compila** — che è il punto del `Record` pieno, e vale per
+// il suo testo non compila — che è il punto del `Record` pieno, e vale per
 // i testi come vale per `FontiRegola`.
 //
 // Le frasi sono minime tranne dove un test le legge: quelle portano le parole
 // che il test cerca, perché è l'unico modo in cui l'asserzione dice qualcosa.
-// ---------------------------------------------------------------------------
 
 const lingua: Lingua = {
   codice: 'it',
@@ -83,6 +79,12 @@ const lingua: Lingua = {
     'regionale.ragione.esente':
       'Il reddito complessivo ({rc}) non supera la soglia di esenzione di {soglia} deliberata da {ente}.',
     'soglia-esenzione-regionale.regola': 'Soglia deliberata dall’ente impositore.',
+    'regionale.spiegazione.dedotta': 'L’ente concede una deduzione: la base non è quella dell’IRPEF.',
+    'deduzione-regionale.etichetta': 'Deduzione di {importo}',
+    'deduzione-regionale.regola': 'Deduzione dalla base deliberata dall’ente impositore.',
+    'deduzione-regionale.spiegazione': 'Abbassa il reddito su cui l’imposta si calcola, non l’imposta.',
+    'deduzione-regionale.spiegazione.non-spetta': 'Sopra la soglia non spetta affatto.',
+    'deduzione-regionale.ragione.non-spetta': 'Il reddito imponibile ({rc}) supera {soglia}: la deduzione non spetta.',
     'ral.etichetta': 'RAL',
     'ral.regola': 'Punto di partenza.',
     'ral.spiegazione': 'La RAL comprende le mensilità aggiuntive.',
@@ -265,9 +267,7 @@ const regime: Regime = {
   },
 }
 
-// ---------------------------------------------------------------------------
 // Enti sintetici, costruiti a mano: nessun CSV, nessun import di dati
-// ---------------------------------------------------------------------------
 
 const regioneScaglioni: EnteRisolto<ParametriRegionali> = {
   stato: 'deliberato',
@@ -284,6 +284,7 @@ const regioneScaglioni: EnteRisolto<ParametriRegionali> = {
     },
     detrazioni: [],
     sogliaEsenzione: null,
+    deduzione: null,
   },
 }
 
@@ -297,6 +298,7 @@ const regioneConSoglia: EnteRisolto<ParametriRegionali> = {
     aliquota: { forma: 'unica', aliquota: aliquota(1.23) },
     detrazioni: [],
     sogliaEsenzione: { valore: euro(25_000), fonte },
+    deduzione: null,
   },
 }
 
@@ -332,6 +334,7 @@ const regioneConDetrazioni: EnteRisolto<ParametriRegionali> = {
       { importo: euro(60), redditoDa: euro(20_000), redditoA: null, fonte },
     ],
     sogliaEsenzione: null,
+    deduzione: null,
   },
 }
 
@@ -381,6 +384,7 @@ const regioneDetrazioneCapiente: EnteRisolto<ParametriRegionali> = {
     aliquota: { forma: 'unica', aliquota: aliquota(1) },
     detrazioni: [{ importo: euro(5_000), redditoDa: euro(0), redditoA: null, fonte }],
     sogliaEsenzione: null,
+    deduzione: null,
   },
 }
 const entiDetrazioneCapiente: EntiRisolti = {
@@ -405,13 +409,12 @@ const regioneFasceIntere: EnteRisolto<ParametriRegionali> = {
     },
     detrazioni: [],
     sogliaEsenzione: null,
+    deduzione: null,
   },
 }
 const entiFasceIntere: EntiRisolti = { regionale: regioneFasceIntere, comunale: comuneEreditato }
 
-// ---------------------------------------------------------------------------
 // Scenari
-// ---------------------------------------------------------------------------
 
 const input = (ral: number, extra: Partial<Input> = {}): Input => ({
   ral: euro(ral),
@@ -439,9 +442,7 @@ const scenari: readonly { nome: string; input: Input; enti: EntiRisolti }[] = [
   { nome: 'ente con detrazioni regionali proprie', input: input(25_000), enti: entiConDetrazioni },
 ]
 
-// ---------------------------------------------------------------------------
 // 1. L'invariante del netto
-// ---------------------------------------------------------------------------
 
 describe('il netto è derivato dalla traccia', () => {
   test.each(scenari)('$nome: RAL più la somma degli effetti torna al netto', ({ input: i, enti }) => {
@@ -453,6 +454,44 @@ describe('il netto è derivato dalla traccia', () => {
     expect(somma).toBeCloseTo(r.nettoAnnuo, 10)
   })
 
+  /**
+   * ⚠️ L'invariante che il test qui sopra non può vedere, e la ragione per
+   * cui va scritta a parte.
+   *
+   * *RAL più la somma degli effetti torna al netto* è una tautologia:
+   * `nettoAnnuo` è costruito proprio così, quindi resta verde qualunque cosa
+   * accada dentro la catena. In particolare resterebbe verde se il totale dei
+   * contributi che entra nell'imponibile divergesse dai contributi che la
+   * traccia mostra — a sbagliare sarebbe `rc`, e con lui IRPEF, detrazioni e
+   * addizionali, con un numero perfettamente plausibile.
+   *
+   * Questo test chiude quel varco: il reddito complessivo deve essere la RAL
+   * meno esattamente i contributi che si leggono nella traccia, non meno un
+   * totale calcolato per conto proprio. È la stessa lezione di D-066 applicata
+   * un livello più a monte — un'invariante va verificata dove viene promessa,
+   * non dove è vera per costruzione.
+   *
+   * Copre entrambi i rami della quota aggiuntiva: sotto la prima fascia
+   * pensionabile il passo è `nonDovuto` e non deve togliere nulla, sopra è
+   * `applicato` e deve togliere esattamente quello che mostra.
+   */
+  test.each(scenari)(
+    '$nome: il reddito complessivo è la RAL meno i contributi che la traccia mostra',
+    ({ input: i, enti }) => {
+      const r = calcolaNetto(i, regime, enti, assunzioni, lingua)
+
+      const previdenziali = r.passi
+        .filter((p) => p.natura === 'previdenza')
+        .reduce((acc, p) => acc + (p.esito.stato === 'applicato' ? p.esito.esce : 0), 0)
+
+      const rc = r.passi.find((p) => p.id === 'reddito-complessivo')
+      expect(rc?.esito.stato).toBe('applicato')
+      if (rc?.esito.stato !== 'applicato') return
+
+      expect(rc.esito.esce).toBeCloseTo((i.ral as number) - previdenziali, 10)
+    },
+  )
+
   test('i passi annidati non contribuiscono al netto', () => {
     const r = calcolaNetto(input(30_000), regime, entiStandard, assunzioni, lingua)
     const annidati = r.passi.flatMap((p) => p.dettaglio ?? [])
@@ -463,9 +502,7 @@ describe('il netto è derivato dalla traccia', () => {
   })
 })
 
-// ---------------------------------------------------------------------------
 // 2. Le tre divisioni mensili
-// ---------------------------------------------------------------------------
 
 describe('le mensilità sono viste della stessa grandezza', () => {
   const mensilita: readonly Mensilita[] = [12, 13, 14]
@@ -482,16 +519,16 @@ describe('le mensilità sono viste della stessa grandezza', () => {
   })
 
   /**
-   * ⚠️ **Questo test ha cambiato oggetto, non è stato aggiustato** (D-052).
+   * ⚠️ Questo test ha cambiato oggetto, non è stato aggiustato (D-052).
    *
    * Asseriva *«la mensilità assente vale 13»*. Era vero, e proteggeva la cosa
    * sbagliata: dopo D-050 l'interfaccia partiva da 12 mentre il motore
-   * continuava ad assumere 13, e **la suite difendeva quello che il prodotto
-   * aveva già smentito**. Un test verde su un comportamento superato è peggio
+   * continuava ad assumere 13, e la suite difendeva quello che il prodotto
+   * aveva già smentito. Un test verde su un comportamento superato è peggio
    * di nessun test, perché dà la stessa fiducia senza la stessa copertura.
    *
-   * L'asserzione nuova è più forte perché **non invecchia con una scelta di
-   * prodotto**: che il motore non accetti un input senza mensilità resta vero
+   * L'asserzione nuova è più forte perché non invecchia con una scelta di
+   * prodotto: che il motore non accetti un input senza mensilità resta vero
    * qualunque numero il prodotto decida di mostrare per primo.
    *
    * Il rifiuto è del compilatore e non del runtime, ed è la forma giusta: il
@@ -518,9 +555,7 @@ describe('le mensilità sono viste della stessa grandezza', () => {
   })
 })
 
-// ---------------------------------------------------------------------------
 // 3. La separazione dei livelli
-// ---------------------------------------------------------------------------
 
 describe('core/ non conosce i livelli sopra di sé', () => {
   test('nessun file di core/ importa da data/, app/ o fixtures/', () => {
@@ -540,9 +575,7 @@ describe('core/ non conosce i livelli sopra di sé', () => {
   })
 })
 
-// ---------------------------------------------------------------------------
 // 4. Le assunzioni applicabili
-// ---------------------------------------------------------------------------
 
 describe('il motore restituisce solo le assunzioni che si applicano', () => {
   test('le incondizionate ci sono sempre', () => {
@@ -571,9 +604,7 @@ describe('il motore restituisce solo le assunzioni che si applicano', () => {
   })
 })
 
-// ---------------------------------------------------------------------------
 // 4-bis. La soglia di esenzione regionale è un cliff, come la comunale (D-057)
-// ---------------------------------------------------------------------------
 
 describe('anche l’ente regionale può avere una soglia di esenzione', () => {
   test('sotto la soglia l’addizionale regionale non è dovuta, con la sua ragione', () => {
@@ -624,9 +655,7 @@ describe('anche l’ente regionale può avere una soglia di esenzione', () => {
   })
 })
 
-// ---------------------------------------------------------------------------
 // 5. Ciò che il motore non modella non sparisce in silenzio (D-033)
-// ---------------------------------------------------------------------------
 
 describe('le detrazioni regionali si applicano, con il pavimento a zero (D-061)', () => {
   test('spettano nella loro banda di reddito e riducono l’addizionale', () => {
@@ -664,9 +693,7 @@ describe('le detrazioni regionali si applicano, con il pavimento a zero (D-061)'
   })
 })
 
-// ---------------------------------------------------------------------------
 // 7. L'aliquota regionale per fascia intera non e' una progressione (D-062)
-// ---------------------------------------------------------------------------
 
 describe('l’aliquota regionale per fascia intera', () => {
   const reg = (r: ReturnType<typeof calcolaNetto>) => {

@@ -103,7 +103,14 @@ La stringa *detrazion* compare nel testo libero di **otto enti**. Di questi, **3
 
 ⚠️ **Una detrazione resta fuori, ed è continua.** La seconda di Bolzano — *«125,00 euro moltiplicato per il rapporto tra il reddito imponibile diminuito di 50.000,00 euro e l'importo di 25.000,00 euro»* — è una **formula lineare crescente**, e `DetrazioneLocale` esprime solo un importo fisso entro una banda. Non è stata modellata: l'effetto è al più **125 euro**, in una direzione nota — dove spetta, l'addizionale mostrata è più alta del reale.
 
-⚠️ **E una che non è una detrazione.** La Provincia di Trento concede una **deduzione** di 30.000 euro a chi ha imponibile fino a 30.000 — riduce la base, non l'imposta, ed è un meccanismo diverso da quello che D-061 ha modellato. Non è stata toccata, e va guardata a parte.
+
+## La deduzione dalla base (D-064)
+
+⚠️ **Non è una detrazione, ed è il quarto meccanismo del livello regionale.** La Provincia autonoma di Trento concede una **deduzione** di 30.000 euro a chi ha reddito imponibile fino a 30.000 — *«Ai contribuenti aventi un reddito imponibile non superiore a euro 30.000,00 spetta una deduzione di euro 30.000,00»* — e riduce la **base**, non l'imposta. È il piano su cui nessuno degli altri tre assi agisce.
+
+**Effetto misurato:** a imponibile 30.000,00 l'addizionale regionale è **0,00**; a 30.000,01 è **369,00** (1,23% sull'intera base). Gradino di **−369 euro** a una RAL di circa **33.036**, il doppio di quello di Milano e **il più grande del ramo locale finora misurato**. Colpisce i **166 comuni trentini**, che D-056 ha dichiarato calcolabili: come per Bolzano, è una nostra decisione ad aver reso visibile un difetto latente.
+
+⚠️ **Perché non è modellata come una soglia di esenzione, che oggi darebbe lo stesso numero al centesimo.** Una deduzione **pari alla soglia** e concessa solo sotto la soglia è aritmeticamente identica a un'esenzione. Ma l'equivalenza vale solo finché *importo* e *reddito massimo* coincidono: se la Provincia ne cambiasse uno solo, il modello a soglia darebbe un numero sbagliato **senza che nulla se ne accorga**. Sono due campi perché la norma fissa due grandezze.
 
 ## La mappatura provincia → ente impositore — cosa è verificato e cosa no
 
@@ -160,7 +167,7 @@ Codice, nome, provincia e calcolabilità per 7897 voci — **nessuna aliquota, n
 
 ## Anomalie
 
-Totale: **1487** in 15 categorie.
+Totale: **1488** in 16 categorie.
 
 | Categoria | Occorrenze |
 | --- | --- |
@@ -176,6 +183,7 @@ Totale: **1487** in 15 categorie.
 | `fascia-duplicata` | 2 |
 | `esenzione-2025-non-normalizzabile` | 1 |
 | `esenzione-regionale-applicata` | 1 |
+| `deduzione-regionale-applicata` | 1 |
 | `detrazione-regionale-non-modellata` | 1 |
 | `confini-fuori-dai-due-set` | 1 |
 | `assente-dall-annuale-2025` | 1 |
@@ -207,6 +215,10 @@ La fusione di comuni è un istituto con disciplina propria, e verosimilmente pre
 ### `confini-fuori-dai-due-set` — 1
 
 - **E965** — MARNATE: confini [15000,28000,55000] — né previgenti né vigenti
+
+### `deduzione-regionale-applicata` — 1
+
+- **PROVINCIA AUTONOMA DI TRENTO** — deduzione di 30000 euro dalla base, per reddito imponibile fino a 30000 — abbatte la base, non l'imposta, ed è un meccanismo distinto dalla soglia di esenzione e dalle detrazioni
 
 ### `detrazione-regionale-applicata` — 3
 

@@ -6,7 +6,7 @@
  * fallback del c. 752, la selezione fra due provvedimenti, i tre stati — stanno
  * tutte nell'altro file, dove si possono leggere senza attraversare un parser.
  *
- * ⚠️ **Nessuna dipendenza.** Lo XLSX è uno zip di XML e Node sa già fare
+ * ⚠️ Nessuna dipendenza. Lo XLSX è uno zip di XML e Node sa già fare
  * entrambe le cose (`node:zlib`). D-005 aveva scartato il parsing dell'Excel
  * *a runtime* perché avrebbe aggiunto una libreria; qui la conversione è
  * offline e una libreria resta comunque un costo che non serve pagare.
@@ -15,9 +15,7 @@
 import { readFileSync } from 'node:fs'
 import { inflateRawSync } from 'node:zlib'
 
-// ---------------------------------------------------------------------------
 // CSV
-// ---------------------------------------------------------------------------
 
 /**
  * Analizzatore CSV con campi fra virgolette, perché le colonne di testo libero
@@ -72,9 +70,7 @@ export function leggiCsvComeOggetti(percorso, delimitatore = ';') {
   })
 }
 
-// ---------------------------------------------------------------------------
 // XLSX — zip + XML, senza librerie
-// ---------------------------------------------------------------------------
 
 const FIRMA_EOCD = 0x06054b50
 const FIRMA_CENTRALE = 0x02014b50
@@ -135,8 +131,8 @@ function decodificaEntita(s) {
 /**
  * ⚠️ La cella autochiusa `<c r="E3" s="1"/>` è la trappola di questo formato.
  * Un'espressione che cerchi solo `<c …>…</c>` la scavalca e attribuisce alla
- * colonna vuota il contenuto della colonna successiva — cioè **sposta di posto
- * le aliquote**. Le due forme vanno alternate nella stessa espressione.
+ * colonna vuota il contenuto della colonna successiva — cioè sposta di posto
+ * le aliquote. Le due forme vanno alternate nella stessa espressione.
  */
 const CELLA = /<c\s+r="([A-Z]+)\d+"([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g
 const RIGA = /<row r="(\d+)"[^>]*?(?:\/>|>([\s\S]*?)<\/row>)/g
@@ -166,7 +162,6 @@ export function leggiFoglioXlsx(percorso, foglio = 'xl/worksheets/sheet1.xml') {
   return righe
 }
 
-// ---------------------------------------------------------------------------
 // Le due convenzioni numeriche
 //
 // [Fonti §15, «Nota di formato»] Comunale: `0,8` con virgola decimale, soglie
@@ -174,13 +169,12 @@ export function leggiFoglioXlsx(percorso, foglio = 'xl/worksheets/sheet1.xml') {
 // stesso elenco annuale 2025 convivono le due cose: le aliquote hanno il punto,
 // la colonna Esenzione ha la virgola. Non esiste un normalizzatore unico che
 // indovini: la convenzione si dichiara per colonna, come chiede §15.
-// ---------------------------------------------------------------------------
 
 /**
  * `0,8` · `,76` · `28.000,00` · `€ 0` · `50.000`
  *
- * ⚠️ L'alternativa `^,\d+$` non è una gentilezza: **1.279 valori del file 2026
- * sono scritti senza lo zero iniziale** — `,8` da solo compare 1.076 volte.
+ * ⚠️ L'alternativa `^,\d+$` non è una gentilezza: 1.279 valori del file 2026
+ * sono scritti senza lo zero iniziale — `,8` da solo compare 1.076 volte.
  * Un'espressione che pretenda una cifra prima della virgola non scarta un caso
  * limite, scarta un sesto delle aliquote deliberate.
  */

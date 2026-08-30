@@ -21,9 +21,7 @@ import {
   type Regime,
 } from '../core/types'
 
-// ---------------------------------------------------------------------------
 // Fonti
-// ---------------------------------------------------------------------------
 
 /**
  * [Fonti §4.e] La base contributiva è la retribuzione lorda: le somme si
@@ -39,7 +37,7 @@ const l153_1969_art12: Fonte = {
 
 /**
  * [Fonti §2-ter] I contributi obbligatori non concorrono a formare il reddito:
- * è un'**esclusione**, non una deduzione ex art. 10. Da qui discende che la
+ * è un'esclusione, non una deduzione ex art. 10. Da qui discende che la
  * catena resta lineare e che le basi dell'art. 11 e dell'art. 13 coincidono.
  */
 const tuir_art51_c2a: Fonte = {
@@ -122,17 +120,17 @@ const inps40_2011: Fonte = {
  *
  * ⚠️ Due cose da non appiattire.
  *
- * **È un rinvio dinamico, non una costante.** L'art. 21 della L. 41/1986 estende
+ * È un rinvio dinamico, non una costante. L'art. 21 della L. 41/1986 estende
  * agli apprendisti la disciplina degli obblighi contributivi della generalità
  * dei lavoratori dipendenti «con una riduzione di tre punti della relativa
  * aliquota contributiva». Se l'aliquota ordinaria cambiasse, quella
  * dell'apprendista si muoverebbe da sola.
  *
- * **I tre punti cadono sulla base al netto del GESCAL.** 8,84 − 3,00 = 5,84,
+ * I tre punti cadono sulla base al netto del GESCAL. 8,84 − 3,00 = 5,84,
  * dove 8,84% è la quota lavoratore senza la componente ex GESCAL dello 0,35%.
  * La differenza rispetto al dipendente ordinario è quindi di 3,35 punti, non di
- * tre. Il valore 5,84% è **letto** su due documenti INPS; la sua scomposizione
- * è **ricostruita** e nessuna delle due fonti la scrive.
+ * tre. Il valore 5,84% è letto su due documenti INPS; la sua scomposizione
+ * è ricostruita e nessuna delle due fonti la scrive.
  */
 const inps3618_2023: Fonte = {
   atto: 'INPS, messaggio n. 3618 del 17/10/2023',
@@ -174,7 +172,7 @@ const tuir_art11: Fonte = {
 }
 
 /**
- * [Fonti §3] Detrazione soggettiva **del TUIR**, legata alla tipologia di
+ * [Fonti §3] Detrazione soggettiva del TUIR, legata alla tipologia di
  * reddito e non a un esborso del contribuente. Da tenere distinta dalla
  * detrazione da cuneo, che vive fuori dal testo unico: che le due si comportino
  * allo stesso modo rispetto alla capienza non è scontato, ed è la ragione per
@@ -212,7 +210,7 @@ const l207_2024_c4: Fonte = {
 }
 
 /**
- * [Fonti §1.b] Detrazione dall'imposta lorda di **legge speciale**, fuori dal
+ * [Fonti §1.b] Detrazione dall'imposta lorda di legge speciale, fuori dal
  * TUIR. Il testo dice «un'ulteriore detrazione dall'imposta lorda» senza
  * deroghe, quindi ricade nella regola generale dell'art. 11 c. 3.
  */
@@ -234,7 +232,7 @@ const dl3_2020_art1: Fonte = {
 }
 
 /**
- * [Fonti §1.c] I 75 euro sono stati **inseriti** dalla L. 207/2024, che con il
+ * [Fonti §1.c] I 75 euro sono stati inseriti dalla L. 207/2024, che con il
  * comma immediatamente precedente ha portato la detrazione dell'art. 13 da
  * 1.880 a 1.955: 1.955 − 75 = 1.880, cioè l'importo previgente. Neutralizzano
  * l'aumento e lasciano ferma la soglia di accesso al trattamento integrativo.
@@ -246,12 +244,10 @@ const l207_2024_c3: Fonte = {
   provenienza: 'verificata',
 }
 
-// ---------------------------------------------------------------------------
 // Valori nominati
 //
 // Esportati perché servono anche a `fixtures/`, che deve poterli leggere invece
 // di riscriverli: due copie dello stesso numero divergono in silenzio.
-// ---------------------------------------------------------------------------
 
 /** La fascia decrescente dell'art. 13, quella in cui cade il caso base. */
 export const detrazioneArt13Fascia15000a28000 = {
@@ -266,9 +262,7 @@ export const detrazioneArt13Fascia15000a28000 = {
 /** L'importo pieno della detrazione da cuneo, fra 20.000 e 32.000 di RC. */
 export const detrazioneCuneoPiena = euro(1_000)
 
-// ---------------------------------------------------------------------------
 // Regime
-// ---------------------------------------------------------------------------
 
 export const regime2026: Regime = {
   anno: annoImposta(2026),

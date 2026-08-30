@@ -1,13 +1,13 @@
 /**
  * Il motore di calcolo.
  *
- * TypeScript puro: nessun React, nessun Next, **nessun parametro normativo**.
+ * TypeScript puro: nessun React, nessun Next, nessun parametro normativo.
  * Ogni numero che viene da una legge arriva dal `Regime` o dagli enti risolti,
  * che il motore riceve come argomenti. Dal 29/08/2026 vale lo stesso per la
  * prosa: i testi arrivano dalla `Lingua`, che il motore riceve allo stesso modo
  * (D-041).
  *
- * Il netto **non si calcola due volte**: è la RAL più la somma degli effetti dei
+ * Il netto non si calcola due volte: è la RAL più la somma degli effetti dei
  * passi di primo livello. Non esiste un secondo conto parallelo che si spera
  * coincida — l'invariante «i numeri mostrati sommano al totale» è una
  * tautologia verificata, non una fortuna (D-003, D-024).
@@ -45,24 +45,22 @@ import {
   type Scaglione,
 } from './types'
 
-// ---------------------------------------------------------------------------
 // Helper puri
-// ---------------------------------------------------------------------------
 
 const MENSILITA: readonly Mensilita[] = [12, 13, 14]
 
 /**
  * Come si scrive una frase della traccia.
  *
- * ⚠️ **Qui `core/` non è più legato all'italiano, e il pezzo che lo legava è
- * esattamente quello che D-038 aveva indicato** (D-041). I campi `regola`,
+ * ⚠️ Qui `core/` non è più legato all'italiano, e il pezzo che lo legava è
+ * esattamente quello che D-038 aveva indicato (D-041). I campi `regola`,
  * `spiegazione` e `ragione` portano ancora prosa, e i numeri che vi compaiono
  * si formattano ancora dove la frase si costruisce: la proprietà che D-038
  * proteggeva — testo e numero nella stessa struttura, senza due verità libere
- * di divergere — resta intatta. A cambiare è **da dove viene il testo**.
+ * di divergere — resta intatta. A cambiare è da dove viene il testo.
  *
  * Da qui il vincolo minimo di allora, che vale ancora e ora per lingua:
- * **una convenzione sola**. Un'aliquota e un importo nella stessa stringa non
+ * una convenzione sola. Un'aliquota e un importo nella stessa stringa non
  * possono usare separatori decimali diversi, altrimenti la riga è incoerente
  * con sé stessa.
  */
@@ -74,11 +72,11 @@ interface Prosa {
   /**
    * Un numero puro, con il numero di decimali che gli serve.
    *
-   * ⚠️ **Esiste per il rapporto troncato dell'art. 13 c. 6**, che `f` non sa
+   * ⚠️ Esiste per il rapporto troncato dell'art. 13 c. 6, che `f` non sa
    * scrivere: `f` impone due decimali e trasformerebbe `0,0582` in `0,06`,
    * cancellando proprio il troncamento alla quarta cifra che il passo deve
    * mostrare. Senza questa funzione quel numero finiva in un template letterale
-   * **senza passare da nessun formattatore**, e usciva `0.0582` con il punto
+   * senza passare da nessun formattatore, e usciva `0.0582` con il punto
    * inglese in mezzo a numeri italiani — che è il difetto per cui D-038 esiste.
    */
   readonly r: (n: number, decimali: number) => string
@@ -89,7 +87,7 @@ interface Prosa {
 /**
  * Sostituisce i segnaposti `{nome}` di un modello.
  *
- * È **la sola logica che i testi richiedono**, e sta qui e non in `data/`: il
+ * È la sola logica che i testi richiedono, e sta qui e non in `data/`: il
  * catalogo dice *cosa* si scrive, il motore sa *come* comporlo. Un modello con
  * un segnaposto che nessun valore riempie resta visibile come tale, invece di
  * sparire in una stringa vuota: un buco che si vede si corregge, uno che non si
@@ -153,7 +151,7 @@ const applicaScaglioni = (base: number, scaglioni: readonly Scaglione[]): number
 }
 
 /**
- * Estremo inferiore **escluso**, superiore **incluso**.
+ * Estremo inferiore escluso, superiore incluso.
  *
  * Non è una convenzione arbitraria: riproduce gli operatori delle norme.
  * L'art. 13 c. 1 lett. a) dice *non superiore a 15.000*, la lett. b) *superiore
@@ -171,7 +169,7 @@ const trovaFascia = <T extends { readonly redditoDa: number; readonly redditoA: 
 /**
  * Valuta una detrazione a tratti.
  *
- * `troncamento` si passa **solo** dove la norma lo impone. L'art. 13 c. 6 lo
+ * `troncamento` si passa solo dove la norma lo impone. L'art. 13 c. 6 lo
  * prevede; la detrazione da cuneo vive fuori dal TUIR e non porta una clausola
  * equivalente, quindi lì il rapporto non si tronca.
  */
@@ -246,18 +244,16 @@ const assunzioneApplicabile = (
 const effetto = (passo: Passo): number =>
   passo.esito.stato === 'applicato' ? passo.esito.effettoSulNetto : 0
 
-// ---------------------------------------------------------------------------
 // Addizionali: la parte che dipende dall'ente risolto
-// ---------------------------------------------------------------------------
 
 /**
- * ⚠️ **Tre forme, e la terza non è una progressione** (D-062). L'aliquota per
- * **fascia intera** si applica all'**intero** imponibile e cambia per soglia:
+ * ⚠️ Tre forme, e la terza non è una progressione (D-062). L'aliquota per
+ * fascia intera si applica all'intero imponibile e cambia per soglia:
  * al confine c'è un salto secco, non un cambio di pendenza. È la stessa
  * meccanica delle fasce percentuali della somma del cuneo, che il motore
  * calcola già — e infatti riusa `trovaFascia` e `FasciaSuIntero`.
  *
- * `progressioneOltre` serve agli enti **ibridi**: la fascia intera vale sotto
+ * `progressioneOltre` serve agli enti ibridi: la fascia intera vale sotto
  * una soglia, e sopra si torna agli scaglioni pubblicati.
  */
 const totaleAddizionale = (base: number, forma: FormaAliquotaRegionale): number => {
@@ -298,9 +294,7 @@ const dettaglioScaglioni = (
   return passi
 }
 
-// ---------------------------------------------------------------------------
 // Il motore
-// ---------------------------------------------------------------------------
 
 export function calcolaNetto(
   input: Input,
@@ -319,9 +313,7 @@ export function calcolaNetto(
   // iniziale del prodotto vive nel livello che valida l'input.
   const mensilita: Mensilita = input.mensilita
 
-  // -------------------------------------------------------------------------
   // 1. RAL
-  // -------------------------------------------------------------------------
 
   passi.push({
     id: 'ral',
@@ -332,9 +324,7 @@ export function calcolaNetto(
     esito: esitoNeutro(ral, ral),
   })
 
-  // -------------------------------------------------------------------------
   // 2. Ramo contributivo
-  // -------------------------------------------------------------------------
 
   // Art. 12 c. 3 L. 153/1969: le somme si assumono al lordo di qualsiasi
   // contributo e trattenuta. La base è quindi il lordo, e la catena non è
@@ -377,7 +367,7 @@ export function calcolaNetto(
 
   // Quota aggiuntiva 1%.
   //
-  // ⚠️ La condizione del 10% è riferita al **regime pensionistico**, non al
+  // ⚠️ La condizione del 10% è riferita al regime pensionistico, non al
   // lavoratore: l'art. 3-ter si applica ai regimi «che prevedano aliquote
   // contributive a carico del lavoratore inferiori al 10 per cento». Si
   // verifica quindi l'aliquota ordinaria anche quando il contribuente è un
@@ -387,6 +377,27 @@ export function calcolaNetto(
     regime.contributi.aliquotaOrdinaria.valore < quotaAggiuntiva.aliquotaMassimaRegime.valore
   const soglia: number = quotaAggiuntiva.sogliaPrimaFascia.valore
   const eccedenza = retribuzioneImponibile - soglia
+
+  /*
+   * ⚠️ Quanto vale la quota si decide qui, una volta sola, e non lo si
+   * ricalcola più.
+   *
+   * Prima questa espressione stava scritta due volte — nel passo che la
+   * mostra e nel totale che entra nell'imponibile — insieme alla condizione
+   * che la governa. Era la doppia verità che D-003 esiste per impedire,
+   * dentro `core/`: due sedi che devono restare d'accordo e nessuno che le
+   * costringa a farlo.
+   *
+   * ⚠️ E nessun test l'avrebbe vista. `nettoAnnuo` è derivato dalla
+   * traccia, quindi l'invariante «la somma degli effetti torna al netto»
+   * resterebbe verde anche se il totale divergesse dal passo: a sbagliare
+   * sarebbe `rc`, e con lui IRPEF, detrazioni e addizionali — tutta la catena
+   * a valle, con un numero perfettamente plausibile. È la stessa lezione di
+   * D-066: un'invariante verificata dove è vera per costruzione dà copertura
+   * zero.
+   */
+  const quotaDovuta =
+    regimeSottoLimite && eccedenza > 0 ? (eccedenza * quotaAggiuntiva.aliquota.valore) / 100 : 0
 
   const parametroSoglia = {
     tipo: 'soglia',
@@ -441,19 +452,16 @@ export function calcolaNetto(
         valore: quotaAggiuntiva.aliquota.valore,
         fonte: quotaAggiuntiva.aliquota.fonte,
       },
-      esito: esitoSottrae(eccedenza, (eccedenza * quotaAggiuntiva.aliquota.valore) / 100),
+      esito: esitoSottrae(eccedenza, quotaDovuta),
     })
   }
 
-  const contributiTotali =
-    contributi + (regimeSottoLimite && eccedenza > 0 ? (eccedenza * quotaAggiuntiva.aliquota.valore) / 100 : 0)
+  const contributiTotali = contributi + quotaDovuta
 
-  // -------------------------------------------------------------------------
   // 3. Dal lordo all'imponibile fiscale
-  // -------------------------------------------------------------------------
 
-  // Art. 51 c. 2 lett. a): i contributi obbligatori **non concorrono a formare
-  // il reddito**. È un'esclusione, non una deduzione ex art. 10 — per questo il
+  // Art. 51 c. 2 lett. a): i contributi obbligatori non concorrono a formare
+  // il reddito. È un'esclusione, non una deduzione ex art. 10 — per questo il
   // reddito complessivo nasce già al netto e la catena resta lineare.
   const rc = ral - contributiTotali
   const rld = rc
@@ -467,9 +475,7 @@ export function calcolaNetto(
     esito: esitoNeutro(ral, rc),
   })
 
-  // -------------------------------------------------------------------------
   // 4. Ramo erariale
-  // -------------------------------------------------------------------------
 
   const lorda = applicaScaglioni(rc, regime.irpef.scaglioni.valore)
 
@@ -552,7 +558,7 @@ export function calcolaNetto(
   }
   dettaglioIrpef.push(passoDetrazione)
 
-  // ⚠️ Il gate del trattamento integrativo si valuta **qui**, prima di sommare
+  // ⚠️ Il gate del trattamento integrativo si valuta qui, prima di sommare
   // la detrazione da cuneo.
   //
   // La condizione confronta l'imposta lorda con la sola detrazione dell'art. 13
@@ -613,10 +619,10 @@ export function calcolaNetto(
     spiegazione:
       netta > 0 ? t('irpef-netta.spiegazione.capiente') : t('irpef-netta.spiegazione.incapiente'),
     /*
-     * ⚠️ **Nessun parametro, ed è una correzione** (D-026).
+     * ⚠️ Nessun parametro, ed è una correzione (D-026).
      *
      * Qui stava `detrazioniTotali` con la fonte degli scaglioni: due errori in
-     * una riga. Il totale delle detrazioni è una **grandezza calcolata**, non un
+     * una riga. Il totale delle detrazioni è una grandezza calcolata, non un
      * numero che una norma fissa; e l'art. 11 c. 1 sono gli scaglioni, che con
      * il pavimento a zero non c'entrano.
      *
@@ -640,11 +646,9 @@ export function calcolaNetto(
     dettaglio: dettaglioIrpef,
   })
 
-  // -------------------------------------------------------------------------
   // 5. Ramo locale
-  // -------------------------------------------------------------------------
 
-  // Le addizionali dipendono dall'**esito** del ramo IRPEF, non solo dalla sua
+  // Le addizionali dipendono dall'esito del ramo IRPEF, non solo dalla sua
   // base. Il gate è binario: o si applica sull'intera base, o non si applica
   // affatto. Non esiste una riduzione parziale.
   const gateAperto = netta > 0
@@ -666,12 +670,17 @@ export function calcolaNetto(
 
   // Addizionale regionale.
   //
-  // ⚠️ Le detrazioni regionali NON sono applicate. Il tipo `ParametriRegionali`
-  // le ammette e i dati MEF le mostrano (Umbria, Lazio), ma la norma statale
-  // che le autorizza non è stata reperita, e con essa restano aperte tre
-  // domande: se abbiano un pavimento proprio, se siano a cliff o continue, e
-  // come interagiscano con il gate. Finché non si chiudono, un ente con
-  // detrazioni popolate riceve un'addizionale **più alta del reale**.
+  // ⚠️ Il ramo regionale ha quattro assi, e ognuno è stato aggiunto dopo che
+  // un dato ha falsificato l'affermazione che non servisse: forma
+  // dell'aliquota, che ammette anche la fascia intera (D-062) · soglia di
+  // esenzione a cliff (D-057) · detrazioni proprie con pavimento a zero
+  // (D-061) · deduzione dalla base (D-064).
+  //
+  // L'argomento dal silenzio dell'art. 50 — *l'articolo non lo prevede, quindi
+  // non esiste* — ha quindi fallito quattro volte. Ciò che manca non è la
+  // rappresentazione dei meccanismi ma la norma statale che li autorizza:
+  // il valore lo fissa l'atto dell'ente, ed è la riserva che D-059 ha reso
+  // dichiarabile invece di tacere.
   const { regionale, comunale } = enti
 
   if (regionale.stato === 'nonIstituito') {
@@ -703,23 +712,23 @@ export function calcolaNetto(
     const esenteRegionale = sogliaRegionale !== null && rc <= sogliaRegionale
 
     /**
-     * ⚠️ **Anche l'ente regionale può avere una soglia, ed è un cliff** (D-057).
+     * ⚠️ Anche l'ente regionale può avere una soglia, ed è un cliff (D-057).
      *
      * Stessa meccanica della comunale, e stessa forma nella traccia: la soglia
-     * è una **verifica con la sua ragione**, non una voce a zero.
+     * è una verifica con la sua ragione, non una voce a zero.
      *
-     * ⚠️ **La citazione c'è, ed è l'atto dell'ente — con la sua riserva**
+     * ⚠️ La citazione c'è, ed è l'atto dell'ente — con la sua riserva
      * (D-059). Il gate delle addizionali e la soglia comunale citano una norma
      * statale; qui quella norma non risulta — l'art. 50 non prevede la soglia,
      * ed è proprio l'argomento dal silenzio che questo campo ha falsificato per
      * la terza volta. Scrivere quell'articolo per simmetria sarebbe inventare
-     * una citazione; **lasciare il passo senza fonti aggirerebbe D-029**, che ha
+     * una citazione; lasciare il passo senza fonti aggirerebbe D-029, che ha
      * reso `fontiRegola` un `Record` pieno perché una regola non potesse entrare
      * senza citazione.
      *
-     * La stessa `Fonte` sta **due volte**, e non è una ripetizione: sul
+     * La stessa `Fonte` sta due volte, e non è una ripetizione: sul
      * `parametro` dice *da dove viene il valore*, sul passo dice *chi stabilisce
-     * la regola*. Che siano lo stesso atto **è l'accertamento** — questa è una
+     * la regola*. Che siano lo stesso atto è l'accertamento — questa è una
      * regola la cui unica base è la deliberazione dell'ente.
      */
     const passoSogliaRegionale: Passo | undefined =
@@ -763,17 +772,82 @@ export function calcolaNetto(
         dettaglio: [passoSogliaRegionale!],
       })
     } else {
-      const lorda = totaleAddizionale(rc, forma)
+      /*
+       * La deduzione dalla base (D-064).
+       *
+       * ⚠️ Agisce su un piano diverso da tutto il resto di questo blocco.
+       * La soglia di esenzione decide *se* si paga, le detrazioni abbattono
+       * *l'imposta già calcolata*; questa cambia il reddito su cui l'imposta
+       * si calcola. È la stessa distinzione fra deduzione e detrazione che il
+       * ramo erariale porta fin dall'inizio, e qui compare sul ramo locale.
+       *
+       * ⚠️ Il diritto è a cliff, l'effetto no. Sopra `redditoMassimo` la
+       * deduzione non spetta affatto — non decresce — e la base torna intera.
+       * A Trento i due numeri coincidono, quindi sotto la soglia la base è
+       * sempre zero; ma `Math.max(0, …)` sta qui perché il tipo ammette un
+       * `importo` minore del `redditoMassimo`, e una base negativa produrrebbe
+       * un'addizionale negativa invece di zero.
+       *
+       * ⚠️ Le condizioni continuano a leggere il reddito complessivo, non la
+       * base dedotta, ed è ciò che dicono gli atti: soglia di esenzione e
+       * fasce delle detrazioni sono scritte su *reddito imponibile*. Solo
+       * l'aliquota legge la base. Nessun ente ha oggi deduzione e una delle
+       * altre due, quindi la scelta non è osservabile sui dati 2026 — e per
+       * questo va scritta invece che lasciata implicita.
+       */
+      const deduzione = regionale.parametri.deduzione
+      const deduzioneSpetta = deduzione !== null && rc <= deduzione.redditoMassimo
+      const baseRegionale = deduzioneSpetta ? Math.max(0, rc - deduzione.importo) : rc
+
+      const lorda = totaleAddizionale(baseRegionale, forma)
       const dettaglioRegionale: Passo[] = []
       if (passoSogliaRegionale) dettaglioRegionale.push(passoSogliaRegionale)
 
-      // ⚠️ **La fascia intera non è uno scaglione, e il dettaglio deve dirlo**
+      /*
+       * ⚠️ Il passo esiste solo se l'ente prevede la deduzione, e i due
+       * esiti non sono intercambiabili: `applicato` quando spetta, perché c'è
+       * un'aritmetica da mostrare — `entra` il reddito, `esce` la base; e
+       * `nonDovuto` quando non spetta, perché lì non c'è nessun numero da
+       * mostrare, solo una ragione.
+       *
+       * ⚠️ Non è solo semantica: regge l'invariante di D-066. Un passo
+       * `applicato` entra fra le uscite da cui la presentazione riconosce se i
+       * figli sono addendi di un totale o anelli di una catena. Quando la
+       * deduzione spetta la base è zero, non ci sono passi per scaglione, e
+       * l'unico figlio *è* il totale; quando non spetta il passo si sfila e i
+       * figli restano gli scaglioni, che sommano come prima. Renderlo
+       * `applicato` in entrambi i casi romperebbe il riconoscimento proprio
+       * sugli enti che questa voce serve.
+       */
+      if (deduzione !== null) {
+        dettaglioRegionale.push({
+          id: 'deduzione-regionale',
+          etichetta: t('deduzione-regionale.etichetta', { importo: f(deduzione.importo) }),
+          regola: t('deduzione-regionale.regola'),
+          fonti: [deduzione.fonte],
+          parametro: { tipo: 'importo', valore: deduzione.importo, fonte: deduzione.fonte },
+          spiegazione: deduzioneSpetta
+            ? t('deduzione-regionale.spiegazione')
+            : t('deduzione-regionale.spiegazione.non-spetta'),
+          esito: deduzioneSpetta
+            ? esitoNeutro(rc, baseRegionale)
+            : {
+                stato: 'nonDovuto',
+                ragione: t('deduzione-regionale.ragione.non-spetta', {
+                  rc: f(rc),
+                  soglia: f(deduzione.redditoMassimo),
+                }),
+              },
+        })
+      }
+
+      // ⚠️ La fascia intera non è uno scaglione, e il dettaglio deve dirlo
       // (D-062). Un solo passo che dichiara l'aliquota applicata all'intero
       // imponibile: renderla come una riga di scaglione racconterebbe una
       // progressione che non c'è, ed è esattamente l'errore che la variante
       // esiste per chiudere.
       const fasciaIntera =
-        forma.forma === 'fasce-intere' ? trovaFascia(forma.fasce, rc) : undefined
+        forma.forma === 'fasce-intere' ? trovaFascia(forma.fasce, baseRegionale) : undefined
       if (fasciaIntera) {
         dettaglioRegionale.push({
           id: 'addizionale-regionale-fascia-intera',
@@ -781,7 +855,7 @@ export function calcolaNetto(
           regola: t('regionale.fascia-intera.regola'),
           spiegazione: t('regionale.fascia-intera.spiegazione'),
           parametro: { tipo: 'aliquota', valore: fasciaIntera.percentuale, fonte: regionale.fonte },
-          esito: esitoNeutro(rc, lorda),
+          esito: esitoNeutro(baseRegionale, lorda),
         })
       } else {
         const scaglioni =
@@ -790,21 +864,21 @@ export function calcolaNetto(
             : forma.forma === 'fasce-intere'
               ? (forma.progressioneOltre ?? undefined)
               : forma.scaglioni
-        const perScaglione = dettaglioScaglioni(rc, scaglioni, 'addizionale-regionale', regionale.fonte, prosa)
+        const perScaglione = dettaglioScaglioni(baseRegionale, scaglioni, 'addizionale-regionale', regionale.fonte, prosa)
         if (perScaglione) dettaglioRegionale.push(...perScaglione)
       }
 
       /*
-       * Le detrazioni regionali, con il **pavimento a zero** (D-061).
+       * Le detrazioni regionali, con il pavimento a zero (D-061).
        *
-       * ⚠️ **È il quarto pavimento del sistema, e va reso come tale.** Se la
-       * detrazione supera l'addizionale il risultato è zero, **mai un credito**:
+       * ⚠️ È il quarto pavimento del sistema, e va reso come tale. Se la
+       * detrazione supera l'addizionale il risultato è zero, mai un credito:
        * lo scrivono la Provincia di Trento — *«se l'imposta dovuta risulta
        * minore della detrazione non sorge alcun credito d'imposta»* — e
        * Bolzano. Un passo che mostrasse la detrazione piena quando solo una
        * parte è stata usata direbbe una cosa falsa.
        *
-       * Sono **cumulabili**: un ente può prevederne più d'una sulla stessa fascia.
+       * Sono cumulabili: un ente può prevederne più d'una sulla stessa fascia.
        */
       const spettanti = regionale.parametri.detrazioni.filter(
         (d) => rc > d.redditoDa && (d.redditoA === null || rc <= d.redditoA),
@@ -830,12 +904,12 @@ export function calcolaNetto(
                 })
               : t('detrazioni-regionali.spiegazione', { quante, ente: regionale.nome }),
           /*
-           * ⚠️ Il parametro è la detrazione **deliberata**, non quella usata:
+           * ⚠️ Il parametro è la detrazione deliberata, non quella usata:
            * `usata` è `min(dovuta, lorda)`, cioè una grandezza calcolata dal
            * pavimento a zero, e nessuna legge regionale la fissa. Quanto se ne
            * sia potuto usare sta in `entra → esce` (D-026).
            *
-           * Con più detrazioni cumulate non esiste **un** parametro, e il passo
+           * Con più detrazioni cumulate non esiste un parametro, e il passo
            * non ne porta: l'importo complessivo si legge dall'esito.
            */
           parametro:
@@ -851,7 +925,15 @@ export function calcolaNetto(
         etichetta: t('regionale.etichetta', { ente: regionale.nome }),
         natura: 'locale',
         regola: t('regionale.regola'),
-        spiegazione: t('regionale.spiegazione'),
+        /*
+         * ⚠️ La spiegazione ordinaria diventa falsa quando la deduzione
+         * spetta. Dice *«si calcola sulla stessa base dell'IRPEF»*, e con una
+         * deduzione dell'ente quella base non è più la stessa. Una frase che
+         * resta uguale mentre il numero sotto cambia è la divergenza fra ciò
+         * che si calcola e ciò che si spiega — cioè quello che la traccia
+         * esiste per rendere impossibile.
+         */
+        spiegazione: deduzioneSpetta ? t('regionale.spiegazione.dedotta') : t('regionale.spiegazione'),
         parametro:
           forma.forma === 'unica'
             ? { tipo: 'aliquota', valore: forma.aliquota, fonte: regionale.fonte }
@@ -875,16 +957,14 @@ export function calcolaNetto(
     ),
   )
 
-  // -------------------------------------------------------------------------
   // 6. Ramo che aggiunge
   //
   // Somme che per legge non concorrono a formare il reddito: non riducono
   // l'imponibile, non hanno effetti a cascata sulla detrazione, si sommano al
   // netto. Restano due voci distinte e mai aggregate in un unico «bonus»:
   // una dipende solo dal reddito, l'altra dall'esito del ramo fiscale.
-  // -------------------------------------------------------------------------
 
-  // ⚠️ A esattamente la soglia di accesso spetta la somma e **non** la
+  // ⚠️ A esattamente la soglia di accesso spetta la somma e non la
   // detrazione: il c. 4 dice «non superiore a», il c. 6 «superiore a». Gli
   // operatori sono quelli della norma.
   const somma = regime.cuneo.somma
@@ -913,7 +993,7 @@ export function calcolaNetto(
       },
     })
   } else {
-    // ⚠️ Le fasce non sono scaglioni: la percentuale si applica all'**intero**
+    // ⚠️ Le fasce non sono scaglioni: la percentuale si applica all'intero
     // reddito di lavoro dipendente, non alla parte eccedente. Ogni confine è
     // quindi un salto secco verso il basso.
     const percentuale = fasciaSomma ? fasciaSomma.percentuale : aliquota(0)
@@ -970,9 +1050,7 @@ export function calcolaNetto(
     })
   }
 
-  // -------------------------------------------------------------------------
   // 7. Il netto è derivato, non calcolato
-  // -------------------------------------------------------------------------
 
   // RAL più la somma degli effetti dei passi di primo livello. Il passo `ral`
   // vale zero: è il punto di partenza, non una voce che muove il netto.
@@ -1004,7 +1082,7 @@ export function calcolaNetto(
 }
 
 /**
- * L'addizionale comunale ha **due gate in cascata**: prima *l'imposta è
+ * L'addizionale comunale ha due gate in cascata: prima *l'imposta è
  * dovuta?*, poi *il contribuente è sotto la soglia di esenzione del suo
  * comune?*. Il secondo è indipendente dal primo, ed è un cliff: un euro sopra
  * la soglia e si paga sull'intera base, non sull'eccedenza.

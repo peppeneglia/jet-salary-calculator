@@ -8,7 +8,7 @@
  * Vive fuori da `core/` perché un `Risultato` scritto a mano non è né motore né
  * parametro normativo: è il contratto fra i due livelli, e i contratti non
  * vivono dentro una delle due parti (D-030). Da qui può importare entrambi,
- * quindi **nessun valore normativo è riscritto**: aliquote, soglie e citazioni
+ * quindi nessun valore normativo è riscritto: aliquote, soglie e citazioni
  * arrivano da `data/`, e restano hand-written solo i risultati del calcolo, che
  * per definizione in `data/` non ci sono.
  *
@@ -49,9 +49,7 @@ import {
 
 const regole = regime2026.fontiRegola
 
-// ---------------------------------------------------------------------------
 // La traccia
-// ---------------------------------------------------------------------------
 
 const passi: readonly Passo[] = [
   {
@@ -432,9 +430,7 @@ const passi: readonly Passo[] = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Assunzioni
-// ---------------------------------------------------------------------------
 
 /**
  * Le assunzioni applicabili a questo calcolo, prese dal catalogo di `data/`.
@@ -466,9 +462,7 @@ const assunzioni = catalogoAssunzioni
   .filter((a) => ID_APPLICABILI.includes(a.assunzione.id))
   .map((a) => a.assunzione)
 
-// ---------------------------------------------------------------------------
 // Il risultato
-// ---------------------------------------------------------------------------
 
 export const fixtureRal30000Milano: Risultato = {
   annoImposta: annoImposta(2026),

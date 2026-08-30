@@ -1,17 +1,17 @@
 /**
  * Il catalogo delle assunzioni dichiarate.
  *
- * ⚠️ **Ogni assunzione ha due testi, perché ha due pubblici** (D-039).
+ * ⚠️ Ogni assunzione ha due testi, perché ha due pubblici (D-039).
  *
- * Qui vive il testo **rivolto all'utente**: chi legge è un dipendente o chi
+ * Qui vive il testo rivolto all'utente: chi legge è un dipendente o chi
  * gestisce il personale, e sta guardando il proprio stipendio. Frasi corte, si
- * dà del tu, e ogni voce dice **da che parte il numero è impreciso** — che è
+ * dà del tu, e ogni voce dice da che parte il numero è impreciso — che è
  * l'informazione utile, non la giustificazione della scelta.
  *
- * La **versione argomentata** resta su *Semplificazioni* in Notion, collegata a
+ * La versione argomentata resta su *Semplificazioni* in Notion, collegata a
  * questa per `id`. Quella parla a chi valuta il lavoro e deve restare
- * argomentata; questa parla a chi legge il proprio netto. **Non sono due copie
- * della stessa frase: sono due frasi diverse per due lettori diversi**, e
+ * argomentata; questa parla a chi legge il proprio netto. Non sono due copie
+ * della stessa frase: sono due frasi diverse per due lettori diversi, e
  * costringerle a coincidere rompe la seconda.
  *
  * È la stessa doppia forma che `Passo` ha già: `regola` in linguaggio
@@ -19,20 +19,20 @@
  * in mente di fonderle. La differenza è che qui la versione argomentata vive in
  * Notion e non nel tipo, perché serve al colloquio e non al prodotto.
  *
- * **Il collegamento è l'****`id`****, ed è il vincolo che tiene.** Se una voce
+ * Il collegamento è l'`id`, ed è il vincolo che tiene. Se una voce
  * cambia in *Semplificazioni* e non qui, la mappa di coerenza prima della
- * consegna lo trova. Per la stessa ragione il catalogo contiene **solo voci
- * `S-xxx`**: un id di altra famiglia risulterebbe spaiato alla verifica.
+ * consegna lo trova. Per la stessa ragione il catalogo contiene solo voci
+ * `S-xxx`: un id di altra famiglia risulterebbe spaiato alla verifica.
  *
- * Non stanno nel `Regime` perché **non sono parametri normativi**: sono
+ * Non stanno nel `Regime` perché non sono parametri normativi: sono
  * dichiarazioni di perimetro, cioè cosa questo calcolatore ha scelto di non
  * modellare. Confondere le due cose mescolerebbe *quanto vale una cosa per
  * legge* con *cosa non calcoliamo* (D-031).
  *
  * Ogni voce porta la condizione che la rende applicabile a un calcolo, come
  * dato e non come funzione. Il motore riceve il catalogo e restituisce il
- * sottoinsieme applicabile, così **la pagina non può mostrare un'assunzione che
- * il motore non ha considerato**.
+ * sottoinsieme applicabile, così la pagina non può mostrare un'assunzione che
+ * il motore non ha considerato.
  */
 
 import { euro, type AssunzioneDichiarata, type Fonte } from '../core/types'
@@ -52,11 +52,13 @@ const massimaleContributivo: Fonte = {
 }
 
 /**
- * [S-015, S-016] I due limiti che riguardano un solo ente impositore.
+ * [S-015] Il limite che riguarda un solo ente impositore.
  *
  * Il valore lo fissa una legge provinciale, che il prospetto MEF espone nella
  * colonna `NORME`; la riserva sul meccanismo è quella di D-059, e sta sulla
  * `Fonte` dei parametri regionali.
+ *
+ * ⚠️ Erano due: S-016 è caduta con l'attuazione di D-064.
  */
 const prospettoRegionale: Fonte = {
   atto: 'MEF, Dipartimento delle Finanze — prospetto addizionale regionale IRPEF 2026',
@@ -68,13 +70,13 @@ const prospettoRegionale: Fonte = {
 export const assunzioni: readonly AssunzioneDichiarata[] = [
   {
     /*
-     * ⚠️ **Vale solo per chi ha Bolzano come ente impositore.** La seconda
+     * ⚠️ Vale solo per chi ha Bolzano come ente impositore. La seconda
      * detrazione altoatesina è `125 × (reddito − 50.000) / 25.000`, con un
-     * massimo di 125: una **formula continua**, e `DetrazioneLocale` esprime un
+     * massimo di 125: una formula continua, e `DetrazioneLocale` esprime un
      * importo fisso entro una banda. D-061 ha modellato la prima detrazione,
      * non questa.
      */
-    condizione: { tipo: 'ente-regionale-e', nome: 'PROVINCIA AUTONOMA DI BOLZANO' },
+    condizione: { tipo: 'ente-regionale-e', nome: 'Provincia autonoma di Bolzano' },
     assunzione: {
       id: 'S-015',
       testo: {
@@ -86,25 +88,17 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
       fonte: prospettoRegionale,
     },
   },
-  {
-    /*
-     * ⚠️ **Trento, e non è una detrazione: è una deduzione.** Riduce la base
-     * invece dell'imposta, quindi è un meccanismo che il modello non ha — non
-     * un parametro che manca. Con imponibile fino a 30.000 la deduzione è di
-     * 30.000, cioè azzera la base.
-     */
-    condizione: { tipo: 'ente-regionale-e', nome: 'PROVINCIA AUTONOMA DI TRENTO' },
-    assunzione: {
-      id: 'S-016',
-      testo: {
-        it: 'A Trento, fino a 30.000 euro di imponibile, la Provincia concede una deduzione che abbatte la base su cui si calcola l’addizionale regionale. Qui non la applichiamo: chi vi ha diritto paga meno addizionale di quella che vedi, quindi il suo netto è più alto.',
-        en: 'In Trento, up to 30,000 euro of taxable income, the Province grants a deduction that cuts the base the regional addizionale is worked out on. We do not apply it here: anyone entitled to it pays less than you see, so their net pay is higher.',
-      },
-      direzione: 'netto-reale-piu-alto',
-      collocazione: 'blocco-semplificazioni',
-      fonte: prospettoRegionale,
-    },
-  },
+  /*
+   * ⚠️ S-016 non è più qui, e la sua assenza è il segno che D-064 è stata
+   * attuata. La voce dichiarava che la deduzione trentina non veniva
+   * applicata: adesso lo è, il campo `deduzione` esiste in `ParametriRegionali`
+   * e il motore la calcola. Una semplificazione che sopravvive alla propria
+   * chiusura è peggio di una mai scritta — dice al lettore che il numero è più
+   * basso del vero quando non lo è più.
+   *
+   * S-015 resta, perché la seconda detrazione di Bolzano è ancora fuori: quella
+   * è una formula continua, e il tipo esprime importi fissi entro una banda.
+   */
   {
     condizione: { tipo: 'sempre' },
     assunzione: {
@@ -139,8 +133,8 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
     assunzione: {
       id: 'S-003',
       testo: {
-        it: 'Calcoliamo quello che arriva a te, non quanto spende l\'azienda. Sopra il tuo lordo c\'è un altro livello — contributi a carico del datore, TFR — che non fa parte di questo strumento.',
-        en: 'We work out what reaches you, not what your employer spends. Above your gross figure there is another layer — employer contributions, TFR (severance accrual) — that is not part of this tool.',
+        it: 'Calcoliamo quello che arriva a te, non quanto spende l\'azienda. Sopra il tuo lordo c\'è un altro livello (contributi a carico del datore, TFR) che non fa parte di questo strumento.',
+        en: 'We work out what reaches you, not what your employer spends. Above your gross figure there is another layer that is not part of this tool: employer contributions and TFR (severance accrual).',
       },
       direzione: 'nessuna',
       collocazione: 'blocco-semplificazioni',
@@ -273,7 +267,7 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
       id: 'S-013',
       testo: {
         it: 'Nel 2026 alcune parti dello stipendio pagano molto meno tasse del resto: gli aumenti da rinnovo del contratto nazionale, i premi di risultato, le maggiorazioni per lavoro notturno o a turni. Dal solo stipendio lordo non possiamo sapere quanto della tua retribuzione sia fatto di queste voci. Se ne hai, il tuo netto reale è più alto di quello che vedi, anche di duecento euro ogni mille euro di aumento contrattuale.',
-        en: 'In 2026 some parts of your pay are taxed far less than the rest: increases from national collective bargaining renewals, performance bonuses, and premiums for night or shift work. From your gross salary alone we cannot tell how much of your pay is made up of these. If you have any, your real net pay is higher than what you see here — by as much as two hundred euros for every thousand euros of bargained increase.',
+        en: 'In 2026 some parts of your pay are taxed far less than the rest: increases from national collective bargaining renewals, performance bonuses, and premiums for night or shift work. From your gross salary alone we cannot tell how much of your pay is made up of these. If you have any, your real net pay is higher than what you see here, by as much as two hundred euros for every thousand euros of bargained increase.',
       },
       direzione: 'netto-reale-piu-alto',
       collocazione: 'accanto-al-numero',

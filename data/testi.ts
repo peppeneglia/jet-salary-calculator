@@ -1,34 +1,34 @@
 /**
  * I testi della traccia, indicizzati per lingua — D-041.
  *
- * ⚠️ **File separato dai parametri normativi, e la separazione è il punto.**
+ * ⚠️ File separato dai parametri normativi, e la separazione è il punto.
  * `regime-2026.ts` e `caso-base.ts` sono la sede citabile dei valori: ogni
  * numero lì dentro porta accanto la propria fonte, e chi verifica il
  * calcolatore apre quei file. Mescolarci dentro trecento righe di prosa
  * renderebbe illeggibile proprio la parte che deve restare verificabile.
  * Qui non c'è nessun valore normativo: solo il modo in cui si raccontano.
  *
- * ⚠️ **Sono modelli, non funzioni.** I valori entrano al posto dei segnaposti
+ * ⚠️ Sono modelli, non funzioni. I valori entrano al posto dei segnaposti
  * `{nome}`, e a sostituirli è `core/`. Una funzione qui sarebbe logica in
  * `data/`, ed è la stessa ragione per cui `CondizioneAssunzione` è un dato
  * dichiarativo e non un predicato.
  *
  * ---
  *
- * **Cosa non si traduce, ed è sostanza (D-041).**
+ * Cosa non si traduce, ed è sostanza (D-041).
  *
  * Restano in italiano in entrambe le lingue: i riferimenti normativi, i nomi
- * degli atti, i nomi propri di enti e comuni, e **i nomi degli istituti
- * italiani che non hanno equivalente** — IRPEF, RAL, addizionale regionale e
+ * degli atti, i nomi propri di enti e comuni, e i nomi degli istituti
+ * italiani che non hanno equivalente — IRPEF, RAL, addizionale regionale e
  * comunale, trattamento integrativo, cuneo fiscale, apprendistato.
  *
- * In inglese l'istituto porta una **glossa fra parentesi alla prima
- * occorrenza**, e poi torna nudo: *addizionale comunale (municipal income tax
+ * In inglese l'istituto porta una glossa fra parentesi alla prima
+ * occorrenza, e poi torna nudo: *addizionale comunale (municipal income tax
  * surcharge)*. Tradurlo e basta farebbe perdere il riferimento a chi poi deve
  * cercarlo, che è l'opposto dello scopo di uno strumento che cita le proprie
  * fonti.
  *
- * **Dove sta la prima occorrenza, in pratica.** Le tre nature del prelievo —
+ * Dove sta la prima occorrenza, in pratica. Le tre nature del prelievo —
  * contributi, IRPEF, addizionali — sono introdotte dai titoli dei gruppi, che
  * stanno in `app/` e portano lì la loro glossa; le etichette dei passi che
  * ricadono sotto quei titoli usano quindi il nome nudo. Restano glossati qui
@@ -39,15 +39,13 @@
 import type { CodiceLingua, Lingua, TestiTraccia } from '../core/types'
 import { TAG } from './tag-lingua'
 
-// ---------------------------------------------------------------------------
 // Italiano
 //
 // ⚠️ Sono le frasi che stavano dentro `core/calcola.ts` fino al 28/08/2026,
-// riportate **alla lettera**: la traduzione non è l'occasione per riscrivere
+// riportate alla lettera: la traduzione non è l'occasione per riscrivere
 // l'italiano. Ogni riga di questa tabella è già passata dall'audit del registro
 // (D-039), e cambiarla qui la farebbe uscire da quella verifica senza che
 // nessuno se ne accorga.
-// ---------------------------------------------------------------------------
 
 const it: TestiTraccia = {
   // RAL
@@ -147,7 +145,7 @@ const it: TestiTraccia = {
   'gate.ragione.chiuso':
     'L’IRPEF netta è zero perché le detrazioni superano l’imposta lorda: il presupposto non è soddisfatto e nessuna delle due addizionali è dovuta.',
   'addizionale.spiegazione.gate':
-    'Non dipende solo dal tuo reddito. Se l’IRPEF che devi risulta zero, l’addizionale non si paga affatto — non si riduce: non è dovuta.',
+    'Non dipende solo dal tuo reddito. Se l’IRPEF che devi risulta zero, l’addizionale non si paga affatto. Non si riduce: non è dovuta.',
   'addizionale.ragione.gate':
     'L’IRPEF netta è zero, quindi il presupposto delle addizionali non è soddisfatto.',
 
@@ -174,7 +172,7 @@ const it: TestiTraccia = {
   'detrazioni-regionali.spiegazione':
     '{ente} prevede {quante} dall’addizionale regionale per chi sta in questa fascia di reddito, e si sottraggono dall’imposta già calcolata.',
   'detrazioni-regionali.spiegazione.pavimento':
-    'La detrazione spettante è di {dovuta}, ma l’addizionale dovuta è minore: se ne usa {usata} e l’addizionale si ferma a zero. Il residuo non diventa un credito — lo dice l’ente stesso.',
+    'La detrazione spettante è di {dovuta}, ma l’addizionale dovuta è minore: se ne usa {usata} e l’addizionale si ferma a zero. Il residuo non diventa un credito: lo dice l’ente stesso.',
   'detrazioni-regionali.una': 'una detrazione propria',
   'detrazioni-regionali.molte': '{n} detrazioni proprie',
 
@@ -207,6 +205,17 @@ const it: TestiTraccia = {
     'Il reddito complessivo ({rc}) non supera la soglia di esenzione di {soglia} deliberata da {ente}.',
   'soglia-esenzione-regionale.regola':
     'Soglia di esenzione in ragione del possesso di specifici requisiti reddituali, deliberata dall’ente impositore. La norma statale che l’autorizza non è stata reperita: la base è il provvedimento dell’ente.',
+  'regionale.spiegazione.dedotta':
+    'La base non è quella dell’IRPEF: l’ente concede una deduzione, e l’addizionale si calcola su quello che resta. È l’ente a spostare la base, non lo Stato.',
+  'deduzione-regionale.etichetta': 'Deduzione di {importo}',
+  'deduzione-regionale.regola':
+    'Deduzione dalla base imponibile dell’addizionale regionale, spettante ai contribuenti con reddito imponibile non superiore alla soglia deliberata dall’ente impositore. La norma statale che l’autorizza non è stata reperita: la base è il provvedimento dell’ente.',
+  'deduzione-regionale.spiegazione':
+    'Una deduzione abbassa il reddito su cui l’imposta si calcola, non l’imposta già calcolata: è la stessa differenza che c’è fra deduzione e detrazione sull’IRPEF. E non è un’esenzione, anche se qui il risultato è lo stesso — il diritto sparisce di colpo sopra la soglia, ma quello che toglie è un importo.',
+  'deduzione-regionale.spiegazione.non-spetta':
+    'La deduzione non decresce e non si riduce in proporzione: sopra la soglia non spetta affatto, e l’addizionale si calcola sull’intero reddito.',
+  'deduzione-regionale.ragione.non-spetta':
+    'Il reddito imponibile ({rc}) supera {soglia}: la deduzione non spetta.',
   'soglia-esenzione.etichetta': 'Soglia di esenzione: {soglia}',
   'soglia-esenzione.regola':
     'Soglia di esenzione in ragione del possesso di specifici requisiti reddituali, stabilita con regolamento comunale.',
@@ -246,7 +255,6 @@ const it: TestiTraccia = {
     'L’imposta lorda ({lorda}) non supera la detrazione per lavoro dipendente diminuita di {scarto}, pari a {sogliaGate}: il trattamento integrativo non spetta.',
 }
 
-// ---------------------------------------------------------------------------
 // English
 //
 // ⚠️ Two rules govern this column, and both come from D-041.
@@ -260,14 +268,13 @@ const it: TestiTraccia = {
 //    the law it restates, in English as in Italian; `spiegazione` is the field
 //    that speaks to the reader. Flattening the first into the second would
 //    empty it (D-039).
-// ---------------------------------------------------------------------------
 
 const en: TestiTraccia = {
   // RAL
   'ral.etichetta': 'RAL (gross annual salary)',
   'ral.regola': 'Starting point, as entered by the user.',
   'ral.spiegazione':
-    'The RAL already includes any extra monthly instalments: your annual net pay is the same whether it is paid over 12, 13 or 14 instalments — only the divisor changes.',
+    'The RAL already includes any extra monthly instalments: your annual net pay is the same whether it is paid over 12, 13 or 14 instalments: only the divisor changes.',
 
   // Contributi
   'contributi.etichetta': 'IVS social security contributions',
@@ -359,7 +366,7 @@ const en: TestiTraccia = {
   'gate.ragione.chiuso':
     'Net IRPEF is zero because the credits exceed the gross tax: the condition is not met and neither addizionale is due.',
   'addizionale.spiegazione.gate':
-    'It does not depend on your income alone. If the IRPEF you owe comes out at zero, the addizionale is not paid at all — it is not reduced: it is not due.',
+    'It does not depend on your income alone. If the IRPEF you owe comes out at zero, the addizionale is not paid at all. It is not reduced: it is not due.',
   'addizionale.ragione.gate':
     'Net IRPEF is zero, so the condition for the addizionali is not met.',
 
@@ -388,7 +395,7 @@ const en: TestiTraccia = {
   'detrazioni-regionali.spiegazione':
     '{ente} grants {quante} against the addizionale regionale for this income band, and they come off the tax already computed.',
   'detrazioni-regionali.spiegazione.pavimento':
-    'The credit due is {dovuta}, but the addizionale owed is smaller: {usata} of it is used and the addizionale stops at zero. The remainder does not become a refund — the authority says so itself.',
+    'The credit due is {dovuta}, but the addizionale owed is smaller: {usata} of it is used and the addizionale stops at zero. The remainder does not become a refund: the authority says so itself.',
   'detrazioni-regionali.una': 'one credit of its own',
   'detrazioni-regionali.molte': '{n} credits of its own',
 
@@ -422,6 +429,17 @@ const en: TestiTraccia = {
     'Total taxable income ({rc}) does not exceed the {soglia} exemption threshold set by {ente}.',
   'soglia-esenzione-regionale.regola':
     'Exemption threshold based on specified income requirements, set by the levying authority. The national provision authorising it has not been traced: the basis is the authority’s own act.',
+  'regionale.spiegazione.dedotta':
+    'The base is not the one IRPEF uses: the authority grants a deduction, and the addizionale is worked out on what is left. It is the authority moving the base, not the state.',
+  'deduzione-regionale.etichetta': 'Deduction of {importo}',
+  'deduzione-regionale.regola':
+    'Deduction from the taxable base of the addizionale regionale, due to taxpayers whose taxable income does not exceed the threshold set by the levying authority. The national provision authorising it has not been traced: the basis is the authority’s own act.',
+  'deduzione-regionale.spiegazione':
+    'A deduction lowers the income the tax is worked out on, not the tax already computed: it is the same difference as between a deduction and a tax credit on IRPEF. And it is not an exemption, even though the result here is the same — the entitlement vanishes at once above the threshold, but what it removes is an amount.',
+  'deduzione-regionale.spiegazione.non-spetta':
+    'The deduction does not taper off and is not scaled down: above the threshold it is not due at all, and the addizionale is worked out on the whole income.',
+  'deduzione-regionale.ragione.non-spetta':
+    'Taxable income ({rc}) exceeds {soglia}: the deduction is not due.',
   'soglia-esenzione.etichetta': 'Exemption threshold: {soglia}',
   'soglia-esenzione.regola':
     'Exemption threshold based on specified income requirements, set by municipal regulation.',
@@ -461,9 +479,7 @@ const en: TestiTraccia = {
     'The gross tax ({lorda}) does not exceed the employment income credit reduced by {scarto}, that is {sogliaGate}: the trattamento integrativo is not due.',
 }
 
-// ---------------------------------------------------------------------------
 // Le lingue, montate
-// ---------------------------------------------------------------------------
 
 /**
  * Il tag BCP 47 non è cosmetico: decide separatore delle migliaia e dei

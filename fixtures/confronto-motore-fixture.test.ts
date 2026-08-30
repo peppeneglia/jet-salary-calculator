@@ -1,7 +1,7 @@
 /**
  * Diagnostico: motore contro fixture, RAL 30.000 a Milano.
  *
- * **Non asserisce e non fallisce mai.** Il fixture è scritto a mano e dichiarato
+ * Non asserisce e non fallisce mai. Il fixture è scritto a mano e dichiarato
  * non certificato: una divergenza può stare da entrambe le parti, e decidere
  * quale delle due abbia ragione è lavoro dei casi di test, non di questo file.
  * Qui si stampa soltanto dove i due non coincidono.

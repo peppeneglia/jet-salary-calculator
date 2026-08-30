@@ -1,17 +1,17 @@
 /**
- * L'invariante di D-024, verificata **su ciò che l'utente legge** — D-066.
+ * L'invariante di D-024, verificata su ciò che l'utente legge — D-066.
  *
- * ⚠️ **È la prima verifica sulla presentazione del progetto, e la ragione per
- * cui serviva è che il difetto era passato proprio di lì.** La suite verificava
- * che la traccia sommasse al netto, ed era vero: nel motore il netto **è** la
+ * ⚠️ È la prima verifica sulla presentazione del progetto, e la ragione per
+ * cui serviva è che il difetto era passato proprio di lì. La suite verificava
+ * che la traccia sommasse al netto, ed era vero: nel motore il netto è la
  * somma degli effetti, quindi l'asserzione era una tautologia che non poteva
  * fallire. Ma la garanzia di D-024 — *«i numeri mostrati sommano al totale»* —
- * è un'affermazione **sulla pagina**, e arrotondare non commuta con il sommare.
+ * è un'affermazione sulla pagina, e arrotondare non commuta con il sommare.
  *
  * Su RAL 30.000 a Milano le voci facevano 23.425,49 e la testata diceva
  * 23.425,48, con dieci test verdi.
  *
- * Qui i numeri si **formattano e si rileggono**, con lo stesso formattatore
+ * Qui i numeri si formattano e si rileggono, con lo stesso formattatore
  * della pagina: se un totale non torna, torna anche il difetto.
  */
 
@@ -25,7 +25,7 @@ import type { CodiceLingua, Passo, Risultato } from '../core/types'
 const LINGUE: readonly CodiceLingua[] = ['it', 'en']
 
 /**
- * Rilegge un importo **dalla stringa che la pagina scrive**.
+ * Rilegge un importo dalla stringa che la pagina scrive.
  *
  * Non usa `leggiImporto`, che serve a leggere ciò che una persona digita: qui
  * si rilegge l'uscita di `Intl`, che può usare il segno meno tipografico
@@ -60,6 +60,16 @@ const CASI: readonly { readonly nome: string; readonly ral: number; readonly com
   { nome: 'ramo che aggiunge', ral: 15_000, comune: 'F205' },
   { nome: 'fascia intera regionale — Roma', ral: 22_000, comune: 'H501' },
   { nome: 'detrazione regionale capiente — Bolzano', ral: 33_000, comune: 'A952' },
+  /*
+   * ⚠️ I due lati della deduzione trentina, e non sono lo stesso caso per
+   * questa suite (D-064). Il passo `deduzione-regionale` è un figlio in più
+   * dell'addizionale regionale, e cambia forma da un lato all'altro della
+   * soglia: `applicato` sotto, `nonDovuto` sopra. La presentazione riconosce
+   * dai figli se il padre è una somma o una catena, quindi il rischio che il
+   * totale smetta di tornare sta esattamente qui.
+   */
+  { nome: 'deduzione regionale che spetta — Trento', ral: 33_036.0, comune: 'L378' },
+  { nome: 'deduzione regionale che non spetta — Trento', ral: 33_036.02, comune: 'L378' },
   { nome: 'fascia alta', ral: 70_000, comune: 'F205' },
 ]
 
@@ -80,11 +90,11 @@ describe('il totale mostrato è la somma delle voci mostrate (D-066)', () => {
         })
 
         /**
-         * ⚠️ **L'asserzione non è circolare, e la differenza sta in dove si
-         * guarda.** La relazione fra un blocco e i suoi figli — somma di
-         * addendi, oppure ultimo anello di una catena — si **riconosce sui
-         * numeri esatti del motore**, dove è vera per costruzione. Poi si
-         * pretende che **sopravviva all'arrotondamento**, sui numeri formattati.
+         * ⚠️ L'asserzione non è circolare, e la differenza sta in dove si
+         * guarda. La relazione fra un blocco e i suoi figli — somma di
+         * addendi, oppure ultimo anello di una catena — si riconosce sui
+         * numeri esatti del motore, dove è vera per costruzione. Poi si
+         * pretende che sopravviva all'arrotondamento, sui numeri formattati.
          *
          * Un blocco i cui figli non stanno in nessuna delle due relazioni non
          * viene messo alla prova: `contributi-ivs` ha per figlio la base
@@ -170,7 +180,7 @@ describe('la formattazione non dipende dalla build del runtime', () => {
    * ⚠️ `useGrouping: 'always'`. Il default delega a `minimumGroupingDigits` del
    * CLDR, che per l'italiano vale 2 nelle versioni recenti e 1 in quelle
    * precedenti: sotto i 10.000 lo stesso numero esce con o senza il separatore
-   * **a seconda dell'ICU compilato nel runtime**. Fra il Node che rende la
+   * a seconda dell'ICU compilato nel runtime. Fra il Node che rende la
    * pagina e il browser che la riprende non è la stessa.
    */
   it('il separatore delle migliaia c’è anche sotto i diecimila, in entrambe le lingue', () => {

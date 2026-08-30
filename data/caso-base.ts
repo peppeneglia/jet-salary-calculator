@@ -1,13 +1,29 @@
 /**
- * Parametri locali del caso base, scritti a mano.
+ * Parametri locali di Milano e della Lombardia, scritti a mano.
  *
- * Milano e Lombardia sono i due enti che il progetto dichiara **verificati uno
- * per uno**, contro il resto d'Italia che arriverà importato dal MEF a una data
- * dichiarata. Vivono qui, a mano, perché quella distinzione è una decisione di
- * prodotto (D-005) e non un effetto collaterale dell'import.
+ * ⚠️ Dal 29/08 questo file non alimenta più l'applicazione. Milano passa
+ * dall'import come tutti gli altri 7.896 comuni, e `app/_lib/comuni.ts` non lo
+ * importa più. Quello che resta serve ai fixture e ai test, ed è la sua
+ * sola ragione di esistere adesso.
+ *
+ * Perché è caduta la ragione precedente. Il file esisteva per la
+ * distinzione di D-005 fra parametro *verificato* e *importato*: Milano e
+ * Lombardia sarebbero stati «verificati uno per uno». Quella distinzione non
+ * era nei dati — le due `Fonte` qui sotto portano entrambe
+ * `provenienza: 'importata'`, e il commento su `elencoComunaleAnnuale2025` lo
+ * dice: la delibera del Comune di Milano non è stata letta. Restava lo stesso
+ * numero in due sedi, cioè il difetto che D-052 ha già chiuso altrove.
+ *
+ * A cosa serve oggi. I tre valori — l'aliquota comunale, la soglia, gli
+ * scaglioni regionali — sono le misure registrate in *Fonti* §15, e
+ * `fixtures/import-mef.test.ts` le confronta con ciò che l'import produce. Non
+ * è più un confronto fra due sedi vive: è l'ancoraggio dell'import a quello che
+ * è stato letto sul prospetto. Se un import futuro portasse altro, si vede.
+ *
+ * ⚠️ Da emendare in Notion: D-005 e la riga di `CLAUDE.md` §4 affermano
+ * ancora la verifica sulle delibere. La voce la scrive l'autore.
  *
  * Nessuna logica: nessuna funzione che risolve un comune, nessun parsing.
- * L'import del dataset arriva dopo e non sostituisce questo file — lo affianca.
  */
 
 import {
@@ -20,16 +36,14 @@ import {
   type ParametriRegionali,
 } from '../core/types'
 
-// ---------------------------------------------------------------------------
 // Fonti
-// ---------------------------------------------------------------------------
 
 /**
  * [Fonti §15.a] Il prospetto dà i valori 2026 per tutti e 21 gli enti
  * impositori regionali.
  *
  * ⚠️ Riserva da dichiarare in pagina. Per la Lombardia la colonna `NORME` cita
- * l'art. 72 c. 1 della L.R. 14/07/2003 n. 10, che è la **legge abilitante**:
+ * l'art. 72 c. 1 della L.R. 14/07/2003 n. 10, che è la legge abilitante:
  * una legge del 2003 non può aver fissato una struttura a quattro fasce sul set
  * previgente, divenuta lecita solo con il c. 727 della L. 207/2024. Il
  * provvedimento che fissa le aliquote 2026 non è identificato dal prospetto.
@@ -49,13 +63,13 @@ export const prospettoRegionaleMef: Fonte = {
 }
 
 /**
- * [Fonti §15.b] L'elenco **annuale** è uno snapshot congelato e datato, non la
+ * [Fonti §15.b] L'elenco annuale è uno snapshot congelato e datato, non la
  * vista giornaliera che cambia ogni giorno: è l'artefatto giusto da citare, ed
  * è quello che risponde alla domanda «cosa si applica» invece di «cosa è stato
  * deliberato».
  *
  * La delibera del Comune di Milano non è stata letta: il valore viene
- * dall'elenco ministeriale, quindi è **importato**.
+ * dall'elenco ministeriale, quindi è importato.
  */
 export const elencoComunaleAnnuale2025: Fonte = {
   atto: 'MEF, Elenco annuale addizionale comunale IRPEF 2025 (aggiornato al 13/03/2026)',
@@ -65,7 +79,7 @@ export const elencoComunaleAnnuale2025: Fonte = {
 }
 
 /**
- * [Fonti §7, §15] Il fallback per chi non delibera **non è aliquota zero**: si
+ * [Fonti §7, §15] Il fallback per chi non delibera non è aliquota zero: si
  * applicano scaglioni e aliquote già vigenti nell'ente nell'anno precedente.
  * Al 28/08/2026 riguarda il 61% dei comuni, Milano compresa: è il ramo
  * principale dell'import, non una correzione.
@@ -78,12 +92,10 @@ const fallbackAnnoPrecedente: Fonte = {
   provenienza: 'verificata',
 }
 
-// ---------------------------------------------------------------------------
 // Il caso base
-// ---------------------------------------------------------------------------
 
 /**
- * Quattro fasce con la prima soglia a 15.000: è il **set previgente**,
+ * Quattro fasce con la prima soglia a 15.000: è il set previgente,
  * autorizzato dal c. 727 della L. 207/2024, non quello dell'IRPEF vigente.
  *
  * Il caso base del progetto richiede quindi questa forma fin dal primo calcolo:
@@ -120,11 +132,15 @@ export const lombardia: EnteRisolto<ParametriRegionali> = {
     // Le detrazioni regionali esistono — Umbria 150 €, Lazio 60 € — ma la
     // Lombardia non ne prevede. L'array vuoto è un dato, non un segnaposto.
     detrazioni: [],
-    // Stessa cosa per la soglia: **un ente su ventuno** ne ha una, ed è la
+    // Stessa cosa per la soglia: un ente su ventuno ne ha una, ed è la
     // Valle d'Aosta (D-057). Il `null` è misurato sul prospetto, non assunto —
     // e quando c'è porta la propria fonte con la riserva di D-059, perché è una
     // regola la cui sola base è l'atto dell'ente.
     sogliaEsenzione: null,
+    // E la deduzione dalla base (D-064) la prevede un ente su ventuno, la
+    // Provincia autonoma di Trento. Anche questo `null` è misurato sul
+    // prospetto: la Lombardia non deduce nulla.
+    deduzione: null,
   },
 }
 
@@ -137,45 +153,5 @@ export const milano: EnteRisolto<ParametriComunali> = {
   parametri: {
     aliquota: { forma: 'unica', aliquota: aliquotaComunaleMilano },
     sogliaEsenzione: sogliaEsenzioneMilano,
-  },
-}
-
-// ---------------------------------------------------------------------------
-// Enti che il caso base non usa, e che servono a tenere onesto il tipo
-//
-// Due modi diversi di non pagare nulla, che il file MEF distingue e che la UI
-// non deve confondere: il tributo che non esiste per quell'ente, e il tributo
-// che esiste con aliquota deliberata pari a zero. Il primo non ha parametri —
-// non «ha zero», non ne ha — e nella pagina va detto diversamente.
-//
-// Stanno qui adesso, e non quando servirà l'import, perché un tipo che non
-// viene esercitato finché non arriva il dato reale è un tipo che si scopre
-// sbagliato tardi.
-// ---------------------------------------------------------------------------
-
-/**
- * [Fonti §15.b] Trento è `0*` anche nell'**elenco annuale**, che è già il
- * risultato del consolidamento: non è un dato mancante, è addizionale comunale
- * mai istituita.
- */
-export const trentoComunaleNonIstituita: EnteRisolto<ParametriComunali> = {
-  stato: 'nonIstituito',
-  nome: 'Trento',
-}
-
-/**
- * [Fonti §15.b] Bolzano ha un'addizionale comunale **istituita e deliberata**,
- * con aliquota pari a zero. Il contribuente non paga, ma per una ragione
- * diversa da quella di Trento — e la differenza è visibile nel tipo: qui i
- * parametri esistono.
- */
-export const bolzanoComunaleAliquotaZero: EnteRisolto<ParametriComunali> = {
-  stato: 'deliberato',
-  nome: 'Bolzano',
-  annoDelibera: 2025,
-  fonte: elencoComunaleAnnuale2025,
-  parametri: {
-    aliquota: { forma: 'unica', aliquota: aliquota(0) },
-    sogliaEsenzione: null,
   },
 }

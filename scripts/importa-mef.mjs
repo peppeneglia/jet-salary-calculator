@@ -1,45 +1,43 @@
 /**
  * Import dei due dataset MEF — da un comune calcolabile a tutti i comuni italiani.
  *
- * Si esegue **una volta, offline**: `node scripts/importa-mef.mjs`.
- * Legge i tre artefatti da `../Fonti/`, che sta **fuori dal repo** perché le
+ * Si esegue una volta, offline: `node scripts/importa-mef.mjs`.
+ * Legge i tre artefatti da `../Fonti/`, che sta fuori dal repo perché le
  * fonti primarie non si versionano (CLAUDE.md §4), e scrive in `data/mef/` tre
  * file versionati: i comuni, gli enti regionali, il rapporto di anomalie.
  *
- * ---------------------------------------------------------------------------
  * Le cinque regole che governano questo file, e perché ciascuna esiste
- * ---------------------------------------------------------------------------
  *
- * **1. `0*` non è zero.** 4.822 comuni su 7.897 non hanno deliberato per il
+ * 1. `0*` non è zero. 4.822 comuni su 7.897 non hanno deliberato per il
  * 2026. Il c. 752 della L. 207/2024 impone di applicare scaglioni e aliquote
- * già vigenti nell'ente nell'anno precedente. Il fallback va sull'**elenco
- * annuale 2025**, non su un giornaliero: il giornaliero riporta ciò che è stato
+ * già vigenti nell'ente nell'anno precedente. Il fallback va sull'elenco
+ * annuale 2025, non su un giornaliero: il giornaliero riporta ciò che è stato
  * *deliberato* (61,1% di `0*`), l'annuale riporta ciò che si *applica* (11,5%).
  * È l'unico artefatto che risponde alla domanda giusta [Fonti §15.b].
- * **Milano è fra i comuni con `0*`**: il caso base passa da questo ramo, che
+ * Milano è fra i comuni con `0*`: il caso base passa da questo ramo, che
  * quindi non è una correzione ma il percorso principale.
  *
- * **2. Tre stati, non due** (D-054). `risolto` — delibera 2026 o ereditata.
+ * 2. Tre stati, non due (D-054). `risolto` — delibera 2026 o ereditata.
  * `senza addizionale applicabile` — il calcolo si fa, l'addizionale è zero con
  * la sua ragione: sono gli 884 comuni che restano `0*` anche nell'annuale, e
  * non è un dato mancante. `non calcolabile` — manca un parametro necessario.
  *
- * **3. Due assi ortogonali, non tre forme.** Forma dell'aliquota (unica oppure
- * a scaglioni, con i confini nel dato) **per** soglia di esenzione facoltativa,
+ * 3. Due assi ortogonali, non tre forme. Forma dell'aliquota (unica oppure
+ * a scaglioni, con i confini nel dato) per soglia di esenzione facoltativa,
  * che ha colonna propria. Un comune può avere entrambi. La soglia è un
- * **cliff**: sotto, zero; sopra, aliquota sull'intera base. Gli scaglioni sono
- * invece **progressivi** — il file dice *«applicabile a scaglione di reddito da
+ * cliff: sotto, zero; sopra, aliquota sull'intera base. Gli scaglioni sono
+ * invece progressivi — il file dice *«applicabile a scaglione di reddito da
  * … fino a …»* — quindi si applicano alla quota compresa nella fascia.
  *
- * **4. Nessun clamp, mai.** Il tetto comunale di 0,8 è derogato (dissesto e
+ * 4. Nessun clamp, mai. Il tetto comunale di 0,8 è derogato (dissesto e
  * predissesto, che il file etichetta in `NOTE`); quello regionale di 1,4 lo è
  * da 15 enti su 21, fino al 3,63 del Molise. Un clamp corromperebbe quasi tutto
  * il centro-sud.
  *
- * **5. Regionale: nessun fallback** (D-053). Tutti e 21 gli enti hanno
+ * 5. Regionale: nessun fallback (D-053). Tutti e 21 gli enti hanno
  * pubblicato entro gennaio 2026. Per gli enti con due provvedimenti si prende
- * quello con `DATA PUBBLICAZIONE` più antica dell'anno — regola **meccanica e
- * dichiarata come tale**, perché la colonna `ANNO` vale 2026 su tutte le righe
+ * quello con `DATA PUBBLICAZIONE` più antica dell'anno — regola meccanica e
+ * dichiarata come tale, perché la colonna `ANNO` vale 2026 su tutte le righe
  * e non discrimina. La mappatura è `comune → ente impositore`, non
  * `comune → regione`: Trento e Bolzano sono righe separate e il Trentino-Alto
  * Adige non esiste come ente impositore.
@@ -67,7 +65,7 @@ const USCITA = join(RADICE, 'data', 'mef')
 const ANNO_IMPOSTA = 2026
 
 /**
- * ⚠️ **La data di estrazione è dichiarata, non calcolata.**
+ * ⚠️ La data di estrazione è dichiarata, non calcolata.
  *
  * Gli elenchi generali del MEF si aggiornano ogni giorno e non portano un
  * timbro di versione: la data di consultazione è l'unico riferimento. Questa è
@@ -77,24 +75,20 @@ const ANNO_IMPOSTA = 2026
  */
 const ESTRATTO_IL = '2026-08-28'
 
-// ---------------------------------------------------------------------------
 // Rapporto di anomalie
 //
 // Lo script non fallisce in silenzio e non salta le righe storte: le elenca.
 // Il rapporto è versionato accanto al JSON perché è la prova che i casi sporchi
 // sono stati visti, non ignorati.
-// ---------------------------------------------------------------------------
 
 const anomalie = []
 const segnala = (categoria, chiave, dettaglio) => anomalie.push({ categoria, chiave, dettaglio })
 
-// ---------------------------------------------------------------------------
 // I due set di scaglioni
 //
 // [Fonti §7] Il c. 751 della L. 207/2024 autorizza due set di confini: quello
 // vigente (28.000 / 50.000) e quello previgente (15.000 / 28.000 / 50.000).
-// **Sono due set di confini, cioè un dato, non due forme di calcolo.**
-// ---------------------------------------------------------------------------
+// Sono due set di confini, cioè un dato, non due forme di calcolo.
 
 const CONFINI_PREVIGENTI = [15_000, 28_000, 50_000]
 const CONFINI_VIGENTI = [28_000, 50_000]
@@ -105,15 +99,15 @@ const stessiConfini = (a, b) => a.length === b.length && a.every((v, i) => v ===
 const CONFINI_LECITI = [0, 15_000, 28_000, 50_000]
 
 /**
- * ⚠️ **Lo stesso confine è scritto in tre modi, e sono lo stesso numero.**
+ * ⚠️ Lo stesso confine è scritto in tre modi, e sono lo stesso numero.
  *
  * Un comune apre la seconda fascia a `15.000,01`, un altro a `15.001`, un terzo
  * a `15.001,00`: sono tutte e tre la formula «il primo euro sopra quindicimila»,
- * cioè il confine **15.000**. Chi le prende alla lettera vede una catena di
+ * cioè il confine 15.000. Chi le prende alla lettera vede una catena di
  * fasce non contigua e scarta comuni la cui delibera è perfettamente regolare —
  * sono nove nel file 2026.
  *
- * Lo scarto ammesso è **un euro**, non di più: serve a riconoscere la
+ * Lo scarto ammesso è un euro, non di più: serve a riconoscere la
  * convenzione di scrittura, non ad avvicinare un confine che l'ente ha scelto
  * davvero diverso. I 55.000 di MARNATE restano fuori dai due set, e devono.
  */
@@ -135,19 +129,17 @@ const formaDaConfini = (confini, aliquote) => ({
   scaglioni: costruisciScaglioni(confini, aliquote),
 })
 
-// ---------------------------------------------------------------------------
 // Elenco generale giornaliero 2026 — le aliquote DELIBERATE
-// ---------------------------------------------------------------------------
 
 const COLONNE_ALIQUOTA = ['ALIQUOTA', ...Array.from({ length: 11 }, (_, i) => `ALIQUOTA_${i + 2}`)]
 const COLONNE_FASCIA = ['FASCIA', ...Array.from({ length: 11 }, (_, i) => `FASCIA_${i + 2}`)]
 
 /**
- * Esenzioni che il file descrive ma che **non sono una soglia di reddito e
- * basta**: ultrasessantacinquenni, nuclei con figli a carico, invalidità, ISEE,
+ * Esenzioni che il file descrive ma che non sono una soglia di reddito e
+ * basta: ultrasessantacinquenni, nuclei con figli a carico, invalidità, ISEE,
  * reddito di sola provenienza da lavoro dipendente o pensione.
  *
- * Il ministero **non le riporta in `IMPORTO_ESENTE`** — la colonna resta a zero
+ * Il ministero non le riporta in `IMPORTO_ESENTE` — la colonna resta a zero
  * — e fa bene: non sono derivabili dagli input del calcolatore. Vengono contate
  * e messe a rapporto invece che ignorate, perché un residente in quei comuni
  * potrebbe avere diritto a un'esenzione che qui non viene applicata (D-033).
@@ -156,10 +148,10 @@ const ESENZIONE_CONDIZIONATA =
   /figli|a carico|famigli|nucleo|invalid|disabil|handicap|isee|ultra|anzian|pension|lavoro dipendente|assimilat/i
 
 /**
- * ⚠️ **Il parsing è guidato dal testo di `FASCIA`, mai dalla posizione della
- * colonna.**
+ * ⚠️ Il parsing è guidato dal testo di `FASCIA`, mai dalla posizione della
+ * colonna.
  *
- * Per i comuni con esenzione la prima coppia porta lo **zero dell'esenzione**:
+ * Per i comuni con esenzione la prima coppia porta lo zero dell'esenzione:
  * 1.280 righe hanno `ALIQUOTA = 0`. Chi legge `ALIQUOTA` come «l'aliquota del
  * comune» assegna zero a 1.280 comuni, e ottiene per ciascuno un numero
  * perfettamente plausibile e sbagliato [Fonti §15].
@@ -187,7 +179,7 @@ function classificaFascia(grezzo) {
   const numeri = numeriDi(t)
   if (numeri.length === 0) return { tipo: 'ignota', testo: pulito }
 
-  // ⚠️ **La fascia si riconosce dalla struttura, non dalla parola «scaglione».**
+  // ⚠️ La fascia si riconosce dalla struttura, non dalla parola «scaglione».
   // Otto comuni descrivono le proprie fasce senza mai usarla — «Applicabile a
   // 15.001-28.000», «Applicabile a redditi tra 15.000,01 e 28.000,00» — e un
   // classificatore che pretenda quella parola li scarta tutti. A tenere il
@@ -279,8 +271,8 @@ function leggiGiornaliero2026() {
 
 /**
  * Da coppie a parametri. Restituisce `null` quando la riga non regge, e in quel
- * caso l'ente ricade sul fallback dell'anno precedente: **una riga 2026 che non
- * si lascia leggere non autorizza a inventare un'aliquota**, e il c. 752 dice
+ * caso l'ente ricade sul fallback dell'anno precedente: una riga 2026 che non
+ * si lascia leggere non autorizza a inventare un'aliquota, e il c. 752 dice
  * già cosa si applica a chi non ha una delibera utilizzabile.
  */
 function parametriDa2026(voce) {
@@ -290,30 +282,28 @@ function parametriDa2026(voce) {
   const scaglioni = coppie.filter((c) => c.fascia.tipo === 'scaglione')
   const esenzioni = coppie.filter((c) => c.fascia.tipo === 'esenzione')
 
-  // ---------------------------------------------------------------------
   // Asse 2 — la soglia di esenzione
   //
-  // ⚠️ **`IMPORTO_ESENTE` non è sempre compilata, e da sola perde 136 comuni.**
-  // La colonna esiste ed è il posto giusto dove guardare per primo, ma **138
-  // righe** del file 2026 descrivono un'esenzione — «Esenzione per redditi
+  // ⚠️ `IMPORTO_ESENTE` non è sempre compilata, e da sola perde 136 comuni.
+  // La colonna esiste ed è il posto giusto dove guardare per primo, ma 138
+  // righe del file 2026 descrivono un'esenzione — «Esenzione per redditi
   // imponibili fino a euro 10.000,00», senza condizioni — con la colonna a
   // zero. Fermarsi alla colonna significherebbe far pagare l'addizionale a chi
   // il comune ha esentato, cioè un numero plausibile e sbagliato nella
   // direzione peggiore, contro il contribuente.
   //
-  // ⚠️ **138 letture, 136 comuni, e i due che mancano non sono un errore.**
+  // ⚠️ 138 letture, 136 comuni, e i due che mancano non sono un errore.
   // La lettura avviene mentre si analizza la riga 2026; il rifiuto della riga
-  // arriva dopo, se le fasce non reggono. **BENTIVOGLIO** (fascia duplicata) e
-  // **MARNATE** (confine a 55.000) hanno la soglia letta dal testo e poi la
+  // arriva dopo, se le fasce non reggono. BENTIVOGLIO (fascia duplicata) e
+  // MARNATE (confine a 55.000) hanno la soglia letta dal testo e poi la
   // delibera scartata: ricadono sul c. 752 e prendono la soglia dalla colonna
-  // dell'annuale 2025. Il rapporto conta le **letture**, `origineSoglia` conta
-  // i **comuni**, e sono due grandezze diverse che devono restare tali.
+  // dell'annuale 2025. Il rapporto conta le letture, `origineSoglia` conta
+  // i comuni, e sono due grandezze diverse che devono restare tali.
   //
-  // Vale qui la stessa regola già stabilita per le aliquote: **il parsing è
-  // guidato dal testo della colonna `FASCIA`**. La colonna resta la sorgente
+  // Vale qui la stessa regola già stabilita per le aliquote: il parsing è
+  // guidato dal testo della colonna `FASCIA`. La colonna resta la sorgente
   // preferita; il testo interviene solo quando la colonna tace, e ogni volta
   // che interviene lo dice nel rapporto.
-  // ---------------------------------------------------------------------
   const esente = numeroVirgola(voce.importoEsente)
   let sogliaEsenzione = esente && esente.valore > 0 ? esente.valore : null
   // D-055: la provenienza si marca riga per riga, non si deduce a valle.
@@ -420,24 +410,22 @@ function parametriDa2026(voce) {
   }
 }
 
-// ---------------------------------------------------------------------------
 // Elenco annuale 2025 — le aliquote APPLICABILI, cioè il fallback del c. 752
-// ---------------------------------------------------------------------------
 
 /**
- * ⚠️ **Qui il set di scaglioni si infersce, e va dichiarato comune per comune.**
+ * ⚠️ Qui il set di scaglioni si infersce, e va dichiarato comune per comune.
  *
  * L'elenco annuale non porta le descrizioni delle fasce: dice *quante* aliquote
  * ha un comune, non su *quali* confini. Il set si ricava dalla cardinalità —
  * 4 aliquote → previgente (15.000), 3 → vigente (28.000) — e l'euristica tiene
- * al **98,5%**: su circa 560 comuni multialiquota, **sei finiscono sul set
- * sbagliato** [Fonti §15.b].
+ * al 98,5%: su circa 560 comuni multialiquota, sei finiscono sul set
+ * sbagliato [Fonti §15.b].
  *
  * L'inferenza non si può eliminare cercando le descrizioni nel file 2026: i
  * comuni che passano dal fallback sono per definizione quelli che nel 2026 non
- * hanno deliberato, e quindi non hanno descrizioni. **Il campo
+ * hanno deliberato, e quindi non hanno descrizioni. Il campo
  * `setScaglioniInferito` esiste perché un'inferenza silenziosa qui sarebbe
- * indifendibile**, e perché il giorno in cui il giornaliero 2025 entrerà in
+ * indifendibile, e perché il giorno in cui il giornaliero 2025 entrerà in
  * cartella basterà spegnere quel campo per sei comuni.
  */
 function leggiAnnuale2025() {
@@ -457,10 +445,10 @@ function leggiAnnuale2025() {
     // Colonna Esenzione: convenzione italiana (`23.000,00`), a differenza delle
     // aliquote nello stesso foglio, che usano il punto decimale.
     //
-    // ⚠️ **2.880 celle non vuote non sono 2.880 soglie utilizzabili.** 112
+    // ⚠️ 2.880 celle non vuote non sono 2.880 soglie utilizzabili. 112
     // portano la stringa `NOTA` — l'esenzione esiste ma il suo valore non è nel
     // file — e una è scritta male (`8.4999,99`). Restano 2.767 soglie leggibili.
-    // I 113 comuni scoperti vengono calcolati **senza esenzione**, quindi con
+    // I 113 comuni scoperti vengono calcolati senza esenzione, quindi con
     // un'addizionale più alta del reale: va detto, non lasciato accadere.
     const grezzaEsenzione = normalizzaTesto(celle.I)
     const esente = numeroVirgola(grezzaEsenzione)
@@ -544,9 +532,7 @@ function leggiAnnuale2025() {
   return { per, titolo }
 }
 
-// ---------------------------------------------------------------------------
 // Prospetto regionale 2026
-// ---------------------------------------------------------------------------
 
 function fasciaRegionale(grezzo) {
   const pulito = normalizzaTesto(grezzo)
@@ -570,26 +556,26 @@ function fasciaRegionale(grezzo) {
 const statisticheRegionali = { righe: 0, massimoNelFile: 0 }
 
 /**
- * ⚠️ **La soglia di esenzione regionale sta nella prosa, e va presa con le pinze**
+ * ⚠️ La soglia di esenzione regionale sta nella prosa, e va presa con le pinze
  * (D-057).
  *
- * Il prospetto regionale **non ha una colonna** come `IMPORTO_ESENTE` del file
+ * Il prospetto regionale non ha una colonna come `IMPORTO_ESENTE` del file
  * comunale: se un ente prevede una soglia, lo scrive in `DISPOSIZIONE`. Leggere
  * un parametro da un testo libero è esattamente ciò che ho rifiutato di fare
- * per le detrazioni regionali, quindi la differenza va detta: **qui il testo
- * dichiara da sé la meccanica**, e l'estrazione la accetta solo se lo fa.
+ * per le detrazioni regionali, quindi la differenza va detta: qui il testo
+ * dichiara da sé la meccanica, e l'estrazione la accetta solo se lo fa.
  *
  * Due condizioni, entrambe necessarie:
- * 1. una frase che esenta dei redditi **fino a** un importo;
- * 2. una conferma esplicita del **cliff** — *oltre* lo stesso importo si applica
+ * 1. una frase che esenta dei redditi fino a un importo;
+ * 2. una conferma esplicita del cliff — *oltre* lo stesso importo si applica
  *    l'aliquota *sull'intero imponibile*.
  *
  * La Valle d'Aosta le soddisfa entrambe, con lo stesso numero in tutte e due le
  * frasi. Un ente che parlasse di esenzione senza dire cosa succede sopra la
- * soglia finirebbe nel rapporto, **senza soglia**: un'esenzione applicata come
+ * soglia finirebbe nel rapporto, senza soglia: un'esenzione applicata come
  * cliff quando è una franchigia è un numero plausibile e sbagliato.
  *
- * ⚠️ **E qui la convenzione numerica cambia di nuovo, dentro lo stesso file.**
+ * ⚠️ E qui la convenzione numerica cambia di nuovo, dentro lo stesso file.
  * Le colonne `ALIQUOTA` e `FASCIA` usano il punto decimale (`1.23`, `15000.00`);
  * la prosa di `DISPOSIZIONE` scrive `15.000 euro` all'italiana. Terza
  * convenzione, terzo normalizzatore dichiarato.
@@ -618,7 +604,7 @@ function sogliaEsenzioneRegionale(ente, provvedimento) {
   }
   const soglia = [...sogliePossibili][0]
 
-  // La conferma del cliff: sopra la soglia si paga sull'**intero** imponibile.
+  // La conferma del cliff: sopra la soglia si paga sull'intero imponibile.
   const conferma = frasi.some(
     (fr) =>
       /oltre/i.test(fr) &&
@@ -637,12 +623,11 @@ function sogliaEsenzioneRegionale(ente, provvedimento) {
   return soglia
 }
 
-// ---------------------------------------------------------------------------
 // Letture dal testo di `DISPOSIZIONE` — D-061 e D-062
 //
-// ⚠️ **Perché una tavola dichiarativa e non un'espressione regolare.**
+// ⚠️ Perché una tavola dichiarativa e non un'espressione regolare.
 //
-// Le colonne numeriche del prospetto regionale **non sanno rappresentare** né
+// Le colonne numeriche del prospetto regionale non sanno rappresentare né
 // l'aliquota per fascia intera né le detrazioni: espongono quattro aliquote su
 // tre confini e basta. La struttura vera sta nella prosa di `DISPOSIZIONE`, e
 // la prosa non è uniforme — il FVG scrive «sull'intero importo», il Lazio «è
@@ -651,17 +636,16 @@ function sogliaEsenzioneRegionale(ente, provvedimento) {
 //
 // Un'espressione regolare che li coprisse tutti e tre coprirebbe anche cose che
 // non sono quelle, ed è esattamente ciò che la disciplina di questo import
-// vieta: **non si estrae dalla prosa nulla che la prosa non dichiari da sé**.
+// vieta: non si estrae dalla prosa nulla che la prosa non dichiari da sé.
 //
-// Quindi la lettura è **fatta a mano, una volta, e citata**: ogni voce porta la
-// frase esatta su cui si fonda, e l'import **verifica che quella frase sia
-// ancora nel file** prima di applicarla. Se il ministero riscrive il testo, la
+// Quindi la lettura è fatta a mano, una volta, e citata: ogni voce porta la
+// frase esatta su cui si fonda, e l'import verifica che quella frase sia
+// ancora nel file prima di applicarla. Se il ministero riscrive il testo, la
 // voce non si applica più e finisce nel rapporto — invece di applicare in
 // silenzio un parametro che nessuno ha più confermato.
 //
 // È lo stesso patto della soglia valdostana: si accetta solo ciò che il testo
 // dichiara, e la prova che lo dichiara sta accanto al dato.
-// ---------------------------------------------------------------------------
 
 const LETTURE_DAL_TESTO = {
   'REGIONE FRIULI VENEZIA GIULIA': {
@@ -680,7 +664,7 @@ const LETTURE_DAL_TESTO = {
       prova: 'non trovano applicazione nei confronti dei soggetti con un reddito imponibile complessivo',
       // Sospese le maggiorazioni, i primi due scaglioni valgono entrambi 1,23:
       // applicati progressivamente danno lo stesso di 1,23 sull'intero. La
-      // fascia intera è quindi il modo giusto **e** il numero giusto.
+      // fascia intera è quindi il modo giusto e il numero giusto.
       fasce: [{ redditoDa: 0, redditoA: 28_000, percentuale: 1.23 }],
       progressioneOltre: 'pubblicata',
       nota: 'sotto 28.000 le maggiorazioni sono sospese e i due scaglioni collassano su 1,23; sopra si torna alla progressione pubblicata',
@@ -705,6 +689,23 @@ const LETTURE_DAL_TESTO = {
       { prova: 'detrazione pari a 60,00 euro', importo: 60, redditoDa: 28_000, redditoA: 30_000 },
     ],
   },
+  'PROVINCIA AUTONOMA DI TRENTO': {
+    // D-064 — una deduzione dalla base, che è il quarto meccanismo del
+    // livello regionale e non uno dei tre già modellati. Il testo la separa in
+    // due frasi: chi ne ha diritto, e chi non ne ha. La `prova` è la prima.
+    //
+    // ⚠️ I due numeri coincidono — 30.000 di deduzione fino a 30.000 di
+    // imponibile — e non vanno fusi: se la Provincia ne cambiasse uno solo, un
+    // modello a soglia darebbe un numero sbagliato senza che nulla lo veda.
+    deduzione: {
+      prova: 'spetta una deduzione di euro 30.000,00',
+      importo: 30_000,
+      redditoMassimo: 30_000,
+    },
+    // ⚠️ La detrazione trentina di 246 euro è per figlio a carico: fuori
+    // perimetro per D-019, e già dichiarata da S-001. Non entra fra le
+    // `detrazioni`, che sono quelle legate al solo reddito.
+  },
   'PROVINCIA AUTONOMA DI BOLZANO': {
     detrazioni: [
       {
@@ -716,7 +717,7 @@ const LETTURE_DAL_TESTO = {
     ],
     // ⚠️ La seconda detrazione di Bolzano — «125,00 euro moltiplicato per il
     // rapporto fra il reddito diminuito di 50.000 e 25.000», con massimo 125 —
-    // è **continua, non a cliff**, e `DetrazioneLocale` non sa esprimere una
+    // è continua, non a cliff, e `DetrazioneLocale` non sa esprimere una
     // formula: ha un importo fisso entro una banda. Resta fuori, dichiarata.
     // L'effetto è al più 125 euro e va nella direzione che si conosce.
     detrazioniNonModellate: [
@@ -737,7 +738,7 @@ const perConfronto = (t) =>
     .replace(/\s+/g, ' ')
 
 /**
- * Applica una lettura **solo se la frase che la fonda è ancora nel file**.
+ * Applica una lettura solo se la frase che la fonda è ancora nel file.
  * Se non c'è, la lettura non si applica e finisce nel rapporto.
  */
 function provaPresente(ente, testo, prova, cosa) {
@@ -777,7 +778,7 @@ function leggiRegionale2026() {
     if (letta.ambiguo) {
       segnala('convenzione-numerica-ambigua', ente, `provvedimento ${numero}: ALIQUOTA = ${JSON.stringify(r.ALIQUOTA)} — virgola in un file a punto`)
     }
-    // Il massimo **prima** della selezione: è il 3,63 del Molise, che appartiene
+    // Il massimo prima della selezione: è il 3,63 del Molise, che appartiene
     // al provvedimento di giugno e quindi non entra nell'anno d'imposta 2026.
     statisticheRegionali.massimoNelFile = Math.max(statisticheRegionali.massimoNelFile, letta.valore)
 
@@ -841,6 +842,18 @@ function leggiRegionale2026() {
         `${d.importo} euro per reddito imponibile fra ${d.redditoDa} e ${d.redditoA ?? 'oltre'} — a cliff, letta dal testo e citata sulla legge regionale`,
       )
     }
+    // D-064 — la deduzione dalla base, con la stessa disciplina delle altre
+    // letture: si applica solo se la frase che la fonda è ancora nel testo.
+    let deduzione = null
+    if (lettura?.deduzione && provaPresente(ente, testoDisposizione, lettura.deduzione.prova, 'deduzione regionale')) {
+      deduzione = { importo: lettura.deduzione.importo, redditoMassimo: lettura.deduzione.redditoMassimo }
+      segnala(
+        'deduzione-regionale-applicata',
+        ente,
+        `deduzione di ${deduzione.importo} euro dalla base, per reddito imponibile fino a ${deduzione.redditoMassimo} — abbatte la base, non l'imposta, ed è un meccanismo distinto dalla soglia di esenzione e dalle detrazioni`,
+      )
+    }
+
     for (const d of lettura?.detrazioniNonModellate ?? []) {
       segnala(
         'detrazione-regionale-non-modellata',
@@ -849,7 +862,7 @@ function leggiRegionale2026() {
       )
     }
 
-    // ⚠️ Art. 50 c. 3 terzo periodo — una maggiorazione **più favorevole** al
+    // ⚠️ Art. 50 c. 3 terzo periodo — una maggiorazione più favorevole al
     // contribuente può applicarsi retroattivamente all'anno in corso. Oggi non
     // ricorre, perché entrambe le seconde delibere alzano le aliquote. La
     // condizione va scritta lo stesso: una regola senza la propria condizione è
@@ -871,7 +884,7 @@ function leggiRegionale2026() {
       }
     }
 
-    // Le detrazioni **per carichi di famiglia** restano fuori perimetro (D-019),
+    // Le detrazioni per carichi di famiglia restano fuori perimetro (D-019),
     // e non hanno bisogno di un passo proprio: le copre già S-001, che dichiara
     // che coniuge e figli a carico non entrano nel calcolo.
     const testoLibero = [scelto.disposizione, scelto.note].filter(Boolean).join(' ')
@@ -892,6 +905,7 @@ function leggiRegionale2026() {
       aliquota: forma,
       detrazioni,
       sogliaEsenzione: sogliaEsenzioneRegionale(ente, scelto),
+      deduzione,
       provvedimentiScartati: scartati.map((p) => ({ numero: p.numero, dataPubblicazione: p.pubblicazione })),
     })
   }
@@ -922,7 +936,7 @@ function formaRegionale(ente, provvedimento, silenzioso = false) {
 const aliquoteDi = (forma) => {
   if (forma.forma === 'unica') return [forma.aliquota]
   if (forma.forma === 'fasce-intere') {
-    // Il tetto va misurato su **tutte** le aliquote che l'ente può applicare:
+    // Il tetto va misurato su tutte le aliquote che l'ente può applicare:
     // quelle per fascia intera e quelle della progressione oltre l'ultima.
     return [
       ...forma.fasce.map((f) => f.percentuale),
@@ -940,18 +954,16 @@ function piuFavorevole(candidata, corrente) {
   return a.every((v, i) => v <= b[i]) && a.some((v, i) => v < b[i])
 }
 
-// ---------------------------------------------------------------------------
 // comune → ente impositore
 //
-// ⚠️ **PARAMETRO NON VERIFICATO, e non è un dettaglio.** La ripartizione delle
-// province fra gli enti impositori **non sta in nessuno dei tre file MEF**: il
+// ⚠️ PARAMETRO NON VERIFICATO, e non è un dettaglio. La ripartizione delle
+// province fra gli enti impositori non sta in nessuno dei tre file MEF: il
 // file comunale porta la sigla della provincia, quello regionale il nome
 // dell'ente, e niente li lega. Questa tabella è di uso corrente ma non è stata
 // reperita su un atto, e va marcata come tale in pagina finché non lo sarà.
 //
-// Le due province autonome sono enti a sé: il Trentino-Alto Adige **non esiste**
+// Le due province autonome sono enti a sé: il Trentino-Alto Adige non esiste
 // come soggetto che impone il tributo [Fonti §15.a, D-037].
-// ---------------------------------------------------------------------------
 
 const PROVINCE_PER_ENTE = {
   'REGIONE PIEMONTE': ['AL', 'AT', 'BI', 'CN', 'NO', 'TO', 'VB', 'VC'],
@@ -982,9 +994,7 @@ for (const [ente, province] of Object.entries(PROVINCE_PER_ENTE)) {
   for (const p of province) ENTE_PER_PROVINCIA.set(p, ente)
 }
 
-// ---------------------------------------------------------------------------
 // Risoluzione
-// ---------------------------------------------------------------------------
 
 function risolvi(giornaliero, annuale, entiRegionali) {
   const nomiEnti = new Set(entiRegionali.map((e) => e.nome))
@@ -1083,12 +1093,10 @@ function risolvi(giornaliero, annuale, entiRegionali) {
   return { comuni, conteggi }
 }
 
-// ---------------------------------------------------------------------------
 // Verifiche — i numeri devono tornare
 //
 // [Fonti §15, §15.b] sono già misurati sui file in cartella. Se l'import ne
 // produce di diversi, è il parser a essere sbagliato, non la misura.
-// ---------------------------------------------------------------------------
 
 function verifiche(giornaliero, annuale, comuni, entiRegionali, conteggi) {
   const aliquoteMassime = (forma) => Math.max(...aliquoteDi(forma))
@@ -1103,7 +1111,7 @@ function verifiche(giornaliero, annuale, comuni, entiRegionali, conteggi) {
   const previgenti2026 = [...giornaliero.values()].filter(
     (v) => v.deliberato && v.coppie.filter((c) => c.fascia.tipo === 'scaglione').length === 4,
   ).length
-  // ⚠️ La misura di §15 è sulla **prima** colonna `ALIQUOTA`, non su tutte e
+  // ⚠️ La misura di §15 è sulla prima colonna `ALIQUOTA`, non su tutte e
   // dodici: è quella la colonna che un import ingenuo scambierebbe per
   // «l'aliquota del comune», ed è lì che sta lo zero dell'esenzione.
   const righeAliquotaZero = [...giornaliero.values()].filter(
@@ -1162,9 +1170,7 @@ function verifiche(giornaliero, annuale, comuni, entiRegionali, conteggi) {
   ]
 }
 
-// ---------------------------------------------------------------------------
 // Esecuzione
-// ---------------------------------------------------------------------------
 
 const giornaliero = leggiGiornaliero2026()
 const { per: annuale, titolo: titoloAnnuale } = leggiAnnuale2025()
@@ -1251,21 +1257,21 @@ for (const c of comuni) {
 }
 
 /**
- * ⚠️ **La mappatura provincia → ente è il punto più fragile dell'import, e
- * questi controlli dicono fin dove arrivano — non che sia giusta.**
+ * ⚠️ La mappatura provincia → ente è il punto più fragile dell'import, e
+ * questi controlli dicono fin dove arrivano — non che sia giusta.
  *
  * Nessuno dei tre file MEF lega una sigla di provincia a un ente impositore: il
  * comunale porta la sigla, il regionale il nome dell'ente, e in mezzo non c'è
- * niente. La tabella **non è derivabile** da questi dati, quindi non è
+ * niente. La tabella non è derivabile da questi dati, quindi non è
  * verificabile con questi dati. Quello che si può fare è escludere gli errori
- * che si vedono — buchi, doppioni, enti inventati, enti vuoti — e **dichiarare
- * quello che resta**.
+ * che si vedono — buchi, doppioni, enti inventati, enti vuoti — e dichiarare
+ * quello che resta.
  *
- * **Il difetto che sopravvive a tutti e quattro i controlli è lo scambio:** due
+ * Il difetto che sopravvive a tutti e quattro i controlli è lo scambio: due
  * province attribuite l'una all'ente dell'altra. Copertura, unicità e totali
  * tornerebbero identici, e ogni comune di quelle due province riceverebbe
  * l'aliquota di un ente sbagliato producendo un numero perfettamente
- * plausibile. Per questo la tabella resta marcata **non verificata**.
+ * plausibile. Per questo la tabella resta marcata non verificata.
  */
 function controlliSullaMappatura() {
   const sigleNelFile = new Set(comuni.map((c) => c.provincia))
@@ -1398,7 +1404,14 @@ const rapporto = [
   '',
   "⚠️ **Una detrazione resta fuori, ed è continua.** La seconda di Bolzano — *«125,00 euro moltiplicato per il rapporto tra il reddito imponibile diminuito di 50.000,00 euro e l'importo di 25.000,00 euro»* — è una **formula lineare crescente**, e `DetrazioneLocale` esprime solo un importo fisso entro una banda. Non è stata modellata: l'effetto è al più **125 euro**, in una direzione nota — dove spetta, l'addizionale mostrata è più alta del reale.",
   '',
-  "⚠️ **E una che non è una detrazione.** La Provincia di Trento concede una **deduzione** di 30.000 euro a chi ha imponibile fino a 30.000 — riduce la base, non l'imposta, ed è un meccanismo diverso da quello che D-061 ha modellato. Non è stata toccata, e va guardata a parte.",
+  '',
+  '## La deduzione dalla base (D-064)',
+  '',
+  "⚠️ **Non è una detrazione, ed è il quarto meccanismo del livello regionale.** La Provincia autonoma di Trento concede una **deduzione** di 30.000 euro a chi ha reddito imponibile fino a 30.000 — *«Ai contribuenti aventi un reddito imponibile non superiore a euro 30.000,00 spetta una deduzione di euro 30.000,00»* — e riduce la **base**, non l'imposta. È il piano su cui nessuno degli altri tre assi agisce.",
+  '',
+  "**Effetto misurato:** a imponibile 30.000,00 l'addizionale regionale è **0,00**; a 30.000,01 è **369,00** (1,23% sull'intera base). Gradino di **−369 euro** a una RAL di circa **33.036**, il doppio di quello di Milano e **il più grande del ramo locale finora misurato**. Colpisce i **166 comuni trentini**, che D-056 ha dichiarato calcolabili: come per Bolzano, è una nostra decisione ad aver reso visibile un difetto latente.",
+  '',
+  "⚠️ **Perché non è modellata come una soglia di esenzione, che oggi darebbe lo stesso numero al centesimo.** Una deduzione **pari alla soglia** e concessa solo sotto la soglia è aritmeticamente identica a un'esenzione. Ma l'equivalenza vale solo finché *importo* e *reddito massimo* coincidono: se la Provincia ne cambiasse uno solo, il modello a soglia darebbe un numero sbagliato **senza che nulla se ne accorga**. Sono due campi perché la norma fissa due grandezze.",
   '',
   '## La mappatura provincia → ente impositore — cosa è verificato e cosa no',
   '',
