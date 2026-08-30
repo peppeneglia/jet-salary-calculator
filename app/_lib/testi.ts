@@ -6,17 +6,17 @@
  * prodotto, e sta qui — cioè in `app/`, perché è vocabolario di interfaccia e
  * non del calcolo.
  *
- * Le quattro nature **sono quattro destinazioni** — la pensione futura, lo
+ * Le quattro nature sono quattro destinazioni — la pensione futura, lo
  * Stato, Regione e Comune, e il lavoratore stesso. È ciò che rende coerente il
  * titolo della sezione (D-034), e per questo ogni gruppo porta entrambi i
  * nomi: quello tecnico e quello che risponde alla domanda «dove vanno».
  *
- * ⚠️ **Dal 29/08/2026 le frasi non sono più qui: qui c'è la mappa.** I testi
- * stanno in `_i18n/risorse.ts`, in due lingue; questo file dice **quale chiave**
+ * ⚠️ Dal 29/08/2026 le frasi non sono più qui: qui c'è la mappa. I testi
+ * stanno in `_i18n/risorse.ts`, in due lingue; questo file dice quale chiave
  * corrisponde a quale natura. È la stessa divisione che il motore ha con
  * `data/testi.ts`: la struttura da una parte, la prosa dall'altra.
  *
- * I titoli dei quattro gruppi sono la **prima occorrenza in pagina** dei nomi
+ * I titoli dei quattro gruppi sono la prima occorrenza in pagina dei nomi
  * degli istituti italiani, ed è lì che l'inglese porta la glossa fra parentesi
  * (D-041). Le voci sotto usano il nome nudo.
  */

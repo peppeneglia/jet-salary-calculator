@@ -3,7 +3,7 @@
  *
  * Sta in un file suo, separato da `preferenze.ts`, per una ragione precisa:
  * `next/headers` è codice di server, e importarlo nello stesso modulo che il
- * client usa per **scrivere** il cookie porterebbe quel modulo nel bundle
+ * client usa per scrivere il cookie porterebbe quel modulo nel bundle
  * sbagliato. Costanti e parser stanno di là, dove li leggono entrambi; la
  * lettura della richiesta sta qui.
  *

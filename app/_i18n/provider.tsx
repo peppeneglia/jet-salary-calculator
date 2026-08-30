@@ -6,13 +6,13 @@
  * Sta nel layout e avvolge tutto, così `useTraduzione()` funziona ovunque
  * senza che ogni componente riceva la lingua come prop attraverso tre livelli.
  *
- * La lingua **arriva dal server**: è il server che ha letto il cookie e che ha
+ * La lingua arriva dal server: è il server che ha letto il cookie e che ha
  * già renderizzato la pagina in quella lingua. Se il client la ricavasse da sé
  * — da `navigator.language`, o rileggendo il cookie in un effetto — potrebbe
  * dissentire dal server per un istante, ed è esattamente lo sfarfallio che
  * questo impianto esiste per evitare.
  *
- * ⚠️ **È qui, e solo qui, che entra `initReactI18next`.** Il plugin tocca
+ * ⚠️ È qui, e solo qui, che entra `initReactI18next`. Il plugin tocca
  * `createContext`, che nei server component non esiste: montarlo nel modulo
  * condiviso farebbe fallire la build della pagina. Le opzioni restano comuni
  * ai due lati, il plugin no.

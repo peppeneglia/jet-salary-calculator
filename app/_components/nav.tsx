@@ -14,13 +14,14 @@ import { useTraduzione } from '../_i18n/provider'
  * È un client component per due ragioni: `usePathname`, che marca la voce
  * corrente, e la lingua delle etichette. Nessun altro stato.
  *
- * ⚠️ **I colori qui sono quelli della cornice, non quelli del contenuto.** La
+ * ⚠️ I colori qui sono quelli della cornice, non quelli del contenuto. La
  * fascia verde non cambia con il tema, quindi il testo che ci sta sopra non può
  * usare `inchiostro`: su fondo scuro `inchiostro` diventa quasi bianco, e
  * bianco su #66C239 sta a 2,25 contro il 4,5 richiesto (D-042).
  */
 const VOCI = [
   { href: '/', chiave: 'nav.calcolatore' },
+  { href: '/spiegazione', chiave: 'nav.spiegazione' },
   { href: '/norme', chiave: 'nav.norme' },
 ] as const
 

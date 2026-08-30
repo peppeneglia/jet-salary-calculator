@@ -1,18 +1,18 @@
 /**
  * Come la traccia si dispone in pagina.
  *
- * **Non calcola nulla.** Non somma, non filtra via, non deriva: percorre
+ * Non calcola nulla. Non somma, non filtra via, non deriva: percorre
  * `Risultato.passi` una volta sola, nell'ordine in cui il motore li ha emessi,
  * e li dispone in blocchi. Ogni passo che entra esce, e nessuno cambia valore.
  *
  * Due tipi di blocco, perché i passi sono di due specie:
  *
- * - i passi **con natura** sono le voci del dettaglio, e vanno raggruppati
+ * - i passi con natura sono le voci del dettaglio, e vanno raggruppati
  *   nelle quattro nature;
- * - i passi **senza natura** — la RAL, il reddito complessivo, il gate delle
+ * - i passi senza natura — la RAL, il reddito complessivo, il gate delle
  *   addizionali — non sono voci: sono passaggi. Espongono una grandezza
- *   intermedia o l'esito di una verifica, e vanno mostrati **al proprio posto
- *   nella sequenza**, non raccolti in fondo. Un gate che si apre resta un
+ *   intermedia o l'esito di una verifica, e vanno mostrati al proprio posto
+ *   nella sequenza, non raccolti in fondo. Un gate che si apre resta un
  *   passaggio da mostrare: nasconderlo quando l'esito è positivo lo
  *   trasformerebbe in un messaggio d'errore, che non è.
  *

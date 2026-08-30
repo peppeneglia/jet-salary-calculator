@@ -1,22 +1,22 @@
 /**
  * Le stringhe dell'interfaccia, in italiano e in inglese.
  *
- * ⚠️ **Non è la stessa tabella di `data/testi.ts`, e la differenza non è
- * organizzativa.** Là stanno le frasi che accompagnano un numero prodotto dal
+ * ⚠️ Non è la stessa tabella di `data/testi.ts`, e la differenza non è
+ * organizzativa. Là stanno le frasi che accompagnano un numero prodotto dal
  * motore, e stanno in `data/` perché il motore le riceve come riceve i
- * parametri (D-041). Qui stanno le frasi che l'interfaccia dice **per conto
- * proprio**: titoli, aiuti sotto i campi, etichette che la traccia non porta.
+ * parametri (D-041). Qui stanno le frasi che l'interfaccia dice per conto
+ * proprio: titoli, aiuti sotto i campi, etichette che la traccia non porta.
  * Mescolarle vorrebbe dire che `data/` contiene testo di interfaccia, e
  * `data/` non sa cosa sia un'interfaccia.
  *
- * **Il registro è quello di D-039.** Chi legge è un dipendente o chi gestisce
+ * Il registro è quello di D-039. Chi legge è un dipendente o chi gestisce
  * il personale, non chi valuta la prova. Frasi corte, si dà del tu, niente
  * *modello*, *perimetro*, *prototipo*, *scope*, *input*.
  *
- * **Cosa resta in italiano anche in inglese** (D-041): i nomi degli istituti
+ * Cosa resta in italiano anche in inglese (D-041): i nomi degli istituti
  * che non hanno equivalente, con una glossa fra parentesi alla prima
- * occorrenza. I titoli dei quattro gruppi di `nature` sono la **prima
- * occorrenza in pagina** di *contributi previdenziali*, *IRPEF* e *addizionale
+ * occorrenza. I titoli dei quattro gruppi di `nature` sono la prima
+ * occorrenza in pagina di *contributi previdenziali*, *IRPEF* e *addizionale
  * regionale e comunale*: la glossa sta lì, e le voci sotto usano il nome nudo.
  */
 
@@ -33,12 +33,19 @@ const it = {
     titoloNorme: 'Norme sul calcolo dello stipendio — Jet Salary Calculator',
     descrizioneNorme:
       'Archivio delle norme che determinano la retribuzione netta in Italia: cosa dispone ciascuna, cosa determina nel calcolo o perché resta fuori, con vigenza e fonte istituzionale.',
+    titoloSpiegazione: 'Come si passa dal lordo al netto — Jet Salary Calculator',
+    descrizioneSpiegazione:
+      'La catena intera, spiegata senza numeri di un caso particolare: contributi, IRPEF a scaglioni, detrazioni, addizionali di Regione e Comune, e le somme che invece si aggiungono.',
+    titoloProgetto: 'Che progetto è questo — Jet Salary Calculator',
+    descrizioneProgetto:
+      'Da dove nasce questo calcolatore, come è costruito, e che cosa c’entra Jet HR. Progetto indipendente, non un prodotto dell’azienda.',
   },
 
   nav: {
     etichettaTesta: 'Sezioni del sito',
     etichettaPiede: 'Sezioni del sito, in fondo',
     calcolatore: 'Calcolatore',
+    spiegazione: 'Spiegazione',
     norme: 'Norme',
   },
 
@@ -46,6 +53,7 @@ const it = {
     notaAnnuale:
       'Il risultato è il netto di un anno intero, per uno stipendio percepito tutto nell’anno. Non è l’importo di una singola busta paga: quella risponde a una domanda diversa, e il numero che ci leggi sarà un altro.',
     linkNonCopre: 'Cosa questo calcolatore non copre',
+    linkProgetto: 'Che progetto è questo',
     indipendente: 'Progetto indipendente. Non è un prodotto Jet HR e non è affiliato all’azienda.',
   },
 
@@ -67,9 +75,11 @@ const it = {
     titolo: 'I tuoi dati',
     ralEtichetta: 'Retribuzione annua lorda (RAL)',
     ralAiuto: 'È lo stipendio annuo scritto sul contratto, prima di ogni trattenuta.',
-    comuneEtichetta: 'Comune in cui vivi',
+    comuneEtichetta: 'Comune di residenza',
     comuneAiuto: 'Conta dove avevi il domicilio fiscale al 1° gennaio.',
-    comuneEnte: 'Addizionale regionale di {{ente}}',
+    regioneEtichetta: 'Regione o Provincia autonoma',
+    regioneAiuto: 'Non la scegli tu: la determina il comune.',
+    regioneAssente: 'Non disponibile',
     comuneSegnaposto: 'Cerca un comune',
     comuneNessunRisultato: 'Nessun comune con questo nome, per ora.',
     comuneElencoInArrivo: 'Sto caricando l’elenco dei comuni…',
@@ -179,7 +189,7 @@ const it = {
   /**
    * Il registro degli errori — D-043.
    *
-   * Dicono **cosa fare**, non cosa è andato storto. Nessun codice visibile, e
+   * Dicono cosa fare, non cosa è andato storto. Nessun codice visibile, e
    * nessuna parola di quantità su una condizione binaria (nota di D-039).
    */
   errori: {
@@ -190,7 +200,7 @@ const it = {
       'Scrivi lo stipendio lordo in cifre, per esempio 30.000. Le lettere e i simboli non li sappiamo leggere.',
     ralNonPositiva: 'Inserisci uno stipendio lordo maggiore di zero, per esempio 30.000.',
     ralImplausibile:
-      'Controlla la cifra: la leggiamo come {{importo}}, che per uno stipendio annuo è fuori scala. Scrivila in euro, non in centesimi — oltre {{soglia}} non facciamo il calcolo.',
+      'Controlla la cifra: la leggiamo come {{importo}}, che per uno stipendio annuo è fuori scala. Scrivila in euro, non in centesimi: oltre {{soglia}} non facciamo il calcolo.',
     comuneMancante: 'Scegli il comune in cui avevi il domicilio fiscale al 1° gennaio.',
     comuneSconosciuto:
       'Scegli un comune dall’elenco. Per ora il calcolatore copre i comuni che abbiamo verificato uno per uno: l’elenco completo dei comuni italiani arriverà più avanti.',
@@ -217,11 +227,12 @@ const it = {
     titolo: 'Norme sul calcolo dello stipendio',
     paragrafo1:
       'Quanto arriva davvero in busta paga non lo decide una regola sola. Lo decidono decine di norme stratificate negli anni, che si rinviano a vicenda e che quasi nessuno legge insieme. Qui ci sono quelle che abbiamo aperto e letto, nell’ordine in cui incontrano una retribuzione: prima i contributi, poi l’imposta, poi Regione e Comune.',
-    paragrafo2a: 'Di ciascuna trovi cosa dispone, cosa determina nel netto — o perché resta fuori dal nostro calcolo — e le',
+    paragrafo2a: 'Di ciascuna trovi cosa dispone, cosa determina nel netto, o perché resta fuori dal nostro calcolo, e le',
     paragrafo2b: 'ambiguità che porta con sé',
     paragrafo2c:
       ': rinvii che non arrivano a destinazione, tetti che vengono derogati, articoli che citano numerazioni cambiate vent’anni fa. È la parte che di solito non si racconta.',
-    indice: 'Sezioni dell’archivio',
+    filtro: 'Filtra per sezione',
+    tutte: 'Tutte',
     cosaDetermina: 'Cosa determina nel netto',
     inVigore: 'In vigore',
     ultimaModifica: 'Ultima modifica',
@@ -253,12 +264,19 @@ const en: Risorse = {
     titoloNorme: 'The law behind Italian net pay — Jet Salary Calculator',
     descrizioneNorme:
       'An archive of the rules that determine net pay in Italy: what each one provides, what it determines in the calculation or why it stays out, with dates in force and the institutional source.',
+    titoloSpiegazione: 'How gross pay becomes take-home pay — Jet Salary Calculator',
+    descrizioneSpiegazione:
+      'The whole chain, explained without the figures of any one case: contributions, IRPEF brackets, tax credits, the regional and municipal surcharges, and the sums that are added back instead.',
+    titoloProgetto: 'What this project is — Jet Salary Calculator',
+    descrizioneProgetto:
+      'Where this calculator comes from, how it is built, and what Jet HR has to do with it. An independent project, not a product of the company.',
   },
 
   nav: {
     etichettaTesta: 'Site sections',
     etichettaPiede: 'Site sections, in the footer',
     calcolatore: 'Calculator',
+    spiegazione: 'How it works',
     norme: 'The law',
   },
 
@@ -266,6 +284,7 @@ const en: Risorse = {
     notaAnnuale:
       'The figure is net pay for a full year, on a salary earned entirely within that year. It is not the amount of a single payslip: that answers a different question, and the number you read on it will be another one.',
     linkNonCopre: 'What this calculator does not cover',
+    linkProgetto: 'What this project is',
     indipendente: 'An independent project. Not a Jet HR product and not affiliated with the company.',
   },
 
@@ -287,9 +306,11 @@ const en: Risorse = {
     titolo: 'Your details',
     ralEtichetta: 'Gross annual salary (RAL)',
     ralAiuto: 'The annual salary written in your contract, before any deduction.',
-    comuneEtichetta: 'Where you live',
+    comuneEtichetta: 'Municipality of residence',
     comuneAiuto: 'What counts is where you were tax-resident on 1 January.',
-    comuneEnte: 'Regional addizionale of {{ente}}',
+    regioneEtichetta: 'Region or autonomous Province',
+    regioneAiuto: 'You do not pick this one: the municipality settles it.',
+    regioneAssente: 'Not available',
     comuneSegnaposto: 'Search for a municipality',
     comuneNessunRisultato: 'No municipality by that name, for now.',
     comuneElencoInArrivo: 'Loading the list of municipalities…',
@@ -404,7 +425,7 @@ const en: Risorse = {
       'Write your gross salary in figures, for example 30,000. We cannot read letters or symbols.',
     ralNonPositiva: 'Enter a gross salary above zero, for example 30,000.',
     ralImplausibile:
-      'Check the figure: we read it as {{importo}}, which is off the scale for an annual salary. Write it in euros, not in cents — above {{soglia}} we do not run the calculation.',
+      'Check the figure: we read it as {{importo}}, which is off the scale for an annual salary. Write it in euros, not in cents: above {{soglia}} we do not run the calculation.',
     comuneMancante: 'Choose the municipality where you were tax-resident on 1 January.',
     comuneSconosciuto:
       'Choose a municipality from the list. For now the calculator covers the ones we have checked one by one: the full list of Italian municipalities will come later.',
@@ -431,11 +452,12 @@ const en: Risorse = {
     titolo: 'The law behind Italian net pay',
     paragrafo1:
       'What actually reaches your payslip is not decided by a single rule. It is decided by dozens of them, layered over the years, cross-referring to one another, and almost never read side by side. These are the ones we opened and read, in the order a salary meets them: contributions first, then the tax, then the region and the municipality.',
-    paragrafo2a: 'For each one you will find what it provides, what it determines in your net pay — or why it stays outside our calculation — and the',
+    paragrafo2a: 'For each one you will find what it provides, what it determines in your net pay, or why it stays outside our calculation, and the',
     paragrafo2b: 'ambiguities it carries with it',
     paragrafo2c:
       ': cross-references that lead nowhere, ceilings that get derogated from, articles citing numbering that changed twenty years ago. It is the part nobody usually tells you about.',
-    indice: 'Sections of the archive',
+    filtro: 'Filter by section',
+    tutte: 'All',
     cosaDetermina: 'What it determines in your net pay',
     inVigore: 'In force',
     ultimaModifica: 'Last amended',
@@ -445,6 +467,8 @@ const en: Risorse = {
     vuotoTesto:
       'Some entries have no date in force, and for some the link to the institutional portal is missing. That is not an oversight: it means the check was not carried out, or the document was read on a portal that exposes no stable address. On a page about the law, a figure reconstructed from memory is worth less than a field left blank, because the first one looks reliable and is not.',
   },
+
+
 }
 
 export const RISORSE: Readonly<Record<CodiceLingua, Risorse>> = { it, en }

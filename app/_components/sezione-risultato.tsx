@@ -3,7 +3,7 @@
 /**
  * Il numero, e le sue tre divisioni.
  *
- * Le tre mensilità si mostrano **insieme**, con in evidenza quella scelta.
+ * Le tre mensilità si mostrano insieme, con in evidenza quella scelta.
  * Non è una scelta estetica: mostrandole tutte e tre si rende visibile che 12,
  * 13 e 14 sono viste della stessa grandezza e non scenari alternativi (D-022).
  * È la trappola risolta per via di interfaccia invece che con una nota — e
@@ -40,11 +40,11 @@ export function SezioneRisultato({ risultato }: { risultato: Risultato }) {
     >
       <div className="space-y-6">
         {/*
-          ⚠️ **Il risultato riscrive i propri input** (D-063).
+          ⚠️ Il risultato riscrive i propri input (D-063).
 
           È il presidio di D-036, spostato e reso più forte. Prima un'etichetta
           accanto al campo diceva *questa cifra è un esempio*; adesso il numero
-          dichiara **da cosa nasce**, e lo fa anche quando i dati sono davvero
+          dichiara da cosa nasce, e lo fa anche quando i dati sono davvero
           quelli dell'utente — dove serve a confermare cosa è stato calcolato.
 
           Un numero che dichiara la propria origine non può essere scambiato
@@ -71,9 +71,9 @@ export function SezioneRisultato({ risultato }: { risultato: Risultato }) {
           </p>
 
           {/*
-            ⚠️ **L'anno d'imposta stava nel piede, e qualificava la cosa
-            sbagliata.** Lì era una riga sulla *pagina*; qualifica invece **un
-            numero**, e chi legge la cifra non scorre fino in fondo per sapere
+            ⚠️ L'anno d'imposta stava nel piede, e qualificava la cosa
+            sbagliata. Lì era una riga sulla *pagina*; qualifica invece un
+            numero, e chi legge la cifra non scorre fino in fondo per sapere
             a che anno si riferisce.
 
             E l'anno non è più dentro la stringa: arriva da

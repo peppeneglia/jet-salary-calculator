@@ -3,20 +3,20 @@
 /**
  * Le assunzioni dichiarate, rese in pagina.
  *
- * **È un vincolo del progetto, non un extra** (D-008): quello che il calcolo
+ * È un vincolo del progetto, non un extra (D-008): quello che il calcolo
  * non copre si dice, con la motivazione di ciascuna voce. Dichiarare i confini
  * è di per sé un segnale di controllo del dominio.
  *
  * Il componente serve due posti diversi:
  *
- * - accanto al numero, con le assunzioni che il **motore** ha selezionato per
+ * - accanto al numero, con le assunzioni che il motore ha selezionato per
  *   quel calcolo (D-031): la pagina non può mostrarne una che il motore non ha
  *   considerato;
  * - nella pagina «Cosa questo calcolatore non copre», con il catalogo intero e
  *   la condizione di ciascuna scritta accanto.
  *
- * ⚠️ **È qui, e in nessun altro posto, che il testo di un'assunzione sceglie la
- * propria lingua.** Il catalogo porta entrambe (D-041) e il motore le lascia
+ * ⚠️ È qui, e in nessun altro posto, che il testo di un'assunzione sceglie la
+ * propria lingua. Il catalogo porta entrambe (D-041) e il motore le lascia
  * intatte, proprio perché una delle due pagine non passa dal motore: con la
  * risoluzione a monte le strade sarebbero due, e la stessa voce potrebbe
  * leggersi diversa a seconda di dove compare.

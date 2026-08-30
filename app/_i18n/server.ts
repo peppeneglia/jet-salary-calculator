@@ -3,9 +3,9 @@
  *
  * Le tre pagine sono server component, e devono restare tali: `/` legge il
  * catalogo dei comuni senza farlo attraversare il confine (D-004). Quindi la
- * traduzione serve **anche** fuori da React lato client.
+ * traduzione serve anche fuori da React lato client.
  *
- * ⚠️ **Istanza senza il plugin React, ed è obbligatorio.** `react-i18next`
+ * ⚠️ Istanza senza il plugin React, ed è obbligatorio. `react-i18next`
  * chiama `createContext` quando viene caricato, e in un server component quella
  * funzione non esiste: importarlo qui fa fallire la build, non il runtime. Le
  * opzioni sono le stesse del client — vivono in `istanza.ts` — così i due lati

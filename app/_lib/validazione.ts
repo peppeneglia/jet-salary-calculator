@@ -1,14 +1,14 @@
 /**
  * Cosa rende accettabile una RAL, in un posto solo — D-043.
  *
- * ⚠️ **Due chiamanti, una regola.** Il client valida quello che si è digitato,
+ * ⚠️ Due chiamanti, una regola. Il client valida quello che si è digitato,
  * prima di chiamare l'handler: è la ragione per cui la validazione nativa del
  * browser è spenta — le sue bolle grigie stanno fuori dalla nostra grafica e
  * non parlano la nostra lingua. Il server valida quello che gli arriva, perché
  * un handler che si fida del client non è un handler.
  *
  * Se la soglia vivesse in due posti, un giorno il client accetterebbe un numero
- * che il server rifiuta, e chi legge vedrebbe un errore comparire **dopo** aver
+ * che il server rifiuta, e chi legge vedrebbe un errore comparire dopo aver
  * premuto il bottone, senza capire perché. È la stessa forma della doppia
  * verità che D-003 esiste per impedire, spostata sull'input.
  */
@@ -20,11 +20,11 @@ import { leggiImporto } from './formato'
 /**
  * Sopra questa cifra non calcoliamo.
  *
- * ⚠️ **Non è un parametro normativo e non sta in `data/`**: nessuna legge dice
+ * ⚠️ Non è un parametro normativo e non sta in `data/`: nessuna legge dice
  * che uno stipendio non possa superare dieci milioni. È una scelta di prodotto,
  * e la soglia è alta di proposito.
  *
- * **Perché proprio dieci milioni.** La soglia serve a intercettare un errore di
+ * Perché proprio dieci milioni. La soglia serve a intercettare un errore di
  * battitura — la RAL scritta in centesimi, uno zero di troppo, un incolla
  * andato male — non a giudicare quanto guadagna chi scrive. Il compenso da
  * lavoro dipendente più alto d'Italia sta ampiamente sotto: a dieci milioni

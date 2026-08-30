@@ -3,12 +3,12 @@
 /**
  * Un passo della traccia, reso.
  *
- * **È rendering, non logica riscritta.** Nessun calcolo, nessun numero
+ * È rendering, non logica riscritta. Nessun calcolo, nessun numero
  * derivato: ogni cifra in questo file esce da un campo di `Passo`. Il segno
  * arriva già dal motore — `effettoSulNetto` è negativo per le voci che
  * sottraggono — e qui si decide solo come scriverlo.
  *
- * **E nessuna prosa, nemmeno adesso che le lingue sono due.** `etichetta`,
+ * E nessuna prosa, nemmeno adesso che le lingue sono due. `etichetta`,
  * `regola`, `spiegazione` e `ragione` arrivano dal motore già nella lingua
  * giusta (D-041): qui si traducono soltanto le etichette che la traccia non
  * porta — *Non dovuto*, *Il valore applicato* — che sono vocabolario di
@@ -17,13 +17,13 @@
  * Le tre varianti di `Esito` si rendono in tre modi diversi, ed è il punto:
  *
  * - `applicato` — una riga con il suo effetto;
- * - `nonDovuto` — **si mostra, con la sua ragione**. Non sparisce e non
+ * - `nonDovuto` — si mostra, con la sua ragione. Non sparisce e non
  *   diventa una riga a zero: un numero mancante senza spiegazione è la forma
  *   peggiore di errore, perché è plausibile (D-033);
  * - `verifica` — si mostra come passaggio anche quando si apre. Un gate reso
  *   solo da chiuso sembrerebbe un errore invece di un passaggio della catena.
  *
- * I passi annidati stanno **dentro** il proprio blocco: è così che IRPEF lorda
+ * I passi annidati stanno dentro il proprio blocco: è così che IRPEF lorda
  * → detrazioni → IRPEF netta si legge come una cosa sola, ed è ciò che rende
  * visibile il pavimento a zero (D-018).
  */
@@ -81,8 +81,8 @@ function BloccoParametro({ parametro, mostraFonte }: { parametro: Parametro; mos
         <ValoreParametro parametro={parametro} />
       </p>
       {/*
-        ⚠️ **La citazione si mostra qui solo se non è già fra le regole del
-        passo** (D-026). Le due coesistono perché dicono cose diverse — *si fa
+        ⚠️ La citazione si mostra qui solo se non è già fra le regole del
+        passo (D-026). Le due coesistono perché dicono cose diverse — *si fa
         così* e *il numero è questo* — ma quando sono la stessa norma, ripeterla
         due volte a due righe di distanza non aggiunge niente e fa sembrare la
         pagina più documentata di quanto sia.
@@ -107,7 +107,7 @@ function Etichetta({ children }: { children: React.ReactNode }) {
 /**
  * Il valore mostrato accanto all'etichetta.
  *
- * Per una voce che muove il netto è **l'effetto sul netto**, col suo segno.
+ * Per una voce che muove il netto è l'effetto sul netto, col suo segno.
  * Per un passo neutro — che espone una grandezza intermedia senza muovere
  * nulla — è la grandezza: scrivere «+0,00 €» accanto al reddito complessivo
  * direbbe una cosa vera e priva di senso.

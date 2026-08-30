@@ -4,12 +4,12 @@
  * «Dove vanno i tuoi soldi» — D-034.
  *
  * Il titolo non è decorativo e non poteva essere «trattenute»: la traccia
- * ammette voci di **segno positivo**, e un elenco di trattenute che ne
+ * ammette voci di segno positivo, e un elenco di trattenute che ne
  * contiene una è incoerente. *Dove vanno* regge entrambi i segni, perché per
  * una voce che aggiunge la risposta è *restano a te*.
  *
  * E si salda con le quattro nature: non sono quattro categorie contabili, sono
- * **quattro destinazioni** — la pensione futura, lo Stato, Regione e Comune, e
+ * quattro destinazioni — la pensione futura, lo Stato, Regione e Comune, e
  * il lavoratore stesso.
  *
  * Qui non si somma nulla. Non ci sono totali di gruppo, e non per dimenticanza:
@@ -120,11 +120,11 @@ export function SezioneDettaglio({ risultato }: { risultato: Risultato }) {
                   </ul>
 
                   {/*
-                    ⚠️ **La nota sul contratto sta qui, e non accanto al campo**
+                    ⚠️ La nota sul contratto sta qui, e non accanto al campo
                     (D-063). D-011 chiede che l'input non resti senza
                     spiegazione, perché un campo che sembra non fare nulla si
                     legge come un difetto. Ma accanto al campo la nota si legge
-                    **prima** di aver visto l'effetto; qui si legge nell'istante
+                    prima di aver visto l'effetto; qui si legge nell'istante
                     in cui si cambia contratto e il numero non si muove, con i
                     contributi sotto gli occhi.
                   */}
@@ -144,7 +144,7 @@ export function SezioneDettaglio({ risultato }: { risultato: Risultato }) {
 
         <div>
           {/*
-            ⚠️ **`h4` e non `h3`.** Il blocco degli enti sta gerarchicamente
+            ⚠️ `h4` e non `h3`. Il blocco degli enti sta gerarchicamente
             sotto i gruppi di natura, non accanto a loro: era `h3` come i
             titoli delle nature, quindi un lettore di schermo lo annunciava
             allo stesso livello di *Previdenza* o *Imposte erariali*, mentre

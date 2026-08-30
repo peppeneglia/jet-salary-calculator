@@ -3,22 +3,22 @@
 /**
  * I due selettori in fondo alla pagina: la lingua e il tema.
  *
- * Stanno nel footer e non nella testata perché **non sono azioni del compito**:
+ * Stanno nel footer e non nella testata perché non sono azioni del compito:
  * chi arriva vuole calcolare il proprio netto, non scegliere un colore. Sono
  * dove si va a cercarli quando servono.
  *
- * ⚠️ **Due preferenze, due meccanismi diversi, e la differenza è il motivo per
- * cui non condividono il codice.**
+ * ⚠️ Due preferenze, due meccanismi diversi, e la differenza è il motivo per
+ * cui non condividono il codice.
  *
- * Il **tema** si applica subito, senza rete: cambia un attributo sull'html, e
+ * Il tema si applica subito, senza rete: cambia un attributo sull'html, e
  * il CSS fa il resto. Nessun contenuto dipende dal tema.
  *
- * La **lingua** no. Le pagine sono renderizzate sul server, e cambiare lingua
+ * La lingua no. Le pagine sono renderizzate sul server, e cambiare lingua
  * significa rifarle: si scrive il cookie e si chiede a Next di rigenerare
  * l'albero. Il `Risultato` già in mano al client viene ricalcolato da sé —
  * porta dentro la prosa della traccia, e quella la scrive il motore (D-041).
  *
- * In entrambi i casi il cookie si scrive **prima**: chi ricarica la pagina
+ * In entrambi i casi il cookie si scrive prima: chi ricarica la pagina
  * subito dopo la ritrova come l'ha lasciata.
  */
 
@@ -37,7 +37,7 @@ import {
 } from '../_lib/preferenze'
 
 /**
- * I nomi delle lingue **non si traducono**: una lingua si chiama come si chiama
+ * I nomi delle lingue non si traducono: una lingua si chiama come si chiama
  * nella propria lingua. Chi cerca l'inglese cerca *English*, non *Inglese* —
  * e viceversa, chi non capisce l'inglese non troverebbe mai *Italian*.
  */
@@ -54,7 +54,7 @@ const NOME_LINGUA: Readonly<Record<CodiceLingua, string>> = {
  * i colori della cornice — che sul verde non cambiano con il tema, perché la
  * fascia non cambia.
  *
- * ⚠️ **Qui c'era scritto che il fuoco si vedeva, e non era vero.** L'input
+ * ⚠️ Qui c'era scritto che il fuoco si vedeva, e non era vero. L'input
  * è `sr-only`, cioè un rettangolo di 1px fuori schermo, e la regola globale
  * `:focus-visible` gli disegnava l'anello sopra: sul segmento visibile non
  * arrivava niente. La forma era giusta — radio veri, frecce funzionanti — ma
@@ -87,7 +87,7 @@ function Gruppo<T extends string>({
       {/*
         Il bordo è `bordo-controllo-contro` e non `bordo-controllo`: qui il
         gruppo poggia sulla cornice verde, e un grigio neutro su #66C239 non
-        arriva a 3:1 in nessuna variante. Il token dedicato vale **4,08**
+        arriva a 3:1 in nessuna variante. Il token dedicato vale 4,08
         (D-047). Prima non c'era bordo affatto: il gruppo si distingueva solo
         per un velo al 10%, che è sotto qualunque soglia.
       */}
@@ -140,7 +140,7 @@ export function Preferenze({ temaIniziale }: { temaIniziale: Tema }) {
     setTema(nuovo)
     ricorda(COOKIE_TEMA, nuovo)
 
-    // L'assenza dell'attributo **è** lo stato «come il sistema»: si toglie, non
+    // L'assenza dell'attributo è lo stato «come il sistema»: si toglie, non
     // si scrive un terzo valore che il CSS dovrebbe poi interpretare.
     const attributo = attributoTema(nuovo)
     if (attributo === undefined) delete document.documentElement.dataset.theme

@@ -1,7 +1,7 @@
 /**
  * Il contenitore delle tre sezioni impilate (D-035).
  *
- * Esiste per una ragione sola: **ritmo**. Padding, raggio e spaziatura del
+ * Esiste per una ragione sola: ritmo. Padding, raggio e spaziatura del
  * titolo si decidono qui una volta, e le tre sezioni non possono divergere di
  * qualche pixel l'una dall'altra.
  */

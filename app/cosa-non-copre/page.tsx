@@ -1,22 +1,22 @@
 /**
  * «Cosa questo calcolatore non copre».
  *
- * D-008 chiede che i confini del modello siano **visibili in pagina**, con la
+ * D-008 chiede che i confini del modello siano visibili in pagina, con la
  * motivazione di ciascuno. Stanno qui, raggiungibili dal footer di ogni
  * schermata: non dipendono dall'aver premuto un bottone, che era il vincolo
  * che D-036 proteggeva.
  *
- * ⚠️ **Differenza da tenere ferma rispetto al blocco accanto al numero.** Là le
- * assunzioni arrivano dal risultato, e sono quelle che il **motore** ha
+ * ⚠️ Differenza da tenere ferma rispetto al blocco accanto al numero. Là le
+ * assunzioni arrivano dal risultato, e sono quelle che il motore ha
  * selezionato per quel calcolo (D-031): la pagina non può mostrarne una che il
  * motore non ha considerato. Qui il calcolo non c'è, quindi si mostra il
- * **catalogo intero** — e ogni voce condizionata porta scritto *quando* vale,
+ * catalogo intero — e ogni voce condizionata porta scritto *quando* vale,
  * invece di lasciar credere che valga sempre. Sono due cose diverse e non
  * vanno confuse: l'una dice *cosa è stato assunto per te*, l'altra *cosa
  * questo strumento non fa, in generale*.
  *
- * ⚠️ **È la pagina che non passa dal motore, ed è la ragione per cui il testo
- * di un'assunzione resta multilingua fino al rendering** (D-041). Se la lingua
+ * ⚠️ È la pagina che non passa dal motore, ed è la ragione per cui il testo
+ * di un'assunzione resta multilingua fino al rendering (D-041). Se la lingua
  * si risolvesse dentro `calcolaNetto`, qui bisognerebbe risolverla una seconda
  * volta, in un secondo posto.
  */

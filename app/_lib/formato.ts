@@ -1,12 +1,12 @@
 /**
  * Formattazione, e nient'altro.
  *
- * L'arrotondamento a due decimali è **presentazione** (D-025): la catena di
+ * L'arrotondamento a due decimali è presentazione (D-025): la catena di
  * calcolo lavora a precisione piena e tronca alla quarta cifra solo dove lo
  * impone la norma, che è logica di `core/`. Qui si decide come si scrive un
  * numero, mai quanto vale.
  *
- * ⚠️ **La lingua entra qui come entra nel motore.** Non esiste una funzione
+ * ⚠️ La lingua entra qui come entra nel motore. Non esiste una funzione
  * `inEuro(n)` senza lingua: `1.234,56 €` e `€1,234.56` sono lo stesso importo
  * scritto due volte, e quale delle due si scriva non è una costante del modulo.
  * `formato(lingua)` restituisce l'insieme coerente — importi, aliquote e date
@@ -23,6 +23,22 @@ import { TAG } from '../../data/tag-lingua'
 export interface Formato {
   /** Un importo con il simbolo di valuta. */
   readonly inEuro: (n: number) => string
+  /**
+   * Una soglia di legge, senza decimali — D-071.
+   *
+   * ⚠️ Non è `inEuro` con meno cifre: è un'altra grandezza. `inEuro`
+   * scrive un importo *calcolato*, e i due decimali ci sono perché quel numero
+   * può averli davvero. Un confine di scaglione no: la norma scrive
+   * *«oltre 28.000 euro»*, e `28.000,00 €` aggiunge due cifre che il testo non
+   * ha, suggerendo una precisione al centesimo su una soglia che è tonda per
+   * legge.
+   *
+   * ⚠️ Vale solo dove il numero viene da una norma e non da un conto, ed è
+   * il confine da tenere: i confini delle fasce IRPEF, le soglie di accesso, i
+   * limiti di esenzione. Mai su un risultato — lì il centesimo è il punto, e
+   * D-066 garantisce che le voci mostrate sommino al totale mostrato.
+   */
+  readonly inEuroTondo: (n: number) => string
   /**
    * Il segno è dato dal motore, non ricostruito qui: `effettoSulNetto` è già
    * negativo per le voci che sottraggono. `signDisplay` lo rende visibile anche
@@ -46,13 +62,13 @@ const monta = (lingua: CodiceLingua): Formato => {
   const tag = TAG[lingua]
 
 /**
-   * ⚠️ **`useGrouping: 'always'`, e non è una preferenza tipografica.**
+   * ⚠️ `useGrouping: 'always'`, e non è una preferenza tipografica.
    *
    * Il valore predefinito è `'auto'`, che delega la scelta a
-   * `minimumGroupingDigits` del CLDR: per l'italiano quel valore è **2** nelle
+   * `minimumGroupingDigits` del CLDR: per l'italiano quel valore è 2 nelle
    * versioni recenti, quindi `1952,12` si scrive senza il punto delle migliaia
-   * e `12.345,00` con. Ma la versione di CLDR è quella **compilata dentro
-   * l'ICU del runtime**, e non è la stessa fra il Node che rende la pagina e il
+   * e `12.345,00` con. Ma la versione di CLDR è quella compilata dentro
+   * l'ICU del runtime, e non è la stessa fra il Node che rende la pagina e il
    * browser che la riprende: lo stesso numero può uscire scritto in due modi
    * nello stesso documento.
    *
@@ -60,7 +76,7 @@ const monta = (lingua: CodiceLingua): Formato => {
    * scelta di presentazione: è un difetto che si manifesta solo in produzione.
    * `'always'` lo rende deterministico.
    *
-   * ⚠️ **E chiude un'asimmetria che nessuno aveva deciso.** In inglese
+   * ⚠️ E chiude un'asimmetria che nessuno aveva deciso. In inglese
    * `minimumGroupingDigits` vale 1, quindi `1,952.12` il separatore lo ha
    * sempre avuto. Le due lingue si comportavano diversamente per un default,
    * non per una scelta.
@@ -70,6 +86,20 @@ const monta = (lingua: CodiceLingua): Formato => {
     currency: 'EUR',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
+    useGrouping: 'always',
+  })
+
+  /**
+   * La soglia di legge. Stessa valuta, stesso raggruppamento, zero decimali:
+   * `useGrouping: 'always'` per la ragione appena spiegata sopra — una soglia
+   * che si scrive `28000 €` in un runtime e `28.000 €` in un altro sarebbe lo
+   * stesso difetto, su un numero che per giunta è una citazione.
+   */
+  const soglia = new Intl.NumberFormat(tag, {
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
     useGrouping: 'always',
   })
 
@@ -103,6 +133,7 @@ const monta = (lingua: CodiceLingua): Formato => {
   return {
     tag,
     inEuro: (n) => importo.format(n),
+    inEuroTondo: (n) => soglia.format(n),
     inEuroConSegno: (n) => importoConSegno.format(n),
     inPercentuale: (n) => `${percentuale.format(n)}%`,
     inData: (iso) => {
@@ -123,7 +154,7 @@ export const formato = (lingua: CodiceLingua): Formato => {
 /**
  * Legge un importo scritto a mano.
  *
- * ⚠️ **Non è validazione, è lettura**: dice quale numero ha scritto chi digita,
+ * ⚠️ Non è validazione, è lettura: dice quale numero ha scritto chi digita,
  * non se quel numero vada bene. Il giudizio sta in `validazione.ts`.
  *
  * Chi scrive uno stipendio in italiano scrive `30.000`, e in inglese `30,000`:

@@ -4,17 +4,17 @@
  * La citazione di una fonte, come dato e non come nota a piè di pagina.
  *
  * Ogni voce dell'output mostra da dove viene: il criterio di valutazione
- * numero uno è la ricerca, e va dimostrata **dentro l'artefatto**, non in un
+ * numero uno è la ricerca, e va dimostrata dentro l'artefatto, non in un
  * README. Provenienza e data di consultazione arrivano dal dato — se un
  * domani cambiano, la pagina cambia da sola.
  *
- * ⚠️ **Cosa non si traduce, ed è sostanza** (D-041): `atto` e `riferimento`
+ * ⚠️ Cosa non si traduce, ed è sostanza (D-041): `atto` e `riferimento`
  * restano in italiano in entrambe le lingue. *L. 30/12/2024 n. 207, art. 1
  * c. 6* è la chiave con cui si cerca il testo su Normattiva; tradurla la
  * renderebbe inservibile proprio a chi volesse verificarla. Cambia la cornice
  * — *verificata il*, *importata* — non la citazione.
  *
- * La data invece **segue la lingua**: la stessa consultazione si scrive
+ * La data invece segue la lingua: la stessa consultazione si scrive
  * `28/08/2026` o `28 Aug 2026`, e la fonte la porta in ISO 8601 proprio perché
  * la forma non sia decisa nel dato.
  */

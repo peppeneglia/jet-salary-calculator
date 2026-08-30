@@ -1,8 +1,8 @@
 /**
  * La pagina.
  *
- * È un server component, e resta tale. Ma dal 29/08 **il catalogo non passa più
- * di qui** (D-058): nel documento va **un comune solo**, quello da cui si
+ * È un server component, e resta tale. Ma dal 29/08 il catalogo non passa più
+ * di qui (D-058): nel documento va un comune solo, quello da cui si
  * parte, e i 7.897 li chiede il campo di scelta alla prima apertura. La lista
  * pesava 83 KiB compressi ed era il 78% del trasferimento, pagato da tutti e
  * usato da pochi.
@@ -12,7 +12,7 @@
  * citazioni degli enti restano server-side, ed è la ragione per cui il
  * progetto ha scelto Next (D-004).
  *
- * Il caso di partenza è calcolato **qui**, dalla stessa funzione che sta
+ * Il caso di partenza è calcolato qui, dalla stessa funzione che sta
  * dietro `/api/calcola` (D-036): una funzione, due chiamanti. E nella lingua
  * della richiesta, perché la traccia porta prosa (D-041).
  */
@@ -36,7 +36,7 @@ export default async function Home() {
    * decimali — si sarebbe spostato senza che nessuno lo decidesse. Adesso è una
    * costante del catalogo, e resta un codice che il catalogo garantisce.
    *
-   * ⚠️ La RAL è un **esempio**, e l'etichetta accanto al campo lo dice: è la
+   * ⚠️ La RAL è un esempio, e l'etichetta accanto al campo lo dice: è la
    * conseguenza da gestire di D-036, perché un netto che l'utente non ha
    * chiesto non deve poter essere scambiato per il proprio.
    */

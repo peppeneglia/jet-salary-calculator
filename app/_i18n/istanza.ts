@@ -1,18 +1,18 @@
 /**
  * La configurazione di i18next, condivisa dai due lati.
  *
- * ⚠️ **Qui non si importa React, e non è pignoleria: senza questa regola la
- * build non passa.** `react-i18next` chiama `createContext` al caricamento del
+ * ⚠️ Qui non si importa React, e non è pignoleria: senza questa regola la
+ * build non passa. `react-i18next` chiama `createContext` al caricamento del
  * modulo, e nell'ambiente dei server component quella funzione non esiste. Un
  * modulo che monta l'istanza *con* il plugin React non può quindi essere letto
  * dal server, nemmeno per una traduzione che React non tocca mai.
  *
- * Da qui la forma: **le opzioni stanno qui, l'istanza la costruisce chi la
- * usa** — `server.ts` senza plugin, `provider.tsx` con `initReactI18next`. La
+ * Da qui la forma: le opzioni stanno qui, l'istanza la costruisce chi la
+ * usa — `server.ts` senza plugin, `provider.tsx` con `initReactI18next`. La
  * configurazione resta una sola, e i due lati non possono divergere su
  * fallback, spazio dei nomi o interpolazione.
  *
- * ⚠️ **Una istanza per lingua e non una sola con `changeLanguage`.** La pagina
+ * ⚠️ Una istanza per lingua e non una sola con `changeLanguage`. La pagina
  * è renderizzata sul server: `changeLanguage` è uno stato globale mutabile, e
  * su un server che serve più richieste insieme due lettori con lingue diverse
  * si sovrascriverebbero a vicenda. Istanze separate e immutabili non hanno

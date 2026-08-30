@@ -46,15 +46,15 @@ async function interroga(richiesta: RichiestaCalcolo): Promise<RispostaCalcolo |
  * L'orchestratore: raccoglie l'input, chiama l'handler, rende quello che
  * torna.
  *
- * **Non calcola.** Non conosce aliquote, non conosce soglie, non sa cosa sia
+ * Non calcola. Non conosce aliquote, non conosce soglie, non sa cosa sia
  * una detrazione: sa fare una POST e distinguere un risultato da un errore. Il
  * calcolo sta dietro `/api/calcola`, ed è lì che si innesterà il dataset MEF
  * senza che questo file cambi di una riga (D-004).
  *
- * Il caso di partenza arriva **già calcolato dal server** (D-036), ma le
+ * Il caso di partenza arriva già calcolato dal server (D-036), ma le
  * sezioni 2 e 3 restano chiuse finché non si preme il bottone: la prima
  * schermata è una domanda, non una risposta a una domanda che nessuno ha
- * fatto. Averlo già in mano serve a farle aprire **subito**, senza attesa.
+ * fatto. Averlo già in mano serve a farle aprire subito, senza attesa.
  *
  * Il vincolo che D-036 proteggeva — i confini del modello non devono dipendere
  * da un bottone premuto — regge lo stesso: «Cosa questo calcolatore non copre»
@@ -91,11 +91,31 @@ export function Calcolatore({
   /**
    * L'ultima cosa che è stata chiesta.
    *
-   * In un `ref` e non in uno stato perché **non si rende**: serve solo a poter
+   * In un `ref` e non in uno stato perché non si rende: serve solo a poter
    * rifare la stessa domanda quando cambia la lingua. Tenerlo in uno stato
    * aggiungerebbe un render a ogni calcolo senza cambiare un pixel.
    */
   const ultimaRichiesta = useRef<RichiestaCalcolo>(iniziale)
+
+  /**
+   * Il numero d'ordine dell'ultima domanda fatta.
+   *
+   * ⚠️ Esiste perché le domande partono da due strade e le risposte non
+   * tornano in ordine. Il bottone si disabilita mentre una richiesta è in
+   * volo, quindi due click non si accavallano; ma un cambio di lingua non
+   * passa dal bottone, e chi cambia lingua mentre un calcolo è in corso apre
+   * una seconda richiesta accanto alla prima. Da lì decide la rete: se la
+   * prima risponde per ultima, in pagina resta il risultato della domanda
+   * più vecchia, con la traccia nella lingua di prima.
+   *
+   * La guardia `annullato` che c'era nell'effetto non poteva vederlo: annulla
+   * sé stessa, non l'altra strada. Il contatore invece è uno solo per
+   * entrambe, ed è il pezzo che mancava.
+   *
+   * In un `ref` e non in uno stato: non si rende, e tenerlo in uno stato
+   * aggiungerebbe un render a ogni richiesta senza cambiare un pixel.
+   */
+  const numeroRichiesta = useRef(0)
 
   const applica = useCallback((risposta: RispostaCalcolo | null) => {
     if (risposta === null) {
@@ -112,6 +132,28 @@ export function Calcolatore({
     }
   }, [])
 
+  /**
+   * Chiede, e applica solo se nel frattempo non è stato chiesto altro.
+   *
+   * ⚠️ Spegne *in corso* qui dentro, e non da chi chiama. Una risposta
+   * sorpassata non deve riaprire il bottone, perché la domanda buona è ancora
+   * in volo; ma se fosse chi chiama a spegnerlo, il calcolo sorpassato da un
+   * cambio di lingua non lo spegnerebbe mai — e il bottone resterebbe
+   * disabilitato per sempre, perché l'effetto sulla lingua non lo aveva acceso
+   * e non pensa a spegnerlo. Una sola sede per l'accensione e una per lo
+   * spegnimento, sulla strada che vince.
+   */
+  const chiediEApplica = useCallback(
+    async (richiesta: RichiestaCalcolo): Promise<void> => {
+      const mio = ++numeroRichiesta.current
+      const risposta = await interroga(richiesta)
+      if (mio !== numeroRichiesta.current) return
+      applica(risposta)
+      setInCorso(false)
+    },
+    [applica],
+  )
+
   const calcola = useCallback(
     async (richiesta: RichiestaCalcolo) => {
       ultimaRichiesta.current = richiesta
@@ -126,18 +168,17 @@ export function Calcolatore({
         block: 'start',
       })
 
-      applica(await interroga(richiesta))
-      setInCorso(false)
+      await chiediEApplica(richiesta)
     },
-    [applica],
+    [chiediEApplica],
   )
 
   /**
    * Al cambio di lingua, la stessa domanda si rifà.
    *
-   * ⚠️ **Non è un vezzo: senza, metà pagina resterebbe nella lingua di prima.**
+   * ⚠️ Non è un vezzo: senza, metà pagina resterebbe nella lingua di prima.
    * Il server rende di nuovo la pagina nella lingua nuova, ma il `Risultato`
-   * che sta qui è stato prodotto **prima**, e porta dentro di sé la prosa della
+   * che sta qui è stato prodotto prima, e porta dentro di sé la prosa della
    * traccia — `regola`, `spiegazione`, `ragione` — che il motore ha scritto
    * nella lingua vecchia (D-041). L'unico modo di aggiornarla è richiederla.
    *
@@ -153,16 +194,12 @@ export function Calcolatore({
       return
     }
 
-    let annullato = false
-    void (async () => {
-      const risposta = await interroga({ ...ultimaRichiesta.current, lingua })
-      if (!annullato) applica(risposta)
-    })()
-
-    return () => {
-      annullato = true
-    }
-  }, [lingua, applica])
+    // ⚠️ La guardia allo smontaggio non serve più, e non è stata dimenticata:
+    // `chiediEApplica` scarta ogni risposta sorpassata, e questa lo è per
+    // definizione appena parte la richiesta successiva. Una seconda guardia
+    // accanto direbbe la stessa cosa in un modo che vale solo per metà dei casi.
+    void chiediEApplica({ ...ultimaRichiesta.current, lingua })
+  }, [lingua, chiediEApplica])
 
   return (
     <div className="space-y-6">
@@ -181,9 +218,9 @@ export function Calcolatore({
         ) : null}
 
         {/*
-          ⚠️ **L'arrotondamento si applica qui, una volta sola** (D-066).
+          ⚠️ L'arrotondamento si applica qui, una volta sola (D-066).
 
-          Le due sezioni devono leggere gli **stessi** numeri: se ciascuna
+          Le due sezioni devono leggere gli stessi numeri: se ciascuna
           arrotondasse per conto proprio, il netto della testata e le voci del
           dettaglio potrebbero divergere di un centesimo — che è esattamente il
           difetto che D-066 chiude, riprodotto un livello più in basso.

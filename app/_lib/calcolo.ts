@@ -1,7 +1,7 @@
 /**
  * Il punto in cui una richiesta diventa un risultato.
  *
- * **Non è logica di calcolo.** Valida l'input, risolve il comune nel catalogo
+ * Non è logica di calcolo. Valida l'input, risolve il comune nel catalogo
  * e passa la palla a `calcolaNetto`: tutto ciò che riguarda la norma sta in
  * `core/`, tutto ciò che riguarda i suoi parametri sta in `data/`. Se un
  * giorno una riga di questo file dovesse fare aritmetica su un imponibile, è
@@ -12,11 +12,11 @@
  * il caso di partenza server-side. Una funzione e due chiamanti, non due
  * implementazioni che possono divergere.
  *
- * **È anche il punto di innesto del dataset MEF**: quando i 7.897 comuni
+ * È anche il punto di innesto del dataset MEF: quando i 7.897 comuni
  * entreranno nel repo cambierà `risolviComune`, e né l'handler né la pagina se
  * ne accorgeranno.
  *
- * ⚠️ **Nessun messaggio d'errore qui dentro** (D-043). Questa funzione decide
+ * ⚠️ Nessun messaggio d'errore qui dentro (D-043). Questa funzione decide
  * *cosa non va*, non *come dirlo*: la frase la compone chi rende la pagina,
  * nella lingua di chi legge, dalla stessa tabella che serve la validazione
  * fatta nel client. Le soglie che giudicano una RAL stanno in `validazione.ts`,
@@ -39,20 +39,20 @@ const MENSILITA: readonly Mensilita[] = [12, 13, 14]
 /**
  * Il valore da cui parte il modulo — D-050, D-052.
  *
- * ⚠️ **Sta qui e non nel motore, ed è il punto di D-052.** Prima il numero
+ * ⚠️ Sta qui e non nel motore, ed è il punto di D-052. Prima il numero
  * viveva in due sedi: l'interfaccia partiva da 12 e `core/calcola.ts` assumeva
- * 13 quando il campo mancava, **con un test che asseriva il 13**. Due livelli
+ * 13 quando il campo mancava, con un test che asseriva il 13. Due livelli
  * rispondevano in modo diverso alla stessa domanda, e la suite proteggeva
  * quello che il prodotto aveva già smentito. Il difetto non era il numero: era
  * il numero scritto due volte.
  *
- * ⚠️ **E non sta in `data/`.** Il numero di mensilità non è un parametro
+ * ⚠️ E non sta in `data/`. Il numero di mensilità non è un parametro
  * normativo: nessuna legge lo fissa, lo fissano il CCNL o la scelta di chi
  * consulta. È lo stesso argomento con cui D-031 ha tenuto le assunzioni fuori
  * da `Regime` — non si confonde *quanto vale una cosa per legge* con *cosa
  * questo prodotto mostra per primo*.
  *
- * **Dodici e non tredici**: tredici è la mensilità più diffusa, ma non è
+ * Dodici e non tredici: tredici è la mensilità più diffusa, ma non è
  * quella neutra. Partire da 13 fa leggere un primo numero che porta già dentro
  * un'ipotesi sul contratto che nessuno ha dichiarato.
  */
@@ -102,7 +102,7 @@ export function eseguiCalcolo(corpo: unknown, linguaRichiesta?: CodiceLingua): E
   }
 
   /*
-   * Mensilità: **obbligatoria** — D-052.
+   * Mensilità: obbligatoria — D-052.
    *
    * ⚠️ Era facoltativa, e l'assenza significava «usa il default», che il
    * motore risolveva in 13. Chi chiamava l'API senza il campo riceveva un
@@ -111,7 +111,7 @@ export function eseguiCalcolo(corpo: unknown, linguaRichiesta?: CodiceLingua): E
    * altre: `mensilita-non-valida`, 400.
    *
    * Il valore iniziale del modulo — `MENSILITA_INIZIALE` — vive in questo
-   * file, ma **non è un ripiego applicato qui**: è quello che la pagina mette
+   * file, ma non è un ripiego applicato qui: è quello che la pagina mette
    * nel campo prima che l'utente lo tocchi. Applicarlo anche alle richieste in
    * arrivo rimetterebbe in piedi esattamente il difetto appena chiuso.
    */

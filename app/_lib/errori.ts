@@ -1,13 +1,13 @@
 /**
  * Da errore a frase — D-043.
  *
- * ⚠️ **Il registro: dicono cosa fare, non cosa è andato storto.** *Inserisci lo
+ * ⚠️ Il registro: dicono cosa fare, non cosa è andato storto. *Inserisci lo
  * stipendio lordo annuo, per esempio 30.000* e non *campo obbligatorio*. Nessun
  * codice visibile: `ral-implausibile` è vocabolario nostro, e chi legge il
  * proprio stipendio non deve incontrarlo mai. Vale la nota di D-039 sul
  * registro — chi legge è un dipendente, non chi valuta la prova.
  *
- * **Una funzione sola per due provenienze.** Lo stesso errore può nascere nel
+ * Una funzione sola per due provenienze. Lo stesso errore può nascere nel
  * client, prima che l'handler sia chiamato, o tornare dall'handler: se le frasi
  * fossero due, la stessa RAL rifiutata direbbe due cose diverse a seconda di
  * dove è stata rifiutata.
@@ -43,7 +43,7 @@ export function messaggioErrore(
     case 'comune-sconosciuto':
       return t('errori.comuneSconosciuto')
     case 'comune-non-calcolabile':
-      // ⚠️ La ragione **non si riformula qui**. È la stessa frase che l'elenco
+      // ⚠️ La ragione non si riformula qui. È la stessa frase che l'elenco
       // mostra prima della selezione (D-037), e riscriverla per l'occasione
       // creerebbe due versioni della stessa spiegazione, libere di divergere.
       return `${t('input.comuneNonCalcolabile', { comune: errore.nome })} ${errore.ragione[lingua]}`
