@@ -1,16 +1,16 @@
 /**
  * L'archivio delle norme che determinano la retribuzione netta in Italia.
  *
- * ⚠️ **Nessun collegamento al motore, ed è una proprietà voluta.** Questa non è
+ * ⚠️ Nessun collegamento al motore, ed è una proprietà voluta. Questa non è
  * la lista delle citazioni del calcolo — quelle stanno accanto alle voci del
  * risultato, dove servono. Qui c'è un archivio consultabile, leggibile anche da
- * chi non ha calcolato niente, e che comprende **atti letti e rimasti fuori**
+ * chi non ha calcolato niente, e che comprende atti letti e rimasti fuori
  * dal perimetro: cose che il motore non tocca e che quindi non potrebbe mai
  * citare.
  *
- * ⚠️ **Ogni riga viene dalla pagina *Fonti*, e da nient'altro.** Nessuna data
+ * ⚠️ Ogni riga viene dalla pagina *Fonti*, e da nient'altro. Nessuna data
  * di vigenza, nessun comma, nessun numero che *Fonti* non riporti. Dove *Fonti*
- * tace, il campo resta **vuoto**: su una pagina intitolata alle norme una data
+ * tace, il campo resta vuoto: su una pagina intitolata alle norme una data
  * di vigenza inventata è l'errore che costa più di tutti, e il metodo del
  * progetto dice che le fonti primarie le reperisce l'autore.
  *
@@ -21,10 +21,10 @@ export interface Scheda {
   /**
    * L'atto per esteso, come va citato.
    *
-   * ⚠️ **Non si traduce, ed è sostanza** (D-041). *L. 30/12/2024 n. 207* è la
+   * ⚠️ Non si traduce, ed è sostanza (D-041). *L. 30/12/2024 n. 207* è la
    * chiave con cui si cerca il testo su Normattiva: tradurla la renderebbe
-   * inservibile proprio a chi volesse verificarla. Vale per `riferimento`,
-   * `portale` e `identificativo` per la stessa ragione.
+   * inservibile proprio a chi volesse verificarla. Vale per `riferimento` e
+   * `portale` per la stessa ragione.
    */
   readonly atto: string
   /** Articolo o comma. Vuoto se l'atto rileva per intero. */
@@ -45,8 +45,6 @@ export interface Scheda {
   readonly effetto: Multilingua
   /** Portale istituzionale su cui l'atto è stato letto, se *Fonti* lo nomina. */
   readonly portale?: string
-  /** Identificativo dell'atto sul portale, se *Fonti* lo riporta. */
-  readonly identificativo?: string
   /** Link diretto, solo dove *Fonti* riporta un URL completo. */
   readonly url?: string
   /**
@@ -76,7 +74,6 @@ const DEF_FINANZE = 'https://def.finanze.it'
  * la sequenza in cui una retribuzione lorda diventa netta.
  */
 export const SEZIONI: readonly SezioneNorme[] = [
-  // -------------------------------------------------------------------------
   {
     id: 'contributi',
     titolo: { it: 'Contributi previdenziali', en: 'Social security contributions' },
@@ -89,14 +86,14 @@ export const SEZIONI: readonly SezioneNorme[] = [
         dispone:
           { it: 'Stabilisce su quale retribuzione si calcolano i contributi: le somme si assumono al lordo di qualsiasi contributo e trattenuta, meno un elenco tassativo di esclusioni.', en: 'Sets out which pay contributions are computed on: sums are taken gross of any contribution or withholding, less an exhaustive list of exclusions.' },
         effetto:
-          { it: 'È la norma per cui i contributi si calcolano sulla retribuzione lorda, non su una grandezza ridotta. Nel caso standard la base coincide con la RAL, perché tutte le voci escluse dall’elenco tassativo — TFR, previdenza complementare, casse sanitarie, premi da contrattazione di secondo livello — sono già fuori dal calcolo.', en: 'This is the rule under which contributions are computed on gross pay, not on some reduced figure. In the standard case the base coincides with the RAL, because everything the exhaustive list excludes — TFR (severance accrual), supplementary pensions, health funds, second-level bargaining bonuses — is already outside this calculation.' },
+          { it: 'È la norma per cui i contributi si calcolano sulla retribuzione lorda, non su una grandezza ridotta. Nel caso standard la base coincide con la RAL, perché tutte le voci escluse dall’elenco tassativo sono già fuori dal calcolo: TFR, previdenza complementare, casse sanitarie, premi da contrattazione di secondo livello.', en: 'This is the rule under which contributions are computed on gross pay, not on some reduced figure. In the standard case the base coincides with the RAL, because everything the exhaustive list excludes is already outside this calculation: TFR (severance accrual), supplementary pensions, health funds, second-level bargaining bonuses.' },
         portale: 'Normattiva',
         consultata: '2026-08-28',
         note: [
-          { it: 'Non abbiamo la data di vigenza: il testo che abbiamo letto non la riporta, e non indica nemmeno l’atto che ha introdotto il testo sostitutivo. Il contenuto rinvia al D.Lgs. 124/1993 e al DL 67/1997, quindi è posteriore al 1997 — ma «posteriore al 1997» non è «vigente nel 2026». La verifica resta da fare.', en: 'We do not have the date in force: the text we read does not carry it, and does not even name the act that introduced the replacement wording. The content cross-refers to D.Lgs. 124/1993 and DL 67/1997, so it is later than 1997 — but “later than 1997” is not “in force in 2026”. The check remains to be done.' },
+          { it: 'Non abbiamo la data di vigenza: il testo che abbiamo letto non la riporta, e non indica nemmeno l’atto che ha introdotto il testo sostitutivo. Il contenuto rinvia al D.Lgs. 124/1993 e al DL 67/1997, quindi è posteriore al 1997. Ma «posteriore al 1997» non è «vigente nel 2026». La verifica resta da fare.', en: 'We do not have the date in force: the text we read does not carry it, and does not even name the act that introduced the replacement wording. The content cross-refers to D.Lgs. 124/1993 and DL 67/1997, so it is later than 1997. But “later than 1997” is not “in force in 2026”. The check remains to be done.' },
           { it: 'Due rinvii alla numerazione del TUIR anteriore al 2004: il c. 1 rinvia all’art. 46 e i c. 2 e 3 all’art. 48, che oggi sono gli artt. 49 e 51.', en: 'Two cross-references to the pre-2004 numbering of the TUIR: subsection 1 points to art. 46 and subsections 2 and 3 to art. 48, which today are artt. 49 and 51.' },
           { it: 'Il criterio temporale è diverso da quello fiscale: qui i redditi sono quelli «maturati» nel periodo, mentre l’art. 51 TUIR conta le somme «percepite». Contributivo per maturazione, fiscale per cassa allargata, nella stessa busta paga.', en: 'The timing rule differs from the tax one: here income is what has “accrued” in the period, whereas art. 51 TUIR counts sums “received”. Accrual on the contributions side, extended cash basis on the tax side, in the same payslip.' },
-          { it: 'Ambiguità dichiarata: come si combinano il c. 2, che rinvia all’art. 48 TUIR con le sue esclusioni, e il c. 5, che dichiara tassativo l’elenco del c. 4. Abbiamo adottato la lettura per cui valgono entrambi, perché il c. 3 deroga espressamente alla lett. h) dell’art. 48 — e si deroga solo a ciò che altrimenti varrebbe.', en: 'A declared ambiguity: how subsection 2, which refers to art. 48 TUIR with its exclusions, combines with subsection 5, which declares the list in subsection 4 exhaustive. We have taken the reading under which both apply, because subsection 3 expressly derogates from letter h) of art. 48 — and you only derogate from something that would otherwise apply.' },
+          { it: 'Ambiguità dichiarata: come si combinano il c. 2, che rinvia all’art. 48 TUIR con le sue esclusioni, e il c. 5, che dichiara tassativo l’elenco del c. 4. Abbiamo adottato la lettura per cui valgono entrambi, perché il c. 3 deroga espressamente alla lett. h) dell’art. 48, e si deroga solo a ciò che altrimenti varrebbe.', en: 'A declared ambiguity: how subsection 2, which refers to art. 48 TUIR with its exclusions, combines with subsection 5, which declares the list in subsection 4 exhaustive. We have taken the reading under which both apply, because subsection 3 expressly derogates from letter h) of art. 48, and you only derogate from something that would otherwise apply.' },
           { it: 'Il portale def.finanze non basta per il previdenziale: del testo porta il solo art. 66, perché è un portale tributario.', en: 'The def.finanze portal is not enough for social security law: of this text it carries only art. 66, because it is a tax portal.' },
         ],
       },
@@ -111,7 +108,7 @@ export const SEZIONI: readonly SezioneNorme[] = [
         note: [
           { it: 'Esistono due aliquote a carico del lavoratore, e la differenza è il contributo ex GESCAL: 9,19% dove si applica, 8,84% nei settori che ne sono esclusi. Per l’impiegato del settore privato vale il 9,19%.', en: 'There are two employee rates, and the difference is the former GESCAL contribution: 9.19% where it applies, 8.84% in the sectors excluded from it. For an office employee in the private sector the 9.19% applies.' },
           { it: 'La scomposizione riportata dalla circolare: 32% dal decreto interministeriale del 21/02/1996 in attuazione dell’art. 3 c. 23 della L. 335/1995, più 0,70 punti ex GESCAL, più 0,30 punti dall’art. 1 c. 769 della L. 296/2006.', en: 'The breakdown the circular gives: 32% from the inter-ministerial decree of 21/02/1996 implementing art. 3 c. 23 of L. 335/1995, plus 0.70 points of former GESCAL, plus 0.30 points from art. 1 c. 769 of L. 296/2006.' },
-          { it: 'Cautela sulle date: il +0,30 alla quota del lavoratore è del 2007, non del 2002. E la data del 1° gennaio 2002 compare in un paragrafo sugli equipaggi delle navi da pesca e le aziende agricole — estenderla alla generalità dei dipendenti è un’inferenza, non una lettura.', en: 'A caution about dates: the +0.30 on the employee share is from 2007, not from 2002. And the date of 1 January 2002 appears in a paragraph on fishing-vessel crews and agricultural businesses — extending it to employees in general is an inference, not a reading.' },
+          { it: 'Cautela sulle date: il +0,30 alla quota del lavoratore è del 2007, non del 2002. E la data del 1° gennaio 2002 compare in un paragrafo sugli equipaggi delle navi da pesca e le aziende agricole: estenderla alla generalità dei dipendenti è un’inferenza, non una lettura.', en: 'A caution about dates: the +0.30 on the employee share is from 2007, not from 2002. And the date of 1 January 2002 appears in a paragraph on fishing-vessel crews and agricultural businesses: extending it to employees in general is an inference, not a reading.' },
           { it: 'Di questo documento non abbiamo un indirizzo stabile da citare.', en: 'We have no stable address to cite for this document.' },
         ],
       },
@@ -126,7 +123,6 @@ export const SEZIONI: readonly SezioneNorme[] = [
         effetto:
           { it: 'È l’unica soglia sul versante contributivo: sotto la prima fascia i contributi sono una moltiplicazione, sopra il ramo acquista la stessa forma di quello fiscale.', en: 'It is the only threshold on the contributions side: below the first band contributions are a multiplication, above it the branch takes on the same shape as the tax one.' },
         portale: 'def.finanze.it',
-        identificativo: 'atto id {2E278145-81A8-4B7C-9ED2-7A9CAF61DA6C}, Articolo 3 ter',
         url: DEF_FINANZE,
         consultata: '2026-08-27',
         note: [
@@ -157,7 +153,7 @@ export const SEZIONI: readonly SezioneNorme[] = [
         dispone:
           { it: 'Fissa per il 2026 la prima fascia di retribuzione pensionabile a 56.224,00 euro e il massimale della base contributiva a 122.295,00 euro, e conferma che il contributo aggiuntivo dell’1% è a carico del lavoratore.', en: 'Sets, for 2026, the first pensionable earnings band at 56,224.00 euros and the cap on the contributory base at 122,295.00 euros, and confirms that the additional 1% contribution is borne by the employee.' },
         effetto:
-          { it: 'Dà il valore della soglia oltre la quale scatta il contributo aggiuntivo — il numero che la legge non contiene.', en: 'It gives the value of the threshold above which the additional contribution starts — the number the statute does not contain.' },
+          { it: 'Dà il valore della soglia oltre la quale scatta il contributo aggiuntivo: il numero che la legge non contiene.', en: 'It gives the value of the threshold above which the additional contribution starts: the number the statute does not contain.' },
         consultata: '2026-08-27',
         note: [
           { it: 'Il massimale opera anche ai fini dell’1%: sopra 122.295 il contributo aggiuntivo si ferma. Il calcolatore non modella il massimale, perché dipende dalla data di prima iscrizione previdenziale, e assume quindi un lavoratore iscritto prima del 1996.', en: 'The cap applies to the 1% as well: above 122,295 the additional contribution stops. The calculator does not model the cap, because it depends on the date of first registration with the social security system, and it therefore assumes someone registered before 1996.' },
@@ -198,12 +194,11 @@ export const SEZIONI: readonly SezioneNorme[] = [
     ],
   },
 
-  // -------------------------------------------------------------------------
   {
     id: 'imponibile',
     titolo: { it: 'Dal lordo all’imponibile', en: 'From gross pay to the taxable base' },
     occhiello:
-      { it: 'Il passaggio che decide su quale cifra si calcolano le imposte. È corto — poche norme — ma se si sbaglia qui sbaglia tutto quello che viene dopo.', en: 'The step that decides which figure the taxes are computed on. It is short — a handful of rules — but get it wrong and everything downstream is wrong.' },
+      { it: 'Il passaggio che decide su quale cifra si calcolano le imposte. È corto (poche norme), ma se si sbaglia qui sbaglia tutto quello che viene dopo.', en: 'The step that decides which figure the taxes are computed on. It is short (a handful of rules), but get it wrong and everything downstream is wrong.' },
     schede: [
       {
         atto: 'TUIR (DPR 917/1986)',
@@ -277,7 +272,6 @@ export const SEZIONI: readonly SezioneNorme[] = [
     ],
   },
 
-  // -------------------------------------------------------------------------
   {
     id: 'irpef',
     titolo: { it: 'IRPEF e detrazioni', en: 'IRPEF and tax credits' },
@@ -288,7 +282,7 @@ export const SEZIONI: readonly SezioneNorme[] = [
         atto: 'TUIR (DPR 917/1986)',
         riferimento: 'art. 11',
         dispone:
-          { it: 'Fissa gli scaglioni e le aliquote dell’imposta — 23% fino a 28.000, 33% fino a 50.000, 43% oltre — e stabilisce che le detrazioni si operano sull’imposta lorda fino alla concorrenza del suo ammontare.', en: 'Sets the brackets and rates of the tax — 23% up to 28,000, 33% up to 50,000, 43% above — and provides that credits are applied against gross tax up to its full amount.' },
+          { it: 'Fissa gli scaglioni e le aliquote dell’imposta (23% fino a 28.000, 33% fino a 50.000, 43% oltre) e stabilisce che le detrazioni si operano sull’imposta lorda fino alla concorrenza del suo ammontare.', en: 'Sets the brackets and rates of the tax (23% up to 28,000, 33% up to 50,000, 43% above) and provides that credits are applied against gross tax up to its full amount.' },
         vigenza: { it: 'dal 01/01/2026', en: 'in force from 1 Jan 2026' },
         ultimaModifica: { it: 'L. 30/12/2025 n. 199, art. 1 c. 3', en: 'L. 30/12/2025 n. 199, art. 1 c. 3' },
         effetto:
@@ -298,7 +292,7 @@ export const SEZIONI: readonly SezioneNorme[] = [
         consultata: '2026-08-27',
         note: [
           { it: 'La modifica del 2026 ha sostituito l’aliquota centrale del 35% con il 33%: i confini degli scaglioni non sono cambiati.', en: 'The 2026 amendment replaced the middle rate of 35% with 33%: the bracket boundaries did not change.' },
-          { it: 'Il pavimento a zero del c. 3 non è un principio dedotto ma una citazione, e l’elenco si chiude con «nonché in altre disposizioni di legge» — formula che copre anche le detrazioni nate fuori dal testo unico.', en: 'The floor at zero in subsection 3 is not a principle we inferred but a quotation, and the list closes with “and in other provisions of law” — wording that also covers credits created outside the consolidated act.' },
+          { it: 'Il pavimento a zero del c. 3 non è un principio dedotto ma una citazione, e l’elenco si chiude con «nonché in altre disposizioni di legge», formula che copre anche le detrazioni nate fuori dal testo unico.', en: 'The floor at zero in subsection 3 is not a principle we inferred but a quotation, and the list closes with “and in other provisions of law”, wording that also covers credits created outside the consolidated act.' },
         ],
       },
       {
@@ -328,14 +322,13 @@ export const SEZIONI: readonly SezioneNorme[] = [
           { it: 'Riconosce un’ulteriore detrazione dall’imposta lorda a chi ha un reddito complessivo fra 20.000 e 40.000 euro: 1.000 euro fino a 32.000, poi decrescente fino ad azzerarsi.', en: 'Grants a further credit against gross tax to those with total income between 20,000 and 40,000 euros: 1,000 euros up to 32,000, then tapering to zero.' },
         vigenza: { it: 'dal 01/01/2025', en: 'in force from 1 Jan 2025' },
         effetto:
-          { it: 'È la seconda gamba del taglio del cuneo fiscale. Sotto i 20.000 euro il beneficio esiste ma ha un’altra forma — è una somma erogata, non uno sconto sull’imposta.', en: 'It is the second leg of the cuneo fiscale (tax wedge) cut. Below 20,000 euros the benefit exists but takes another shape — it is a cash payment, not a relief against tax.' },
+          { it: 'È la seconda gamba del taglio del cuneo fiscale. Sotto i 20.000 euro il beneficio esiste ma ha un’altra forma: è una somma erogata, non uno sconto sull’imposta.', en: 'It is the second leg of the cuneo fiscale (tax wedge) cut. Below 20,000 euros the benefit exists but takes another shape: it is a cash payment, not a relief against tax.' },
         portale: 'def.finanze.it',
-        identificativo: 'atto id {4C29326B-B643-4927-886B-92A1FF640FDC}, Articolo 1 com 6',
         url: DEF_FINANZE,
         consultata: '2026-08-27',
         note: [
           { it: 'È una detrazione vera e non porta alcuna deroga, quindi ricade nella regola generale dell’art. 11 c. 3: si consuma sull’imposta lorda e non genera credito.', en: 'It is a genuine tax credit and carries no derogation, so it falls under the general rule of art. 11 c. 3: it is consumed against gross tax and generates no refund.' },
-          { it: 'Nella fascia fra 32.000 e 40.000 euro agiscono insieme tre riduzioni — l’aliquota del 33%, la decrescenza della detrazione dell’art. 13 e quella di questa — per un prelievo effettivo su ogni euro in più attorno al 54%, prima delle addizionali.', en: 'In the band between 32,000 and 40,000 euros three reductions act together — the 33% rate, the taper of the art. 13 credit and the taper of this one — for an effective take on every extra euro of around 54%, before the addizionali.' },
+          { it: 'Nella fascia fra 32.000 e 40.000 euro agiscono insieme tre riduzioni (l’aliquota del 33%, la decrescenza della detrazione dell’art. 13 e quella di questa), per un prelievo effettivo su ogni euro in più attorno al 54%, prima delle addizionali.', en: 'In the band between 32,000 and 40,000 euros three reductions act together (the 33% rate, the taper of the art. 13 credit and the taper of this one), for an effective take on every extra euro of around 54%, before the addizionali.' },
           { it: 'Il raccordo con la somma sotto i 20.000 è calibrato e leggermente favorevole: superando la soglia non si perde nulla, si guadagnano circa 40 euro.', en: 'The join with the cash payment below 20,000 is calibrated and slightly favourable: crossing the threshold you lose nothing, you gain about 40 euros.' },
           { it: 'Controllando la vigenza comma per comma risulta che i commi 2–10 della legge non sono mai stati modificati da alcun atto successivo.', en: 'Checking the dates subsection by subsection shows that subsections 2–10 of the law have never been amended by any later act.' },
         ],
@@ -353,7 +346,7 @@ export const SEZIONI: readonly SezioneNorme[] = [
         url: DEF_FINANZE,
         consultata: '2026-08-27',
         note: [
-          { it: 'Per i figli sotto i 21 anni la detrazione non esiste più, e il comma che prevedeva l’ulteriore detrazione per famiglie numerose è stato abrogato dal D.Lgs. 29/12/2021 n. 230 — il decreto che ha istituito l’Assegno Unico. L’abrogazione porta la firma dell’atto che l’ha sostituita.', en: 'For children under 21 the credit no longer exists, and the subsection providing the further credit for large families was repealed by D.Lgs. 29/12/2021 n. 230 — the decree that created the Assegno Unico (single family allowance). The repeal bears the signature of the act that replaced it.' },
+          { it: 'Per i figli sotto i 21 anni la detrazione non esiste più, e il comma che prevedeva l’ulteriore detrazione per famiglie numerose è stato abrogato dal D.Lgs. 29/12/2021 n. 230, il decreto che ha istituito l’Assegno Unico. L’abrogazione porta la firma dell’atto che l’ha sostituita.', en: 'For children under 21 the credit no longer exists, and the subsection providing the further credit for large families was repealed by D.Lgs. 29/12/2021 n. 230, the decree that created the Assegno Unico (single family allowance). The repeal bears the signature of the act that replaced it.' },
           { it: 'Il c. 4 contiene un terzo limite, distinto dagli altri due del sistema: se i rapporti sono pari a zero, minori di zero o uguali a uno, le detrazioni non spettano.', en: 'Subsection 4 contains a third limit, distinct from the other two in the system: if the ratios come out at zero, below zero or equal to one, the credits are not due.' },
         ],
       },
@@ -370,7 +363,7 @@ export const SEZIONI: readonly SezioneNorme[] = [
         url: DEF_FINANZE,
         consultata: '2026-08-27',
         note: [
-          { it: 'Sono tre i meccanismi sovrapposti che limitano le detrazioni ai redditi alti — art. 15 c. 3-bis, art. 16-ter c. 1–5 e art. 16-ter c. 5-bis — e nessuno dei tre tocca le detrazioni legate alla tipologia di reddito.', en: 'Three overlapping mechanisms limit credits for higher incomes — art. 15 c. 3-bis, art. 16-ter c. 1–5 and art. 16-ter c. 5-bis — and none of the three touches credits tied to the type of income.' },
+          { it: 'Sono tre i meccanismi sovrapposti che limitano le detrazioni ai redditi alti (art. 15 c. 3-bis, art. 16-ter c. 1–5 e art. 16-ter c. 5-bis), e nessuno dei tre tocca le detrazioni legate alla tipologia di reddito.', en: 'Three overlapping mechanisms limit credits for higher incomes (art. 15 c. 3-bis, art. 16-ter c. 1–5 and art. 16-ter c. 5-bis), and none of the three touches credits tied to the type of income.' },
         ],
       },
       {
@@ -397,12 +390,11 @@ export const SEZIONI: readonly SezioneNorme[] = [
     ],
   },
 
-  // -------------------------------------------------------------------------
   {
     id: 'addizionali',
     titolo: { it: 'Addizionale regionale e comunale', en: 'Addizionale regionale e comunale' },
     occhiello:
-      { it: 'Le stesse imposte, incassate da Regione e Comune. Hanno la base dell’IRPEF ma una disciplina propria — e due norme istitutive che, lette una accanto all’altra, non si somigliano quanto ci si aspetterebbe.', en: 'The same tax, collected by the region and the municipality. They share the IRPEF base but have rules of their own — and two founding provisions which, read side by side, resemble each other less than you would expect.' },
+      { it: 'Le stesse imposte, incassate da Regione e Comune. Hanno la base dell’IRPEF ma una disciplina propria, e due norme istitutive che, lette una accanto all’altra, non si somigliano quanto ci si aspetterebbe.', en: 'The same tax, collected by the region and the municipality. They share the IRPEF base but have rules of their own, and two founding provisions which, read side by side, resemble each other less than you would expect.' },
     schede: [
       {
         atto: 'D.Lgs. 15/12/1997 n. 446',
@@ -416,12 +408,12 @@ export const SEZIONI: readonly SezioneNorme[] = [
         portale: 'def.finanze.it',
         consultata: '2026-08-27',
         note: [
-          { it: 'Due rinvii alla numerazione del TUIR anteriore al 2004. Il c. 2 rinvia ai crediti «di cui agli articoli 14 e 15», che oggi non hanno più quel contenuto; il c. 4 rinvia ai redditi di lavoro dipendente «di cui agli articoli 46 e 47», che oggi sono il 49 e il 50. La norma gemella sull’addizionale comunale è stata riallineata, questa no — e sono state modificate dallo stesso atto nello stesso giorno.', en: 'Two cross-references to the pre-2004 numbering of the TUIR. Subsection 2 refers to the credits “under articles 14 and 15”, which no longer carry that content; subsection 4 refers to employment income “under articles 46 and 47”, which today are 49 and 50. The twin provision on the addizionale comunale was realigned, this one was not — and both were amended by the same act on the same day.' },
+          { it: 'Due rinvii alla numerazione del TUIR anteriore al 2004. Il c. 2 rinvia ai crediti «di cui agli articoli 14 e 15», che oggi non hanno più quel contenuto; il c. 4 rinvia ai redditi di lavoro dipendente «di cui agli articoli 46 e 47», che oggi sono il 49 e il 50. La norma gemella sull’addizionale comunale è stata riallineata, questa no. E sono state modificate dallo stesso atto nello stesso giorno.', en: 'Two cross-references to the pre-2004 numbering of the TUIR. Subsection 2 refers to the credits “under articles 14 and 15”, which no longer carry that content; subsection 4 refers to employment income “under articles 46 and 47”, which today are 49 and 50. The twin provision on the addizionale comunale was realigned, this one was not. And both were amended by the same act on the same day.' },
           { it: 'Il tetto dell’1,4% è derogato in modo massiccio: sul prospetto ministeriale 47 aliquote lo superano e 15 enti su 21 ne hanno almeno una sopra il tetto. Solo due citano il disavanzo sanitario. La norma che autorizza la deroga non è stata reperita, e un controllo che tagliasse le aliquote a 1,4 corromperebbe quasi tutto il centro-sud.', en: 'The 1.4% ceiling is derogated from on a large scale: on the ministerial table 47 rates exceed it and 15 authorities out of 21 have at least one above the ceiling. Only two cite a healthcare deficit. We have not traced the rule authorising the derogation, and a check that capped rates at 1.4 would corrupt almost the whole of central and southern Italy.' },
-          { it: 'Il massimo del prospetto e il massimo applicato non coincidono, e la differenza non è un arrotondamento. Il prospetto arriva al 3,63% del Molise, ma il calcolatore applica al massimo il 3,33%: il 3,63 sta su un secondo provvedimento molisano pubblicato il 19/06/2026, e l’aliquota di un anno si prende dal provvedimento pubblicato per primo in quell’anno. Quello di giugno è tempestivo per il 2027, non tardivo per il 2026. Riguarda due enti su ventuno — Molise e Puglia — che hanno due provvedimenti ciascuno.', en: 'The highest rate on the table and the highest rate applied are not the same, and the gap is not rounding. The table reaches Molise’s 3.63%, but the calculator applies at most 3.33%: the 3.63 sits on a second Molise measure published on 19 June 2026, and a year’s rate is taken from the measure published first in that year. June’s is timely for 2027, not late for 2026. It affects two authorities out of twenty-one — Molise and Puglia — which have two measures each.' },
+          { it: 'Il massimo del prospetto e il massimo applicato non coincidono, e la differenza non è un arrotondamento. Il prospetto arriva al 3,63% del Molise, ma il calcolatore applica al massimo il 3,33%: il 3,63 sta su un secondo provvedimento molisano pubblicato il 19/06/2026, e l’aliquota di un anno si prende dal provvedimento pubblicato per primo in quell’anno. Quello di giugno è tempestivo per il 2027, non tardivo per il 2026. Riguarda due enti su ventuno, Molise e Puglia, che hanno due provvedimenti ciascuno.', en: 'The highest rate on the table and the highest rate applied are not the same, and the gap is not rounding. The table reaches Molise’s 3.63%, but the calculator applies at most 3.33%: the 3.63 sits on a second Molise measure published on 19 June 2026, and a year’s rate is taken from the measure published first in that year. June’s is timely for 2027, not late for 2026. It affects two authorities out of twenty-one, Molise and Puglia, which have two measures each.' },
           { it: 'L’aliquota di un anno non è congelata: il c. 3 consente a una regione di applicare retroattivamente una maggiorazione più favorevole al periodo d’imposta in corso. Il dato di un anno non è definitivo mentre quell’anno è in corso, e può cambiare solo in meglio.', en: 'A given year’s rate is not frozen: subsection 3 lets a region apply a more favourable increase retroactively to the tax year in progress. A year’s figure is not final while that year is running, and it can only change for the better.' },
           { it: 'Contraddizione interna: il c. 2 individua l’aliquota con la residenza, il c. 5 destina il gettito al domicilio fiscale al 1° gennaio. Due criteri diversi nella stessa norma.', en: 'An internal contradiction: subsection 2 identifies the rate by residence, subsection 5 allocates the revenue by tax domicile on 1 January. Two different criteria in the same provision.' },
-          { it: 'Sul testo dell’art. 50 non risultano né soglie di esenzione né detrazioni regionali — e l’argomento dal silenzio, su questo articolo, ha ormai fallito tre volte. Non conosce gli scaglioni, che le regioni usano; non conosce le detrazioni, che i dati ministeriali mostrano per otto enti; non conosce la soglia di esenzione, che la Valle d’Aosta applica ai redditi fino a 15.000 e che il calcolatore applica. L’assenza di una previsione nella norma statale non dice nulla su cosa gli enti deliberano.', en: 'On the text of art. 50 there is neither an exemption threshold nor any regional credit — and the argument from silence, on this article, has now failed three times. It does not know about brackets, which the regions use; it does not know about credits, which the ministerial data show for eight authorities; it does not know about the exemption threshold, which Valle d’Aosta applies to incomes up to 15,000 and which the calculator applies. The absence of a provision in the national rule says nothing about what the authorities enact.' },
+          { it: 'Sul testo dell’art. 50 non risultano né soglie di esenzione né detrazioni regionali, e l’argomento dal silenzio, su questo articolo, ha ormai fallito tre volte. Non conosce gli scaglioni, che le regioni usano; non conosce le detrazioni, che i dati ministeriali mostrano per otto enti; non conosce la soglia di esenzione, che la Valle d’Aosta applica ai redditi fino a 15.000 e che il calcolatore applica. L’assenza di una previsione nella norma statale non dice nulla su cosa gli enti deliberano.', en: 'On the text of art. 50 there is neither an exemption threshold nor any regional credit, and the argument from silence, on this article, has now failed three times. It does not know about brackets, which the regions use; it does not know about credits, which the ministerial data show for eight authorities; it does not know about the exemption threshold, which Valle d’Aosta applies to incomes up to 15,000 and which the calculator applies. The absence of a provision in the national rule says nothing about what the authorities enact.' },
         ],
       },
       {
@@ -452,7 +444,6 @@ export const SEZIONI: readonly SezioneNorme[] = [
         effetto:
           { it: 'Determina quali strutture di aliquota un ente può usare, e cosa si applica quando non delibera. Il fallback non è aliquota zero: è la prosecuzione dell’anno precedente.', en: 'It determines which rate structures an authority may use, and what applies when it adopts nothing. The fallback is not a zero rate: it is the previous year carrying on.' },
         portale: 'def.finanze.it',
-        identificativo: 'atto id {4C29326B-B643-4927-886B-92A1FF640FDC}',
         url: DEF_FINANZE,
         consultata: '2026-08-27',
         note: [
@@ -471,7 +462,6 @@ export const SEZIONI: readonly SezioneNorme[] = [
         effetto:
           { it: 'È la norma che regge il caso base del calcolatore: Milano non ha deliberato per il 2026, quindi si applicano aliquota ed esenzione del 2025. Alla data di estrazione dei dati riguardava il 61% dei Comuni italiani.', en: 'It is the rule holding up the calculator’s base case: Milano adopted nothing for 2026, so the 2025 rate and exemption apply. At the date the data were extracted it concerned 61% of Italian municipalities.' },
         portale: 'def.finanze.it',
-        identificativo: 'atto id {4C29326B-B643-4927-886B-92A1FF640FDC}',
         url: DEF_FINANZE,
         consultata: '2026-08-27',
         note: [
@@ -524,7 +514,6 @@ export const SEZIONI: readonly SezioneNorme[] = [
     ],
   },
 
-  // -------------------------------------------------------------------------
   {
     id: 'aggiungono',
     titolo: { it: 'Voci che non concorrono al reddito', en: 'Sums that do not count as income' },
@@ -540,11 +529,10 @@ export const SEZIONI: readonly SezioneNorme[] = [
         effetto:
           { it: 'È denaro che si aggiunge al netto senza passare per le imposte: non riduce l’imponibile, non ha effetti a cascata sulle detrazioni, e spetta anche a chi non ha imposta da pagare.', en: 'It is money that adds to net pay without passing through the tax: it does not reduce the taxable base, it has no knock-on effect on tax credits, and it goes even to those with no tax to pay.' },
         portale: 'def.finanze.it',
-        identificativo: 'atto id {4C29326B-B643-4927-886B-92A1FF640FDC}, Articolo 1 com 4 e com 5',
         url: DEF_FINANZE,
         consultata: '2026-08-27',
         note: [
-          { it: 'Le fasce non sono scaglioni: la percentuale si applica all’intero reddito, non alla parte eccedente. Ogni confine è quindi un salto secco verso il basso — circa 153 euro a 8.500 euro di reddito, circa 75 a 15.000.', en: 'The bands are not brackets: the percentage applies to the whole income, not to the part above the threshold. Every boundary is therefore a sharp step down — about 153 euros at 8,500 euros of income, about 75 at 15,000.' },
+          { it: 'Le fasce non sono scaglioni: la percentuale si applica all’intero reddito, non alla parte eccedente. Ogni confine è quindi un salto secco verso il basso: circa 153 euro a 8.500 euro di reddito, circa 75 a 15.000.', en: 'The bands are not brackets: the percentage applies to the whole income, not to the part above the threshold. Every boundary is therefore a sharp step down: about 153 euros at 8,500 euros of income, about 75 at 15,000.' },
           { it: 'Il c. 8 mostra la meccanica: il datore anticipa denaro proprio e lo recupera dallo Stato in compensazione. Una detrazione non funziona così, e questa è la prova che non è una riduzione d’imposta.', en: 'Subsection 8 shows the mechanics: the employer advances its own money and recovers it from the state by offset. A tax credit does not work like that, and this is the proof that it is not a reduction in tax.' },
           { it: 'Il c. 5 ragguaglia il reddito all’intero anno ai soli fini della scelta della percentuale, non per la base: è una regola di ragguaglio diversa da quella dell’art. 13 e da quella del c. 6.', en: 'Subsection 5 annualises income solely for the purpose of picking the percentage, not for the base: it is a pro-rating rule different from the one in art. 13 and from the one in subsection 6.' },
         ],
@@ -558,7 +546,6 @@ export const SEZIONI: readonly SezioneNorme[] = [
         effetto:
           { it: 'Chiude quale reddito si guarda per la soglia e quale per l’importo. Una sola definizione di reddito complessivo attraversa tutto il calcolo.', en: 'It settles which income is looked at for the threshold and which for the amount. A single definition of total income runs through the whole calculation.' },
         portale: 'def.finanze.it',
-        identificativo: 'atto id {4C29326B-B643-4927-886B-92A1FF640FDC}',
         url: DEF_FINANZE,
         consultata: '2026-08-27',
       },
@@ -570,9 +557,8 @@ export const SEZIONI: readonly SezioneNorme[] = [
         vigenza: { it: 'dal 01/01/2025', en: 'in force from 1 Jan 2025' },
         ultimaModifica: { it: 'L. 30/12/2024 n. 207, art. 1 c. 3', en: 'L. 30/12/2024 n. 207, art. 1 c. 3' },
         effetto:
-          { it: 'È il terzo istituto che si somma al netto, e coesiste con le due misure sul cuneo. La condizione lo riserva a chi ha imposta da pagare, non agli incapienti — e questo lo rende l’unica voce di questo ramo che dipende dall’esito del ramo fiscale.', en: 'It is the third measure that adds to net pay, and it coexists with the two tax wedge measures. The condition reserves it for those with tax to pay, not for those without — and that makes it the only item in this branch that depends on the outcome of the tax branch.' },
+          { it: 'È il terzo istituto che si somma al netto, e coesiste con le due misure sul cuneo. La condizione lo riserva a chi ha imposta da pagare, non agli incapienti, e questo lo rende l’unica voce di questo ramo che dipende dall’esito del ramo fiscale.', en: 'It is the third measure that adds to net pay, and it coexists with the two tax wedge measures. The condition reserves it for those with tax to pay, not for those without, and that makes it the only item in this branch that depends on the outcome of the tax branch.' },
         portale: 'def.finanze.it',
-        identificativo: 'atto id {E6D98FB9-4121-4201-9966-37A2987520BA}',
         url: DEF_FINANZE,
         consultata: '2026-08-27',
         note: [
@@ -591,137 +577,6 @@ export const SEZIONI: readonly SezioneNorme[] = [
           { it: 'Non cambia un numero, ma spiega la stratificazione: il vecchio bonus non è stato eliminato, è stato spostato fuori dal testo unico.', en: 'It does not change a figure, but it explains the layering: the old bonus was not eliminated, it was moved out of the consolidated act.' },
         portale: 'def.finanze.it',
         url: DEF_FINANZE,
-        consultata: '2026-08-27',
-      },
-    ],
-  },
-
-  // -------------------------------------------------------------------------
-  {
-    id: 'fuori',
-    titolo: { it: 'Atti letti e rimasti fuori dal calcolo', en: 'Acts read and deliberately left out' },
-    occhiello:
-      { it: 'Norme aperte, lette e volutamente non applicate. Stanno qui perché sapere cosa è stato escluso, e perché, vale quanto sapere cosa è stato incluso — e perché alcune di queste cambierebbero il numero, se ci fossero gli elementi per applicarle.', en: 'Rules we opened, read and deliberately did not apply. They are here because knowing what was excluded, and why, is worth as much as knowing what was included — and because some of these would change the figure, if there were enough information to apply them.' },
-    schede: [
-      {
-        atto: 'L. 30/12/2025 n. 199',
-        riferimento: 'art. 1 commi 7, 9, 10-11, 18-21',
-        dispone:
-          { it: 'Introducono quattro imposte sostitutive sul lavoro dipendente: 5% sugli aumenti da rinnovo del contratto nazionale, 1% sui premi di risultato, 15% sulle maggiorazioni per lavoro notturno e a turni, e un trattamento speciale per il turismo.', en: 'They introduce four substitute taxes on employment income: 5% on increases from national collective bargaining renewals, 1% on performance bonuses, 15% on premiums for night and shift work, and a special regime for tourism.' },
-        effetto:
-          { it: 'È la semplificazione più pesante che il calcolatore dichiara. Non resta fuori perché dipende da una scelta individuale — questi regimi sono attivi salvo rinuncia scritta — ma perché non è calcolabile dalla retribuzione lorda da sola: servirebbe sapere quanta parte è aumento da rinnovo, quanta premio, quanta indennità di turno.', en: 'It is the heaviest simplification the calculator declares. It stays out not because it depends on an individual choice — these regimes apply unless waived in writing — but because it cannot be worked out from gross pay alone: you would need to know how much is a bargained increase, how much a bonus, how much a shift allowance.' },
-        consultata: '2026-08-27',
-        note: [
-          { it: 'Il regime al 5% sostituisce anche le addizionali, non solo l’IRPEF, e si applica a chi ha reddito di lavoro dipendente 2025 non superiore a 33.000 euro — cioè esattamente la fascia dei dipendenti delle piccole e medie imprese.', en: 'The 5% regime replaces the addizionali as well, not just IRPEF, and applies to those whose 2025 employment income was not above 33,000 euros — which is precisely the band of employees in small and medium-sized companies.' },
-          { it: 'Chi ne beneficia ha un netto reale più alto di quello calcolato: su 1.000 euro di aumento da rinnovo, circa 205 euro che il calcolatore non mostra, fino a circa 305 per chi sta fra 28.000 e 33.000 euro.', en: 'Anyone benefiting has a real net pay higher than the one calculated: on 1,000 euros of bargained increase, roughly 205 euros the calculator does not show, up to about 305 for those between 28,000 and 33,000 euros.' },
-          { it: 'Per questi commi non abbiamo registrato una data di vigenza.', en: 'For these subsections we did not record a date in force.' },
-        ],
-      },
-      {
-        atto: 'DL 27/03/2026 n. 38, conv. con mod. dalla L. 22/05/2026 n. 88',
-        riferimento: 'art. 2-bis',
-        dispone:
-          { it: 'Esclude dalla base imponibile i redditi dei lavoratori marittimi imbarcati per più di 183 giorni su navi battenti bandiera estera.', en: 'Excludes from the taxable base the income of seafarers on board for more than 183 days on foreign-flagged vessels.' },
-        vigenza: { it: 'dal 23/05/2026', en: 'in force from 23 May 2026' },
-        effetto:
-          { it: 'Resta fuori perché riguarda una categoria che il calcolo non copre. È l’articolo che ha modificato gli artt. 3 e 51 del TUIR nel 2026, e L’abbiamo letto per intero proprio per accertare che nessuno dei commi che contano fosse toccato.', en: 'It stays out because it concerns a category the calculation does not cover. It is the article that amended artt. 3 and 51 of the TUIR in 2026, and we read it in full precisely to establish that none of the subsections that matter was touched.' },
-        portale: 'def.finanze.it',
-        consultata: '2026-08-27',
-        note: [
-          { it: 'Il c. 3 contiene una clausola per cui l’esclusione non deve far guadagnare detrazioni e benefici legati a requisiti reddituali. È lo stesso scopo del c. 9 della L. 207/2024, con tecnica opposta: impedire che un’agevolazione ne generi un’altra a cascata.', en: 'Subsection 3 contains a clause preventing the exclusion from earning credits and benefits tied to income requirements. It has the same purpose as subsection 9 of L. 207/2024, by the opposite technique: stopping one relief from generating another by knock-on effect.' },
-        ],
-      },
-      {
-        atto: 'L. 30/12/2024 n. 207',
-        riferimento: 'art. 1 c. 386',
-        dispone:
-          { it: 'Esclude dal reddito, entro 5.000 euro annui, i rimborsi del datore per canoni di locazione dei neoassunti, precisando che l’esclusione non rileva ai fini contributivi.', en: 'Excludes from income, up to 5,000 euros a year, employer reimbursements of rent for new hires, specifying that the exclusion does not apply for contribution purposes.' },
-        effetto:
-          { it: 'Resta fuori dal calcolo, ma è la prova testuale che la base fiscale e quella contributiva possono divergere per disposizione espressa. Che coincidano è una proprietà del caso standard, non del sistema.', en: 'It stays outside the calculation, but it is the textual proof that the tax base and the contributory base can diverge by express provision. That they coincide is a property of the standard case, not of the system.' },
-        portale: 'def.finanze.it',
-        consultata: '2026-08-27',
-      },
-      {
-        atto: 'L. 30/12/2024 n. 207',
-        riferimento: 'art. 1 c. 175',
-        dispone:
-          { it: 'Consente a chi ha il primo accredito contributivo dopo il 2025 di versare volontariamente fino a due punti di aliquota in più, deducibili per metà dell’importo.', en: 'Lets those whose first contribution credit falls after 2025 pay up to two extra percentage points voluntarily, deductible for half the amount.' },
-        effetto:
-          { it: 'Resta fuori, ma è l’esempio che spiega perché i contributi obbligatori non sono una deduzione: la legge dimostra di saper usare la deduzione quando il contributo è facoltativo.', en: 'It stays out, but it is the example that explains why compulsory contributions are not a deduction: the law shows it knows how to use a deduction when the contribution is voluntary.' },
-        portale: 'def.finanze.it',
-        consultata: '2026-08-27',
-      },
-      {
-        atto: 'L. 30/12/2024 n. 207',
-        riferimento: 'art. 1 c. 385',
-        dispone:
-          { it: 'Riduce al 5% l’imposta sostitutiva sui premi di produttività per il 2025.', en: 'Cuts to 5% the substitute tax on productivity bonuses for 2025.' },
-        effetto:
-          { it: 'Resta fuori: dipende dalla contrattazione di secondo livello, che il caso standard non ha. Per il 2026 il regime è stato sostituito da quello all’1% della legge di bilancio successiva.', en: 'It stays out: it depends on second-level bargaining, which the standard case does not have. For 2026 the regime was replaced by the 1% one in the following budget law.' },
-        portale: 'def.finanze.it',
-        consultata: '2026-08-27',
-        note: [
-          { it: 'Su questo comma abbiamo imparato una cosa: l’annotazione «modificato da» dice che un comma è stato toccato, non come. Ricostruirne il senso senza leggere l’atto modificante è un’inferenza, e in questo caso si è rivelata sbagliata nel verso.', en: 'On this subsection we learned something: the note “amended by” tells you a subsection was touched, not how. Reconstructing its meaning without reading the amending act is an inference, and in this case it turned out to be wrong in its direction.' },
-        ],
-      },
-      {
-        atto: 'TUIR (DPR 917/1986)',
-        riferimento: 'art. 17',
-        dispone: { it: 'Disciplina la tassazione separata, che governa il trattamento di fine rapporto.', en: 'Governs separate taxation, which applies to severance pay.' },
-        effetto:
-          { it: 'Resta fuori perché il TFR non entra nel netto annuo, ma è l’articolo da citare per spiegare dove sia scritto che il TFR non segue il regime ordinario.', en: 'It stays out because TFR (severance pay) does not enter annual net pay, but it is the article to cite to show where it is written that TFR does not follow the ordinary regime.' },
-        portale: 'def.finanze.it',
-        url: DEF_FINANZE,
-        consultata: '2026-08-27',
-      },
-      {
-        atto: 'INPS, circolare n. 101 del 29/11/2024',
-        dispone:
-          { it: 'Tratta il regime contributivo dei magistrati onorari, e nel farlo richiama l’aliquota generale del 33% ripartita in 23,81% a carico del datore e 9,19% a carico del lavoratore.', en: 'Deals with the contribution regime of honorary magistrates, and in doing so recalls the general 33% rate split into 23.81% borne by the employer and 9.19% by the employee.' },
-        effetto:
-          { it: 'Non è la fonte citata dal calcolatore, ma resta un riscontro: il valore è corretto e la fonte è primaria, però i valori generali compaiono in un richiamo di contesto dentro una circolare su una categoria specifica.', en: 'It is not the source the calculator cites, but it stands as a cross-check: the figure is right and the source is primary, yet the general figures appear in a contextual aside inside a circular about a specific category.' },
-        consultata: '2026-08-27',
-        note: [
-          { it: 'C’è qui una trappola: la stessa aliquota del 33% compare anche per la Gestione separata, con una ripartizione completamente diversa. Prenderla dalla circolare sbagliata produce un’aliquota errata di quasi due punti.', en: 'There is a trap here: the same 33% rate also appears for the Gestione separata scheme, with a completely different split. Taking it from the wrong circular produces a rate wrong by nearly two points.' },
-          { it: 'Di questo documento non abbiamo un indirizzo stabile da citare.', en: 'We have no stable address to cite for this document.' },
-        ],
-      },
-      {
-        atto: 'INPS, circolare n. 8 del 2026',
-        dispone: { it: 'Disciplina le aliquote della Gestione separata.', en: 'Governs the rates of the Gestione separata scheme.' },
-        effetto:
-          { it: 'Resta fuori perché non riguarda il lavoro dipendente. Conferma però il massimale di 122.295 euro.', en: 'It stays out because it does not concern employment. It does confirm the 122,295 euro cap, though.' },
-        consultata: '2026-08-27',
-        note: [
-          { it: 'Di questo documento non abbiamo un indirizzo stabile da citare.', en: 'We have no stable address to cite for this document.' },
-        ],
-      },
-      {
-        atto: 'DL 19/09/1992 n. 384',
-        riferimento: 'art. 6 c. 11',
-        dispone:
-          { it: 'Fissava il contributo per il Servizio sanitario nazionale a carico dei lavoratori dipendenti, per l’1% più un’ulteriore aliquota dello 0,80%.', en: 'Set the national health service contribution borne by employees, at 1% plus a further rate of 0.80%.' },
-        effetto:
-          { it: 'Non si applica più: quei contributi sono stati aboliti dall’art. 36 del D.Lgs. 446/1997, cioè dallo stesso atto che istituisce l’addizionale regionale. È la prova documentale del legame fra le due cose.', en: 'It no longer applies: those contributions were abolished by art. 36 of D.Lgs. 446/1997, that is by the very act that creates the addizionale regionale. It is the documentary proof of the link between the two.' },
-        portale: 'def.finanze.it',
-        identificativo: 'atto id {2E278145-81A8-4B7C-9ED2-7A9CAF61DA6C}',
-        url: DEF_FINANZE,
-        consultata: '2026-08-27',
-      },
-      {
-        atto: 'L. 29/12/2021 n. 234',
-        riferimento: 'art. 1 commi 565–580',
-        dispone:
-          { it: 'Disciplina la potestà dei Comuni di articolare l’addizionale per scaglioni di reddito.', en: 'Governs the power of municipalities to structure the addizionale by income bracket.' },
-        effetto:
-          { it: 'Non serve per l’anno d’imposta 2026: per quell’anno la potestà nasce direttamente dai commi 727 e 751 della legge di bilancio 2025.', en: 'It is not needed for tax year 2026: for that year the power comes directly from subsections 727 and 751 of the 2025 budget law.' },
-        consultata: '2026-08-27',
-      },
-      {
-        atto: 'DPR 600/1973',
-        dispone: { it: 'Contiene le regole sugli arrotondamenti delle ritenute.', en: 'Contains the rules on rounding withholdings.' },
-        effetto:
-          { it: 'Resta fuori: gli arrotondamenti sulla singola ritenuta, il conguaglio e la rateizzazione delle addizionali riguardano quando il denaro si muove, non quanto spetta per l’anno.', en: 'It stays out: rounding on an individual withholding, the year-end reconciliation and the instalment payment of the addizionali concern when the money moves, not how much is owed for the year.' },
         consultata: '2026-08-27',
       },
     ],
