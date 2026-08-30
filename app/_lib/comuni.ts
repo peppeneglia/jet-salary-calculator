@@ -1,34 +1,37 @@
 /**
  * Il catalogo dei comuni che l'handler sa risolvere.
  *
- * **Non è un file di dati normativi.** Non contiene aliquote scritte a mano:
- * gli enti impositori arrivano interi da `data/caso-base.ts` per il caso
- * verificato e da `data/mef/` per tutti gli altri, e qui si aggiunge soltanto
- * la chiave con cui l'interfaccia li seleziona. È il pezzo che `core/types.ts`
- * descrive come «lettura di dati, non calcolo fiscale»: trovare il comune sta
- * a monte del motore, e `risolviComune` è il punto di innesto del dataset MEF.
+ * Non è un file di dati normativi. Non contiene aliquote scritte a mano:
+ * gli enti impositori arrivano interi da `data/mef/`, e qui si aggiunge
+ * soltanto la chiave con cui l'interfaccia li seleziona. È il pezzo che
+ * `core/types.ts` descrive come «lettura di dati, non calcolo fiscale»:
+ * trovare il comune sta a monte del motore, e `risolviComune` è il punto in
+ * cui il dataset MEF entra nell'applicazione.
  *
- * ---------------------------------------------------------------------------
- * Due provenienze, e la differenza è una decisione di prodotto (D-005)
- * ---------------------------------------------------------------------------
+ * Una provenienza sola, dal 29/08
  *
- * **Milano e Lombardia restano quelli scritti a mano** in `data/caso-base.ts`:
- * sono i due enti che il progetto dichiara verificati uno per uno. Tutto il
- * resto è **importato** dal MEF a una data dichiarata, e la `Fonte` di ogni
- * ente lo dice — `provenienza: 'importata'`, con l'artefatto e la data di
- * estrazione presi **dal dato**, non da una costante riscritta qui.
+ * Tutti e 7.897 i comuni passano dall'import, Milano compresa. La `Fonte`
+ * di ogni ente lo dice — `provenienza: 'importata'`, con l'artefatto e la data
+ * di estrazione presi dal dato, non da una costante riscritta qui.
  *
- * Che i due valori coincidano non è assunto: lo asserisce
- * `data/mef/caso-base-contro-import.test.ts`, che confronta il parametro
- * scritto a mano con quello importato e fallisce se divergono.
+ * ⚠️ Prima Milano e Lombardia arrivavano scritti a mano da `data/caso-base.ts`,
+ * in nome della distinzione di D-005 fra parametro *verificato* e *importato*.
+ * Quella distinzione non era nei dati: entrambe quelle `Fonte` portavano
+ * `provenienza: 'importata'`. Restava lo stesso numero in due sedi, e la sede a
+ * valle è stata tolta. Il dettaglio sta accanto al `return` che la usava.
  *
- * ---------------------------------------------------------------------------
+ * I nomi
+ *
+ * Il prospetto scrive tutto in maiuscolo — `MILANO`, `REGIONE LOMBARDIA` — che
+ * è la convenzione di stampa di un archivio, non un dato. `nomi-comuni.ts` e
+ * `data/nomi-enti.ts` lo riportano alla forma che si legge in pagina, senza
+ * aggiungere diacritici che la fonte non segna.
+ *
  * Il confine verso il client
- * ---------------------------------------------------------------------------
  *
- * ⚠️ **I due JSON entrano solo qui, e questo modulo non è mai importato da un
- * client component**: `page.tsx` lo legge server-side, e i componenti sotto
- * `_components/` ne importano soltanto il **tipo** `ComuneSelezionabile`, che
+ * ⚠️ I due JSON entrano solo qui, e questo modulo non è mai importato da un
+ * client component: `page.tsx` lo legge server-side, e i componenti sotto
+ * `_components/` ne importano soltanto il tipo `ComuneSelezionabile`, che
  * si cancella in compilazione. Al client attraversa il confine la sola lista
  * leggera — codice, nome, provincia, calcolabilità — mai un'aliquota.
  */
@@ -46,7 +49,8 @@ import {
   type ParametriComunali,
   type ParametriRegionali,
 } from '../../core/types'
-import { lombardia, milano } from '../../data/caso-base'
+import { nomeEnte } from '../../data/nomi-enti'
+import { nomeComune } from './nomi-comuni'
 import datiComuni from '../../data/mef/comuni-2026.json'
 import datiRegioni from '../../data/mef/regioni-2026.json'
 
@@ -54,8 +58,8 @@ import datiRegioni from '../../data/mef/regioni-2026.json'
  * Un comune del catalogo è una di due cose, e la differenza va detta.
  *
  * `calcolabile` — entrambi gli enti impositori sono risolti e il motore può
- * percorrere la catena intera. **Ci rientrano anche gli 884 comuni senza
- * addizionale comunale applicabile**: per loro il numero è corretto, non
+ * percorrere la catena intera. Ci rientrano anche gli 884 comuni senza
+ * addizionale comunale applicabile: per loro il numero è corretto, non
  * mancante, e rifiutare il calcolo negherebbe un risultato giusto all'11% dei
  * comuni italiani (D-054).
  *
@@ -81,7 +85,6 @@ export type ComuneDelCatalogo =
       readonly ragione: Multilingua
     }
 
-// ---------------------------------------------------------------------------
 // Le fonti, costruite dal dato
 //
 // [D-005] «Il JSON porta dentro di sé la data di estrazione, così la dicitura
@@ -89,7 +92,6 @@ export type ComuneDelCatalogo =
 // dimenticherà di aggiornare.» Queste `Fonte` si compongono dai blocchi
 // `provenienza` e `artefatti` dei due file: se l'import viene rifatto a una
 // data diversa, la pagina lo dice da sola.
-// ---------------------------------------------------------------------------
 
 const { giornaliero2026, annuale2025 } = datiComuni.artefatti
 const { regionale2026 } = datiRegioni.artefatti
@@ -120,11 +122,11 @@ const normaDiFallback: Fonte = {
 }
 
 /**
- * ⚠️ **La riserva sul set di scaglioni ereditato, e non è una formalità.**
+ * ⚠️ La riserva sul set di scaglioni ereditato, e non è una formalità.
  *
  * L'elenco annuale 2025 dice *quante* aliquote ha un comune, non su *quali*
  * confini: il set si infersce dalla cardinalità, e l'euristica tiene al 98,5%.
- * Su circa 560 comuni multialiquota, **sei finiscono sul set sbagliato**
+ * Su circa 560 comuni multialiquota, sei finiscono sul set sbagliato
  * [Fonti §15.b]. Chi capita su uno di quei comuni vede la riserva accanto al
  * numero, invece di leggere un'aliquota presentata come certa.
  */
@@ -135,23 +137,23 @@ const setInferito: Multilingua = {
 
 /**
  * ⚠️ Stessa riserva già registrata in `data/caso-base.ts` per la Lombardia, e
- * vale per l'intero prospetto: la colonna `NORME` cita **la legge regionale che
- * autorizza** l'addizionale, non sempre l'atto che ne ha fissato i valori per
+ * vale per l'intero prospetto: la colonna `NORME` cita la legge regionale che
+ * autorizza l'addizionale, non sempre l'atto che ne ha fissato i valori per
  * l'anno. Finché quei provvedimenti non sono reperiti uno per uno, i valori
  * sono citati sul prospetto ministeriale.
  */
 /**
- * ⚠️ **La riserva di D-059, ed è più profonda di quella sulla fonte.**
+ * ⚠️ La riserva di D-059, ed è più profonda di quella sulla fonte.
  *
  * Quella sul prospetto dice *non sappiamo quale atto fissi questo valore*.
- * Questa dice **se esista** un atto statale che dia all'ente la facoltà di
+ * Questa dice se esista un atto statale che dia all'ente la facoltà di
  * prevedere il meccanismo: l'art. 50 istituisce l'addizionale regionale e non
  * nomina la soglia di esenzione. L'ente la delibera, il calcolatore la applica,
  * e la norma che gliene attribuisce il potere non risulta.
  *
- * ⚠️ **Le parole sono di esistenza, non di quantità, e non è uno stile.** Le
+ * ⚠️ Le parole sono di esistenza, non di quantità, e non è uno stile. Le
  * altre riserve del progetto dicono *più alto del reale* perché lì il numero c'è
- * e potrebbe essere sbagliato. Qui la soglia è un **presupposto binario**: da
+ * e potrebbe essere sbagliato. Qui la soglia è un presupposto binario: da
  * essa dipende *se* l'addizionale sia dovuta, non *di quanto*. Una riserva che
  * parlasse di misura descriverebbe un meccanismo diverso da quello che c'è.
  *
@@ -165,7 +167,7 @@ const facoltaSenzaNormaStatale: Multilingua = {
 /**
  * La stessa riserva di `facoltaSenzaNormaStatale`, sulle detrazioni (D-059).
  *
- * ⚠️ **Non è una copia per pigrizia: è la stessa categoria.** D-059 l'ha
+ * ⚠️ Non è una copia per pigrizia: è la stessa categoria. D-059 l'ha
  * istituita proprio perché la soglia di esenzione e le detrazioni regionali
  * pongono la stessa domanda — *quale norma statale abilita l'ente a fare
  * questo* — e hanno la stessa risposta: nessuna che risulti, e il potere si
@@ -176,20 +178,33 @@ const detrazioneSenzaNormaStatale: Multilingua = {
   en: 'We have a caveat on this credit, and it is not about the amount: it is about the power to grant it. The amount is set by a regional law, which we cite. But the national article creating the regional addizionale provides for no credit at all — the authority grants one regardless, and we apply it as it does. The national provision granting it that power does not appear to exist. That provision would settle it.',
 }
 
+/**
+ * La stessa riserva di `facoltaSenzaNormaStatale`, sulla deduzione (D-064).
+ *
+ * ⚠️ Ciò che manca qui è più grosso di quanto manchi sugli altri due, e la
+ * frase deve dirlo: una soglia di esenzione e una detrazione muovono *quanta*
+ * imposta si paga, questa muove la base imponibile di un tributo che la
+ * norma statale definisce come *reddito complessivo al netto degli oneri
+ * deducibili*. L'ente la ridefinisce per i propri residenti, e la norma che
+ * glielo consenta non risulta.
+ */
+const deduzioneSenzaNormaStatale: Multilingua = {
+  it: 'Su questa deduzione abbiamo una riserva, e non riguarda l’importo: riguarda il potere di concederla. L’importo lo fissa una legge provinciale, che citiamo. Ma l’articolo statale che istituisce l’addizionale regionale ne fissa la base — il reddito complessivo al netto degli oneri deducibili — e non prevede che l’ente possa abbassarla. L’ente la abbassa comunque, e noi la calcoliamo come la calcola lui. La norma statale che gliene attribuisce la facoltà non risulta. La chiuderebbe quella norma.',
+  en: 'We have a caveat on this deduction, and it is not about the amount: it is about the power to grant it. The amount is set by a provincial law, which we cite. But the national article creating the regional addizionale fixes its base — total income net of deductible charges — and does not provide for the authority lowering it. The authority lowers it regardless, and we compute it as it does. The national provision granting it that power does not appear to exist. That provision would settle it.',
+}
+
 const riservaProspettoRegionale: Multilingua = {
   it: 'Su questa aliquota abbiamo una riserva. L’elenco ministeriale indica la legge regionale che autorizza l’addizionale, non sempre l’atto che ne ha fissato i valori per il 2026.',
   en: 'We have a caveat on this rate. The ministerial list points to the regional law that authorises the addizionale, not always to the act that set its 2026 figures.',
 }
 
-// ---------------------------------------------------------------------------
 // Dal JSON ai tipi del motore
 //
 // I due file sono generati da `scripts/importa-mef.mjs`, che è JavaScript: il
-// confine dove il dato diventa tipato è **questo**, e le conversioni qui sotto
+// confine dove il dato diventa tipato è questo, e le conversioni qui sotto
 // lanciano invece di restituire un valore approssimato. Un `throw` all'avvio
 // del server è un difetto che si vede; un `as` silenzioso è un numero sbagliato
 // che non si vede.
-// ---------------------------------------------------------------------------
 
 interface ScaglioneJson {
   readonly da: number
@@ -225,12 +240,12 @@ function formaAliquota(j: FormaAliquotaJson, dove: string): FormaAliquota {
 }
 
 /**
- * ⚠️ **La forma regionale ha una variante in più di quella comunale** (D-062).
+ * ⚠️ La forma regionale ha una variante in più di quella comunale (D-062).
  *
- * L'aliquota per **fascia intera** si applica all'intero imponibile e cambia
+ * L'aliquota per fascia intera si applica all'intero imponibile e cambia
  * per soglia: al confine c'è un salto secco, non un cambio di pendenza. La
  * conversione sta qui e non nella funzione comunale perché il comunale quella
- * variante **non ce l'ha** — il file dice «applicabile a scaglione», e un tipo
+ * variante non ce l'ha — il file dice «applicabile a scaglione», e un tipo
  * che ammettesse la fascia intera anche lì racconterebbe un dominio più largo
  * di quello vero.
  */
@@ -248,16 +263,17 @@ function formaAliquotaRegionale(j: FormaAliquotaJson, dove: string): FormaAliquo
   }
 }
 
-// ---------------------------------------------------------------------------
 // Gli enti regionali
-// ---------------------------------------------------------------------------
 
 const entiRegionali = new Map<string, EnteRisolto<ParametriRegionali>>(
   datiRegioni.enti.map((e) => [
+    // ⚠️ La chiave resta la stringa MEF, il nome no. La prima è
+    // l'identificatore con cui il record del comune punta al proprio ente e
+    // non si tocca; il secondo è quello che si legge in pagina (`nomi-enti.ts`).
     e.nome,
     {
       stato: 'deliberato',
-      nome: e.nome,
+      nome: nomeEnte(e.nome),
       annoDelibera: datiRegioni.provenienza.annoImposta,
       fonte: {
         atto: `MEF, ${regionale2026.descrizione}`,
@@ -271,16 +287,16 @@ const entiRegionali = new Map<string, EnteRisolto<ParametriRegionali>>(
       parametri: {
         aliquota: formaAliquotaRegionale(e.aliquota, e.nome),
         /*
-         * Le detrazioni **legate al solo reddito**, applicate con pavimento a
+         * Le detrazioni legate al solo reddito, applicate con pavimento a
          * zero (D-061). Tre enti su ventuno: Bolzano, Lazio, Umbria.
          *
-         * ⚠️ **Il valore ha una fonte, il meccanismo ha una riserva.** La legge
+         * ⚠️ Il valore ha una fonte, il meccanismo ha una riserva. La legge
          * regionale che istituisce la detrazione è esposta per ente nella
-         * colonna `NORME`, quindi il numero è citabile; è la norma **statale**
+         * colonna `NORME`, quindi il numero è citabile; è la norma statale
          * che autorizza le regioni a concederle a non risultare — ed è la
          * categoria che D-059 ha istituito, non un caso isolato.
          *
-         * Le detrazioni **per carichi di famiglia** non sono qui e non devono
+         * Le detrazioni per carichi di famiglia non sono qui e non devono
          * esserci: sei enti le prevedono, e stanno fuori perimetro per D-019
          * come le detrazioni statali dell'art. 12 TUIR, già dichiarate in S-001.
          */
@@ -300,12 +316,12 @@ const entiRegionali = new Map<string, EnteRisolto<ParametriRegionali>>(
             },
           }),
         ),
-        // ⚠️ **Un ente su ventuno**, e il numero è misurato sul prospetto, non
+        // ⚠️ Un ente su ventuno, e il numero è misurato sul prospetto, non
         // assunto (D-057). La Valle d'Aosta esenta i redditi fino a 15.000, e
         // il suo stesso testo dichiara che sopra si applica l'aliquota
         // sull'intero imponibile — cioè un cliff, non una franchigia.
         //
-        // Porta **la propria fonte**, distinta da quella dell'ente, perché la
+        // Porta la propria fonte, distinta da quella dell'ente, perché la
         // riserva che deve dichiarare è un'altra: non quale atto fissi il
         // valore, ma se esista un atto statale che autorizzi il meccanismo
         // (D-059).
@@ -324,34 +340,58 @@ const entiRegionali = new Map<string, EnteRisolto<ParametriRegionali>>(
                   nonVerificato: facoltaSenzaNormaStatale,
                 },
               },
+        /*
+         * La deduzione dalla base (D-064). Un ente su ventuno, la Provincia
+         * autonoma di Trento, e il numero è misurato sul prospetto.
+         *
+         * ⚠️ Porta la propria riserva, e non è quella della soglia. Su
+         * questo campo la domanda che resta senza risposta non è *se l'ente
+         * possa esentare* ma *se possa spostare la base imponibile di un
+         * tributo statale*: è la stessa categoria di D-059 — potere esercitato
+         * senza norma statale che risulti — su un piano diverso.
+         */
+        deduzione:
+          e.deduzione === null || e.deduzione === undefined
+            ? null
+            : {
+                importo: euro(e.deduzione.importo),
+                redditoMassimo: euro(e.deduzione.redditoMassimo),
+                fonte: {
+                  atto: e.norme ?? `MEF, ${regionale2026.descrizione}`,
+                  riferimento: `${e.nome} — deduzione dalla base dell'addizionale regionale`,
+                  url: 'https://www1.finanze.gov.it/finanze/index_addreg.php',
+                  consultataIl: regionale2026.estrattoIl,
+                  provenienza: 'importata',
+                  estrattoIl: regionale2026.estrattoIl,
+                  nonVerificato: deduzioneSenzaNormaStatale,
+                },
+              },
       },
     } satisfies EnteRisolto<ParametriRegionali>,
   ]),
 )
 
-// ---------------------------------------------------------------------------
 // I comuni
-// ---------------------------------------------------------------------------
 
 /**
- * ⚠️ **Il comune assente dall'elenco 2025: la catena del fallback non si
- * interrompe, si biforca — ed è per questo che non è uno zero.**
+ * ⚠️ Il comune assente dall'elenco 2025: la catena del fallback non si
+ * interrompe, si biforca — ed è per questo che non è uno zero.
  *
- * Ce n'è **uno solo**, Castegnero Nanto (VI), e i file raccontano tutta la
- * storia: il giornaliero 2026 porta **tre** codici — `C056` Castegnero, `F838`
+ * Ce n'è uno solo, Castegnero Nanto (VI), e i file raccontano tutta la
+ * storia: il giornaliero 2026 porta tre codici — `C056` Castegnero, `F838`
  * Nanto e `M439` Castegnero Nanto — tutti e tre a `0*`; l'elenco annuale 2025
- * porta i due predecessori con **aliquote diverse**, 0,65% e 0,75%, e il comune
+ * porta i due predecessori con aliquote diverse, 0,65% e 0,75%, e il comune
  * fuso non ce l'ha affatto.
  *
  * Il c. 752 rinvia a *«scaglioni e aliquote già vigenti in ciascun ente
- * nell'anno precedente»*. Nell'anno precedente quel territorio aveva **due**
+ * nell'anno precedente»*. Nell'anno precedente quel territorio aveva due
  * aliquote vigenti. Non c'è un valore da ereditare: ce ne sono due, e sceglierne
  * uno è una decisione, non una lettura.
  *
- * ⚠️ **Perché non è lo stato «senza addizionale applicabile» di D-054.**
+ * ⚠️ Perché non è lo stato «senza addizionale applicabile» di D-054.
  * L'argomento di D-054 per gli 884 è il consolidamento: *un `0*` che sopravvive
  * all'elenco annuale significa nessuna aliquota applicabile*. Qui non c'è uno
- * `0*` che sopravvive — **non c'è la riga**. Un'addizionale a zero direbbe che
+ * `0*` che sopravvive — non c'è la riga. Un'addizionale a zero direbbe che
  * il comune non ha il tributo, e i suoi due predecessori ce l'avevano entrambi.
  */
 const fallbackBiforcato: Multilingua = {
@@ -362,7 +402,7 @@ const fallbackBiforcato: Multilingua = {
 /**
  * Il comune da cui la pagina parte.
  *
- * ⚠️ **Sta qui e non in `page.tsx`, e il motivo è l'import.** La pagina
+ * ⚠️ Sta qui e non in `page.tsx`, e il motivo è l'import. La pagina
  * sceglieva «il primo comune calcolabile del catalogo»: con tre voci quello era
  * Milano, con 7.897 ordinate per codice catastale diventa Abano Terme, e il
  * caso base del progetto — quello verificato a mano, quello dei casi di test,
@@ -372,7 +412,7 @@ const fallbackBiforcato: Multilingua = {
 export const CODICE_COMUNE_INIZIALE = 'F205'
 
 function comunaleDa(c: (typeof datiComuni.comuni)[number]): EnteRisolto<ParametriComunali> {
-  const nome = c.nome
+  const nome = nomeComune(c.nome)
   if (c.stato === 'nonIstituito') return { stato: 'nonIstituito', nome }
 
   if (!c.parametri) throw new Error(`${c.codiceCatastale}: stato «${c.stato}» senza parametri`)
@@ -415,22 +455,22 @@ function comunaleDa(c: (typeof datiComuni.comuni)[number]): EnteRisolto<Parametr
 }
 
 const catalogo: readonly ComuneDelCatalogo[] = datiComuni.comuni.map((c): ComuneDelCatalogo => {
-  const identita = { codiceCatastale: c.codiceCatastale, nome: c.nome, provincia: c.provincia }
+  const identita = { codiceCatastale: c.codiceCatastale, nome: nomeComune(c.nome), provincia: c.provincia }
 
   if (c.stato === 'nonCalcolabile') {
     return { stato: 'nonCalcolabile', ...identita, ragione: fallbackBiforcato }
   }
 
   /*
-   * ⚠️ **I 282 comuni delle due Province autonome sono calcolabili** (D-056).
+   * ⚠️ I 282 comuni delle due Province autonome sono calcolabili (D-056).
    *
-   * D-037 li teneva fuori, e non è stata revocata: **si è avverata la sua
-   * condizione di caduta**, che la decisione si era scritta da sé — «cade
+   * D-037 li teneva fuori, e non è stata revocata: si è avverata la sua
+   * condizione di caduta, che la decisione si era scritta da sé — «cade
    * quando entrano i parametri delle due Province». Il prospetto regionale
    * importato contiene le aliquote di entrambe, quindi il parametro c'è.
    *
-   * E ciò che D-037 chiamava «Trento e Bolzano» erano in realtà **166 comuni
-   * trentini e 116 altoatesini**: l'ente impositore delle Province autonome non
+   * E ciò che D-037 chiamava «Trento e Bolzano» erano in realtà 166 comuni
+   * trentini e 116 altoatesini: l'ente impositore delle Province autonome non
    * riguarda i due capoluoghi, riguarda tutto il territorio.
    *
    * La riserva sulla citazione è quella già dichiarata per la Lombardia —
@@ -444,14 +484,27 @@ const catalogo: readonly ComuneDelCatalogo[] = datiComuni.comuni.map((c): Comune
   const regionale = entiRegionali.get(c.enteRegionale)
   if (!regionale) throw new Error(`${c.codiceCatastale} ${c.nome}: ente regionale «${c.enteRegionale}» assente dal prospetto`)
 
-  // Milano e Lombardia sono i due enti verificati a mano: il caso base non
-  // passa dall'import, e la loro `Fonte` resta quella di `data/caso-base.ts`.
-  const enti: EntiRisolti =
-    c.codiceCatastale === CODICE_COMUNE_INIZIALE
-      ? { regionale: lombardia, comunale: milano }
-      : { regionale, comunale: comunaleDa(c) }
-
-  return { stato: 'calcolabile', ...identita, enti }
+  /*
+   * ⚠️ Milano passa dall'import come tutti gli altri, e il caso speciale non
+   * c'è più.
+   *
+   * Fino al 29/08 questi due enti arrivavano da `data/caso-base.ts`, scritti a
+   * mano, in nome della distinzione di D-005 fra *parametro verificato* e
+   * *parametro importato*. Ma quella distinzione non era nei dati: le due
+   * `Fonte` scritte a mano portavano entrambe `provenienza: 'importata'`, e il
+   * commento sopra una di esse lo diceva — *«la delibera del Comune di Milano
+   * non è stata letta: il valore viene dall'elenco ministeriale»*.
+   *
+   * Restava quindi lo stesso numero in due sedi, che è il difetto che D-052 ha
+   * già chiuso altrove: non il numero sbagliato, il numero scritto due volte.
+   * Un test asseriva che le due sedi coincidessero — ed è il motivo per cui
+   * togliere quella a valle non muove il risultato.
+   *
+   * Ci si guadagna anche una citazione migliore: il prospetto porta per la
+   * Lombardia l'atto vero (*art. 72, comma 1, legge regionale 14 luglio 2003,
+   * n. 10*) e l'URL, dove la versione a mano aveva la sola stringa «Lombardia».
+   */
+  return { stato: 'calcolabile', ...identita, enti: { regionale, comunale: comunaleDa(c) } }
 })
 
 const perCodice = new Map(catalogo.map((c) => [c.codiceCatastale, c]))
@@ -459,9 +512,17 @@ const perCodice = new Map(catalogo.map((c) => [c.codiceCatastale, c]))
 /**
  * Il nome dell'ente impositore regionale, preso dal dato e non dal catalogo
  * già costruito: vale anche per il comune non calcolabile, che un ente ce l'ha.
+ *
+ * ⚠️ Esce leggibile, non grezzo. Questo valore attraversa il confine verso
+ * il client e finisce nel riquadro *Regione o Provincia autonoma* accanto al
+ * campo comune: lì `REGIONE LOMBARDIA` è la stringa di un archivio
+ * ministeriale, non un nome che si legge in una pagina.
  */
 const entePerComune = new Map(datiComuni.comuni.map((c) => [c.codiceCatastale, c.enteRegionale]))
-const enteDi = (codice: string): string => entePerComune.get(codice) ?? ''
+const enteDi = (codice: string): string => {
+  const grezzo = entePerComune.get(codice)
+  return grezzo === undefined ? '' : nomeEnte(grezzo)
+}
 
 /** Il codice catastale è la chiave: è quella del dataset MEF, non il nome. */
 export const risolviComune = (codiceCatastale: string): ComuneDelCatalogo | undefined =>
@@ -469,10 +530,10 @@ export const risolviComune = (codiceCatastale: string): ComuneDelCatalogo | unde
 
 /**
  * La forma che arriva al client: nome, provincia, codice e — se il calcolo non
- * è disponibile — **la ragione, già qui**.
+ * è disponibile — la ragione, già qui.
  *
  * La ragione viaggia con la lista e non solo con la risposta d'errore, perché
- * D-037 chiede che questi comuni siano marcati **prima** della selezione: chi
+ * D-037 chiede che questi comuni siano marcati prima della selezione: chi
  * apre l'elenco deve vedere il limite, non scoprirlo dopo aver premuto un
  * bottone.
  *
@@ -485,11 +546,11 @@ export interface ComuneSelezionabile {
   readonly nome: string
   readonly provincia: string
   /**
-   * ⚠️ **L'ente impositore regionale, non la regione geografica** (D-063).
+   * ⚠️ L'ente impositore regionale, non la regione geografica (D-063).
    *
    * Per i 282 comuni delle Province autonome l'ente è la Provincia (D-056):
    * scrivere *Trentino-Alto Adige* accanto a un comune trentino sarebbe
-   * **esattamente l'errore che D-037 esisteva per impedire**, e sarebbe
+   * esattamente l'errore che D-037 esisteva per impedire, e sarebbe
    * credibile — che è la parte peggiore.
    *
    * Attraversa il confine perché la pagina lo mostra accanto al campo, e non è
@@ -501,12 +562,31 @@ export interface ComuneSelezionabile {
 }
 
 /**
+ * Il collatore, costruito una volta e con la lingua dichiarata.
+ *
+ * ⚠️ Era `localeCompare` per confronto, e sono due difetti in uno. Il primo è
+ * che senza collatore esplicito l'ordine dipende da come è configurato il
+ * runtime — sul secondo confronto la lingua non era nemmeno indicata — cioè un
+ * comportamento visibile all'utente deciso dall'ambiente invece che da noi. È
+ * la stessa classe del raggruppamento delle migliaia, chiusa con
+ * `useGrouping: 'always'`.
+ *
+ * Il secondo è il costo: questo `sort` sta a livello di modulo, quindi gira a
+ * ogni avvio di processo, e su serverless gli avvii freddi sono la norma.
+ * Misurato su 7.897 voci: 49 ms contro 6, con ordine identico.
+ *
+ * Nessuna opzione oltre alla lingua: `sensitivity` o `ignorePunctuation`
+ * cambierebbero l'ordine rispetto a oggi, e qui si vuole lo stesso di prima.
+ */
+const collatore = new Intl.Collator('it')
+
+/**
  * Ordinato per nome, che è l'unico ordine consultabile in un elenco a ottomila
  * voci: il JSON resta ordinato per codice catastale, perché lì l'ordine serve a
  * rendere leggibili i diff fra due import, non a farsi scorrere da qualcuno.
  */
 const selezionabili: readonly ComuneSelezionabile[] = [...catalogo]
-  .sort((a, b) => a.nome.localeCompare(b.nome, 'it') || a.provincia.localeCompare(b.provincia))
+  .sort((a, b) => collatore.compare(a.nome, b.nome) || collatore.compare(a.provincia, b.provincia))
   .map((c) => {
     const identita = {
       codiceCatastale: c.codiceCatastale,
@@ -524,9 +604,9 @@ export const comuniSelezionabili = (): readonly ComuneSelezionabile[] => selezio
 /**
  * L'unica voce dell'elenco che entra nel documento — D-058.
  *
- * ⚠️ **È la condizione perché il caricamento differito non sia un
- * peggioramento.** Il campo deve restare leggibile mentre l'elenco arriva, e
- * per esserlo gli serve il comune scelto **per intero**: un codice catastale da
+ * ⚠️ È la condizione perché il caricamento differito non sia un
+ * peggioramento. Il campo deve restare leggibile mentre l'elenco arriva, e
+ * per esserlo gli serve il comune scelto per intero: un codice catastale da
  * solo mostrerebbe `F205` invece di *Milano (MI)*, o un campo vuoto. Sono
  * quattro campi contro 7.897 voci.
  */
@@ -537,7 +617,7 @@ export const comuneIniziale = (): ComuneSelezionabile => {
 }
 
 /**
- * I numeri della copertura, **ricalcolati dall'import** e non scritti a mano.
+ * I numeri della copertura, ricalcolati dall'import e non scritti a mano.
  *
  * D-054: «*Copertura Italia intera* va detta con il numero: tutti i comuni
  * risolti, di cui una quota senza addizionale comunale applicabile e due senza
@@ -548,5 +628,13 @@ export const coperturaComuni = {
   calcolabili: catalogo.filter((c) => c.stato === 'calcolabile').length,
   senzaAddizionaleComunale: datiComuni.conteggi.nonIstituito,
   nonCalcolabili: catalogo.filter((c) => c.stato === 'nonCalcolabile').length,
+  /**
+   * Gli enti impositori regionali, contati sul prospetto e non scritti a
+   * mano (D-070). Sono ventuno perché le due Province autonome deliberano
+   * separatamente e il Trentino-Alto Adige non compare come ente: è
+   * esattamente il genere di numero che, riscritto in una pagina di prosa,
+   * diventa falso al primo cambio del dataset senza che nessuno se ne accorga.
+   */
+  entiRegionali: datiRegioni.enti.length,
   estrattoIl: datiComuni.provenienza.estrattoIl,
 } as const
