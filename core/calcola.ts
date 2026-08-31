@@ -26,6 +26,7 @@ import {
   type Assunzione,
   type AssunzioneDichiarata,
   type CondizioneAssunzione,
+  type DetrazioneLocale,
   type EnteRisolto,
   type EntiRisolti,
   type Esito,
@@ -39,6 +40,7 @@ import {
   type Lingua,
   type Mensilita,
   type ParametriComunali,
+  type Parametro,
   type Passo,
   type Regime,
   type Risultato,
@@ -194,9 +196,52 @@ export const trovaFascia = <T extends { readonly redditoDa: number; readonly red
  */
 export const valutaFormula = (formula: FormulaDetrazione, reddito: number, troncamento?: number): number => {
   if (formula.forma === 'costante') return formula.importo
-  const rapporto = (formula.riferimento - reddito) / formula.ampiezza
+
+  /*
+   * ⚠️ Le due varianti differiscono nel solo verso del rapporto, e il tetto
+   * appartiene alla sola crescente. Tenerle in un ramo unico con il segno
+   * girato sarebbe più corto e meno leggibile: la decrescente misura *quanto
+   * manca* al riferimento, la crescente *quanto lo si è superato*, e sono due
+   * cose che le norme dicono in due modi diversi.
+   */
+  const rapporto =
+    formula.forma === 'lineare-crescente'
+      ? (reddito - formula.riferimento) / formula.ampiezza
+      : (formula.riferimento - reddito) / formula.ampiezza
   const usato = troncamento === undefined ? rapporto : tronca(rapporto, troncamento)
-  return formula.base + formula.quota * usato
+  const valore = formula.base + formula.quota * usato
+
+  if (formula.forma !== 'lineare-crescente' || formula.massimo === null) return valore
+  return Math.min(valore, formula.massimo)
+}
+
+/**
+ * Il parametro del passo delle detrazioni regionali.
+ *
+ * ⚠️ Con più detrazioni cumulate non c'è un parametro: l'importo complessivo
+ * è una somma, e nessuna legge la fissa. Con una sola, la forma del parametro
+ * segue la forma della detrazione — un importo se l'ente ne fissa uno, la
+ * formula se la fa variare col reddito (D-026: il passo cita la regola, il
+ * parametro cita il numero che la norma scrive).
+ */
+const parametroDetrazioneLocale = (
+  spettanti: readonly DetrazioneLocale[],
+  reddito: number,
+  prosa: Prosa,
+): Parametro | undefined => {
+  if (spettanti.length !== 1) return undefined
+  const d = spettanti[0]!
+  if (d.formula.forma === 'costante') {
+    return { tipo: 'importo', valore: d.formula.importo, fonte: d.fonte }
+  }
+  const valore = valutaFormula(d.formula, reddito)
+  const grezzo = d.formula.base + d.formula.quota * ((reddito - d.formula.riferimento) / d.formula.ampiezza)
+  /* Il tetto si mostra solo quando morde: altrimenti sarebbe rumore. */
+  const applicata =
+    d.formula.forma === 'lineare-crescente' && d.formula.massimo !== null && grezzo > d.formula.massimo
+      ? `${prosa.f(grezzo)} → ${prosa.f(valore)}`
+      : `${prosa.f(valore)}`
+  return { tipo: 'formula', espressione: d.formula.espressione, applicata, fonte: d.fonte }
 }
 
 /** Descrive una forma di aliquota in linguaggio da mostrare. */
@@ -252,6 +297,8 @@ const assunzioneApplicabile = (
       return true
     case 'ral-supera':
       return ral > condizione.soglia.valore
+    case 'ral-sotto':
+      return ral < condizione.soglia.valore
     case 'contratto-diverso-da':
       return input.tipoContratto !== condizione.contratto
     case 'ente-regionale-e':
@@ -902,10 +949,27 @@ export function calcolaNetto(
        *
        * Sono cumulabili: un ente può prevederne più d'una sulla stessa fascia.
        */
+      /*
+       * ⚠️ **Estremo inferiore incluso, e non è la convenzione di
+       * `trovaFascia`.** Gli atti regionali non usano gli operatori del TUIR:
+       * la l.r. Umbria 2/2025 art. 1 c. 3 scrive *«compreso tra 28.001,00 e
+       * 50.000,00 euro»*, e il Lazio ha la stessa forma. Con l'estremo escluso
+       * il motore concedeva la detrazione a 28.000,50 — dentro una micro-fascia
+       * di 99 centesimi in cui la legge non la dà.
+       *
+       * Il numero nel dato è quello che l'atto scrive, 28.001, non 28.000: se
+       * la banda si spostasse, a cambiare sarebbe il dato e non questa riga.
+       */
       const spettanti = regionale.parametri.detrazioni.filter(
-        (d) => rc > d.redditoDa && (d.redditoA === null || rc <= d.redditoA),
+        (d) => rc >= d.redditoDa && (d.redditoA === null || rc <= d.redditoA),
       )
-      const dovuta = spettanti.reduce((tot, d) => tot + d.importo, 0)
+      /*
+       * ⚠️ La detrazione può variare col reddito, e da qui passa Bolzano:
+       * `valutaFormula` copre sia l'importo fisso — variante `costante` — sia
+       * la formula. Sommare `d.importo` non è più possibile, ed è la ragione
+       * per cui il tipo è cambiato.
+       */
+      const dovuta = spettanti.reduce((tot, d) => tot + valutaFormula(d.formula, rc), 0)
       const usata = Math.min(dovuta, lorda)
       const netta = lorda - usata
 
@@ -934,10 +998,7 @@ export function calcolaNetto(
            * Con più detrazioni cumulate non esiste un parametro, e il passo
            * non ne porta: l'importo complessivo si legge dall'esito.
            */
-          parametro:
-            spettanti.length === 1
-              ? { tipo: 'importo', valore: spettanti[0].importo, fonte: spettanti[0].fonte }
-              : undefined,
+          parametro: parametroDetrazioneLocale(spettanti, rc, prosa),
           esito: esitoNeutro(lorda, netta),
         })
       }

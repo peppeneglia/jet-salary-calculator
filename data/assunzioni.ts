@@ -69,53 +69,53 @@ const massimaleContributivo: Fonte = {
 }
 
 /**
- * [S-015] Il limite che riguarda un solo ente impositore.
+ * [S-017] Il minimale, cioè il pavimento della base contributiva.
  *
- * Il valore lo fissa una legge provinciale, che il prospetto MEF espone nella
- * colonna `NORME`; la riserva sul meccanismo è quella di D-059, e sta sulla
- * `Fonte` dei parametri regionali.
+ * ⚠️ **Fino al 31/08/2026 il perimetro dichiarava il tetto e taceva sul
+ * pavimento.** S-002 avvisa chi supera il massimale; sotto il minimale non
+ * c'era nulla, e il verso dell'errore è quello pericoloso — contributi
+ * sottostimati, quindi netto mostrato più alto del reale.
  *
- * ⚠️ Erano due: S-016 è caduta con l'attuazione di D-064.
+ * I pavimenti sono **due**, entrambi citati dalla circolare INPS 6/2026 §1:
+ * il **minimo contrattuale** dell'art. 1 c. 1 del D.L. 338/1989 — che vincola
+ * *«anche i datori di lavoro non aderenti, neppure di fatto»* alla disciplina
+ * collettiva — e il **minimale di retribuzione giornaliera** dell'art. 7 c. 1
+ * del D.L. 463/1983, che non può scendere sotto il 9,50% del trattamento
+ * minimo FPLD. Qui si cita il secondo, perché è l'unico con un valore
+ * nazionale: il primo dipende dal CCNL applicato, che l'app non conosce.
  */
-const prospettoRegionale: Fonte = {
-  atto: 'MEF, Dipartimento delle Finanze — prospetto addizionale regionale IRPEF 2026',
-  consultataIl: '2026-08-28',
-  provenienza: 'importata',
-  estrattoIl: '2026-08-28',
+const minimaleContributivo: Fonte = {
+  atto: 'D.L. 12/09/1983 n. 463, conv. dalla L. 11/11/1983 n. 638, come mod. dall’art. 1 c. 2 del D.L. 09/10/1989 n. 338',
+  riferimento: 'art. 7 c. 1 secondo periodo — 9,50% del trattamento minimo FPLD; per il 2026 58,13 € al giorno (INPS circ. 6/2026 §1)',
+  url: 'https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legge:1983-09-12;463~art7',
+  consultataIl: '2026-08-31',
+  provenienza: 'verificata',
 }
 
+/*
+ * ⚠️ **S-015 non è più qui, ed è una decisione di prodotto, non una
+ * dimenticanza.**
+ *
+ * La voce diceva che a Bolzano, sopra i 50.000 euro di imponibile, esiste una
+ * seconda detrazione dall'addizionale regionale che il motore non applica.
+ * Era vera, ed era **l'unica voce dell'elenco che riguardasse un solo ente
+ * impositore su ventuno**: su una pagina che dichiara i confini del calcolo a
+ * chiunque la apra, una riga che parla di una provincia sola sta accanto a
+ * quattordici righe che parlano di tutti.
+ *
+ * ⚠️ E soprattutto: se una cosa si può applicare, va applicata invece che
+ * dichiarata. La detrazione altoatesina è `125 × (reddito − 50.000) / 25.000`
+ * con un massimo di 125, cioè una formula continua, mentre
+ * `DetrazioneLocale` esprime un importo fisso entro una banda. **Il lavoro da
+ * fare non è scriverne il limite: è estendere il tipo**, come D-064 ha già
+ * fatto per la deduzione trentina — che infatti oggi si calcola, e la cui
+ * semplificazione S-016 è caduta insieme.
+ *
+ * Finché il tipo non la esprime, resta un caso noto della documentazione di
+ * progetto, non una riga in pagina.
+ */
+
 export const assunzioni: readonly AssunzioneDichiarata[] = [
-  {
-    /*
-     * ⚠️ Vale solo per chi ha Bolzano come ente impositore. La seconda
-     * detrazione altoatesina è `125 × (reddito − 50.000) / 25.000`, con un
-     * massimo di 125: una formula continua, e `DetrazioneLocale` esprime un
-     * importo fisso entro una banda. D-061 ha modellato la prima detrazione,
-     * non questa.
-     */
-    condizione: { tipo: 'ente-regionale-e', nome: 'Provincia autonoma di Bolzano' },
-    assunzione: {
-      id: 'S-015',
-      testo: {
-        it: 'A Bolzano, sopra i 50.000 euro di imponibile, spetta una seconda detrazione dall’addizionale regionale che qui non applichiamo: cresce con il reddito e arriva a 125 euro. Chi vi ha diritto paga meno addizionale di quella che vedi, quindi il suo netto è più alto.',
-        en: 'In Bolzano, above 50,000 euro of taxable income, a second credit against the regional addizionale is due that we do not apply here: it grows with income and reaches 125 euro. Anyone entitled to it pays less than you see, so their net pay is higher.',
-      },
-      direzione: 'netto-reale-piu-alto',
-      collocazione: 'blocco-semplificazioni',
-      fonte: prospettoRegionale,
-    },
-  },
-  /*
-   * ⚠️ S-016 non è più qui, e la sua assenza è il segno che D-064 è stata
-   * attuata. La voce dichiarava che la deduzione trentina non veniva
-   * applicata: adesso lo è, il campo `deduzione` esiste in `ParametriRegionali`
-   * e il motore la calcola. Una semplificazione che sopravvive alla propria
-   * chiusura è peggio di una mai scritta — dice al lettore che il numero è più
-   * basso del vero quando non lo è più.
-   *
-   * S-015 resta, perché la seconda detrazione di Bolzano è ancora fuori: quella
-   * è una formula continua, e il tipo esprime importi fissi entro una banda.
-   */
   {
     condizione: { tipo: 'sempre' },
     assunzione: {
@@ -142,6 +142,35 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
       direzione: 'netto-reale-piu-alto',
       collocazione: 'accanto-al-numero',
       fonte: massimaleContributivo,
+    },
+  },
+  {
+    /*
+     * ⚠️ **La soglia è una soglia di visualizzazione, non un parametro del
+     * calcolo, e va letta sapendo com'è costruita.**
+     *
+     * 18.136,56 = **58,13 × 312**. Il 58,13 è citato: lo fissa la circolare
+     * INPS 6/2026 §1 come 9,50% del trattamento minimo FPLD (611,85 €). Il
+     * **312 no**: è la convenzione delle giornate retribuite per il lavoro
+     * mensilizzato — 26 al mese per dodici — e nella circolare non compare,
+     * perché il minimale è **giornaliero** e la legge non ne dà un annuale.
+     *
+     * Serve a decidere *a chi mostrare la voce*, non a calcolare nulla: chi
+     * ha lavorato meno di un anno sta sotto la soglia senza che il suo netto
+     * sia sbagliato, e per questo il testo dice «se il rapporto copre l'anno».
+     * Se un giorno l'app chiedesse le giornate, questa diventerebbe un vero
+     * parametro e andrebbe rifatta.
+     */
+    condizione: { tipo: 'ral-sotto', soglia: { valore: euro(18_136.56), fonte: minimaleContributivo } },
+    assunzione: {
+      id: 'S-017',
+      testo: {
+        it: 'Non applichiamo il minimo di legge sui contributi. I contributi vanno calcolati su almeno 58,13 euro per ogni giornata retribuita, anche quando la paga effettiva è più bassa. Non sappiamo quante giornate hai lavorato, quindi abbiamo usato il tuo lordo così com’è: se è basso perché il rapporto copre tutto l’anno, i contributi reali sono più alti e il tuo netto è più basso di quello che vedi.',
+        en: 'We do not apply the statutory floor on contributions. Contributions must be computed on at least 58.13 euros for every paid day, even when actual pay is lower. We do not know how many days you worked, so we have used your gross figure as it stands: if it is low because the contract runs for the whole year, your real contributions are higher and your take-home pay is lower than what you see here.',
+      },
+      direzione: 'netto-reale-piu-basso',
+      collocazione: 'accanto-al-numero',
+      fonte: minimaleContributivo,
     },
   },
   {
@@ -255,43 +284,30 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
       collocazione: 'blocco-semplificazioni',
     },
   },
-  {
-    condizione: { tipo: 'sempre' },
-    assunzione: {
-      id: 'S-011',
-      /*
-       * ⚠️ **Questa voce diceva un'altra cosa, e la diceva male.** Recitava
-       * *«Milano e Lombardia le abbiamo controllate una per una; per gli altri
-       * comuni ci fidiamo dell'elenco»*, e aveva due difetti indipendenti.
-       *
-       * Il primo è di fatto: **Milano non è stata controllata una per una.**
-       * Dal 30/08 arriva dall'import come gli altri 7.896, e già prima le due
-       * `Fonte` scritte a mano portavano `provenienza: 'importata'`. La frase
-       * rivendicava una verifica che non era stata fatta.
-       *
-       * Il secondo è di sostanza, ed è quello che ha portato alla riscrittura:
-       * *ci fidiamo dell'elenco* presentava l'elenco del Dipartimento delle
-       * Finanze come un ripiego. **È l'elenco ufficiale**, quello su cui i
-       * sostituti d'imposta calcolano le ritenute: non aver confrontato ogni
-       * riga con la delibera del singolo comune è una verifica in più che non
-       * si è fatta, non un'incertezza sul dato.
-       *
-       * ⚠️ Quello che resta è la sola limitazione vera, ed è di tempo: gli
-       * elenchi generali del MEF si aggiornano di giorno in giorno e non
-       * portano un numero di versione, quindi l'unico riferimento è la data di
-       * estrazione — che è anche la ragione per cui quella data vive dentro il
-       * dato (D-005). La voce resta `S-xxx` perché quella limitazione c'è.
-       *
-       * ⚠️ L'emendamento a S-011 e a D-005 lo scrive l'autore, non il codice.
-       */
-      testo: {
-        it: 'Le aliquote di Regione e Comune vengono dagli elenchi ufficiali del Ministero dell\'Economia e delle Finanze, alla data di estrazione indicata in pagina. Sono gli stessi elenchi su cui si calcolano le ritenute in busta paga. Se un ente ha deliberato dopo quella data, il tuo numero può essere cambiato.',
-        en: 'The regional and municipal rates come from the official lists published by the Italian Ministry of Economy and Finance, as at the extraction date shown on the page. They are the same lists payroll withholding is computed on. If an authority has passed a new rate since that date, your figure may have moved.',
-      },
-      direzione: 'nessuna',
-      collocazione: 'blocco-semplificazioni',
-    },
-  },
+  /*
+   * ⚠️ **S-011 non è più qui, e a farla cadere è stato il lavoro sulle
+   * fonti.**
+   *
+   * Diceva che le aliquote di Regione e Comune vengono dagli elenchi
+   * ministeriali, alla data di estrazione, e che un ente deliberando dopo
+   * quella data può aver cambiato il numero. Aveva senso finché il prospetto
+   * MEF era **l'unica** cosa che si potesse citare per il livello regionale.
+   *
+   * Da quando gli atti degli enti sono stati reperiti e letti uno per uno,
+   * quella citazione non è più il ripiego di prima: diciannove enti su
+   * ventuno portano ora la propria legge regionale, con articolo e comma, e
+   * per loro la data di estrazione dell'elenco non è più il solo riferimento
+   * disponibile. Tenere una voce che dichiara come limite ciò che nel
+   * frattempo è stato chiuso è il difetto che S-016 aveva già mostrato: una
+   * semplificazione che sopravvive alla propria chiusura dice al lettore che
+   * il numero è meno solido di quanto sia.
+   *
+   * Quello che resta vero — gli elenchi si aggiornano e un ente può deliberare
+   * dopo — non sparisce dal prodotto: è la data di estrazione, che continua a
+   * viaggiare **dentro il dato** e a comparire accanto a ogni citazione
+   * importata (D-005). Lì qualifica il numero che sta accanto, invece di
+   * qualificare l'intero calcolatore.
+   */
   {
     condizione: { tipo: 'sempre' },
     assunzione: {

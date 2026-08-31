@@ -328,8 +328,8 @@ const regioneConDetrazioni: EnteRisolto<ParametriRegionali> = {
   parametri: {
     aliquota: { forma: 'unica', aliquota: aliquota(1.5) },
     detrazioni: [
-      { importo: euro(150), redditoDa: euro(10_000), redditoA: euro(20_000), fonte },
-      { importo: euro(60), redditoDa: euro(20_000), redditoA: null, fonte },
+      { redditoDa: euro(10_000), redditoA: euro(20_000), formula: { forma: 'costante', importo: euro(150) }, fonte },
+      { redditoDa: euro(20_000), redditoA: null, formula: { forma: 'costante', importo: euro(60) }, fonte },
     ],
     sogliaEsenzione: null,
     deduzione: null,
@@ -380,7 +380,7 @@ const regioneDetrazioneCapiente: EnteRisolto<ParametriRegionali> = {
   fonte,
   parametri: {
     aliquota: { forma: 'unica', aliquota: aliquota(1) },
-    detrazioni: [{ importo: euro(5_000), redditoDa: euro(0), redditoA: null, fonte }],
+    detrazioni: [{ redditoDa: euro(0), redditoA: null, formula: { forma: 'costante', importo: euro(5_000) }, fonte }],
     sogliaEsenzione: null,
     deduzione: null,
   },

@@ -472,6 +472,39 @@ export type FormulaDetrazione =
       readonly ampiezza: Euro
       readonly espressione: string
     }
+  /**
+   * `base + quota × (reddito − riferimento) / ampiezza`, con un tetto.
+   *
+   * ⚠️ **Non è la variante decrescente con i segni girati, e va detto perché
+   * il registro affermava il contrario.** La tabella delle decisioni aperte
+   * sosteneva che per la seconda detrazione di Bolzano bastasse «riusare
+   * `lineare-decrescente`, riuso di un tipo, non invenzione». È falso: quella
+   * variante calcola `(riferimento − reddito)`, che **decresce** al crescere
+   * del reddito, e nessuna scelta dei suoi quattro parametri la rende
+   * crescente. Serviva una variante nuova.
+   *
+   * ⚠️ E `massimo` non è un abbellimento. Senza tetto la formula continuerebbe
+   * a crescere oltre la banda in cui la norma la fa vivere: la l.p. Bolzano
+   * scrive *«massimo 125,00 euro»*, e quel numero è parte della regola, non
+   * un limite implementativo. `null` dove la norma non ne pone uno.
+   *
+   * **Perché la provincia la scrive così.** Sopra 50.000 euro l'aliquota passa
+   * da 1,23% a 1,73%, e il sovrapprelievo sulla banda vale
+   * `0,50% × (RI − 50.000)` — che a 75.000 fa esattamente 125. La detrazione
+   * **annulla il gradino** fino a 75.000 e poi si ferma: l'aliquota non sale
+   * con uno scalino, entra gradualmente. Un motore che ignori questa
+   * detrazione disegna una spezzata dove la norma ha una rampa.
+   */
+  | {
+      readonly forma: 'lineare-crescente'
+      readonly base: Euro
+      readonly quota: Euro
+      readonly riferimento: Euro
+      readonly ampiezza: Euro
+      /** Tetto della formula. `null` quando la norma non ne pone uno. */
+      readonly massimo: Euro | null
+      readonly espressione: string
+    }
 
 /** La detrazione è una funzione a tratti, non una curva liscia. */
 export interface FasciaDetrazione {
@@ -741,10 +774,37 @@ export interface DeduzioneLocale {
   readonly fonte: Fonte
 }
 
+/**
+ * Una detrazione dall'addizionale regionale legata al solo reddito (D-061).
+ *
+ * ⚠️ **Porta una `FormulaDetrazione` e non un importo**, dal 31/08/2026.
+ * L'importo fisso è ora la variante `costante`, quindi il caso comune non si
+ * complica: quello che cambia è che un ente può far *variare* la detrazione
+ * col reddito, e la l.p. Bolzano lo fa. Il tipo riusa il vocabolario già in
+ * uso per l'art. 13 e per il cuneo invece di inventarne un secondo.
+ *
+ * ⚠️ **`redditoDa` è l'estremo inferiore INCLUSO, e qui il progetto si
+ * discosta dalla convenzione di `trovaFascia`.** Non è una svista: gli atti
+ * regionali usano operatori diversi da quelli del TUIR. La l.r. Umbria 2/2025
+ * art. 1 c. 3 scrive *«compreso tra 28.001,00 e 50.000,00 euro»*, e la l.r.
+ * Lazio 20/2025 art. 2 c. 3 ha la stessa forma con 60 euro: il primo valore
+ * della banda **spetta**. Con l'estremo escluso il motore concedeva la
+ * detrazione anche a 28.000,50, cioè in una micro-fascia larga 99 centesimi
+ * in cui la legge non la dà.
+ *
+ * ⚠️ **Limite dichiarato.** Dove un atto scrive invece *«superiore a X»* —
+ * è il caso della seconda detrazione di Bolzano, che parte oltre 50.000 — il
+ * dato porta comunque X e l'estremo incluso non produce differenza, perché in
+ * quel punto la formula vale zero. Le due letture coincidono **per il valore,
+ * non per il diritto**: se un ente scrivesse un giorno «superiore a X» con un
+ * importo non nullo in X, servirebbe un operatore per detrazione.
+ */
 export interface DetrazioneLocale {
-  readonly importo: Euro
+  /** Estremo inferiore **incluso**, come lo scrive l'atto dell'ente. */
   readonly redditoDa: Euro
+  /** Estremo superiore incluso. `null` = la banda non ha tetto di reddito. */
   readonly redditoA: Euro | null
+  readonly formula: FormulaDetrazione
   readonly fonte: Fonte
 }
 
@@ -927,6 +987,22 @@ export interface Passo {
 export type CondizioneAssunzione =
   | { readonly tipo: 'sempre' }
   | { readonly tipo: 'ral-supera'; readonly soglia: Citato<Euro> }
+  /**
+   * Lo specchio esatto di `ral-supera`, e nasce dalla stessa asimmetria che
+   * per due giorni ha reso l'app muta su metà del problema.
+   *
+   * ⚠️ Il perimetro dichiarava il **tetto** della base contributiva (S-002, il
+   * massimale) e taceva sul **pavimento**. I pavimenti sono due, entrambi di
+   * legge: il minimo contrattuale dell'art. 1 c. 1 del D.L. 338/1989 e il
+   * minimale di retribuzione giornaliera dell'art. 7 c. 1 del D.L. 463/1983.
+   * Sotto quella soglia il motore trattiene meno contributi del dovuto, quindi
+   * mostra un netto **più alto** del reale — il verso pericoloso.
+   *
+   * Non introduce aritmetica nuova: è il confronto di `ral-supera` col segno
+   * girato, e serve perché una voce vera solo per le RAL basse non deve
+   * comparire a chi ha una RAL alta.
+   */
+  | { readonly tipo: 'ral-sotto'; readonly soglia: Citato<Euro> }
   | { readonly tipo: 'contratto-diverso-da'; readonly contratto: TipoContratto }
   /**
    * Vale solo per chi ha un dato ente impositore regionale.
