@@ -28,10 +28,10 @@ I valori attesi sono quelli già misurati in *Fonti* §15 e §15.b sugli stessi 
 | comuni sopra 0,8 nell'annuale 2025 | 12 | 12 | OK |
 | massimo comunale nell'annuale 2025 | 1.2 | 1.2 | OK |
 | enti regionali | 21 | 21 | OK |
-| enti regionali sopra 1,4 | 15 | 15 | OK |
+| enti regionali sopra il tetto di 3,33 | 1 | 1 | OK |
 | righe nel prospetto regionale | 71 | 71 | OK |
 | massimo regionale nel file | 3.63 | 3.63 | OK |
-| massimo regionale dopo la selezione D-053 | 3.33 | 3.33 | OK |
+| massimo regionale dopo la selezione D-080 | 3.63 | 3.63 | OK |
 | MILANO — stato | ereditato | ereditato | OK |
 | MILANO — forma aliquota | unica | unica | OK |
 | MILANO — aliquota | 0.8 | 0.8 | OK |
@@ -93,9 +93,10 @@ La stringa *detrazion* compare nel testo libero di **otto enti**. Di questi, **3
 
 | Ente | Importo | Banda di reddito imponibile | Forma |
 | --- | --- | --- | --- |
-| PROVINCIA AUTONOMA DI BOLZANO | 430.5 € | da 0 a 90000 | **cliff** |
-| REGIONE LAZIO | 60 € | da 28000 a 30000 | **cliff** |
-| REGIONE UMBRIA | 150 € | da 28000 a 50000 | **cliff** |
+| PROVINCIA AUTONOMA DI BOLZANO | undefined € | da 0 a 90000 | **cliff** |
+| PROVINCIA AUTONOMA DI BOLZANO | undefined € | da 50000 a — | **cliff** |
+| REGIONE LAZIO | undefined € | da 28001 a 30000 | **cliff** |
+| REGIONE UMBRIA | undefined € | da 28001 a 50000 | **cliff** |
 
 **Sono tutte a cliff**: importo fisso entro una banda, quindi un salto secco ai confini. Producono discontinuità nuove per ciascun ente che le prevede, e vanno nello stesso inventario a runtime.
 
@@ -167,7 +168,7 @@ Codice, nome, provincia e calcolabilità per 7897 voci — **nessuna aliquota, n
 
 ## Anomalie
 
-Totale: **1488** in 16 categorie.
+Totale: **1488** in 15 categorie.
 
 | Categoria | Occorrenze |
 | --- | --- |
@@ -176,15 +177,14 @@ Totale: **1488** in 16 categorie.
 | `esenzione-2025-rinviata-a-nota` | 112 |
 | `esenzione-condizionata` | 42 |
 | `detrazione-regionale-per-carichi` | 6 |
+| `detrazione-regionale-applicata` | 4 |
 | `aliquota-per-fascia-intera` | 3 |
-| `detrazione-regionale-applicata` | 3 |
 | `ricaduta-sul-fallback` | 3 |
-| `secondo-provvedimento-scartato` | 2 |
+| `provvedimento-superato` | 2 |
 | `fascia-duplicata` | 2 |
 | `esenzione-2025-non-normalizzabile` | 1 |
 | `esenzione-regionale-applicata` | 1 |
 | `deduzione-regionale-applicata` | 1 |
-| `detrazione-regionale-non-modellata` | 1 |
 | `confini-fuori-dai-due-set` | 1 |
 | `assente-dall-annuale-2025` | 1 |
 
@@ -220,15 +220,12 @@ La fusione di comuni è un istituto con disciplina propria, e verosimilmente pre
 
 - **PROVINCIA AUTONOMA DI TRENTO** — deduzione di 30000 euro dalla base, per reddito imponibile fino a 30000 — abbatte la base, non l'imposta, ed è un meccanismo distinto dalla soglia di esenzione e dalle detrazioni
 
-### `detrazione-regionale-applicata` — 3
+### `detrazione-regionale-applicata` — 4
 
-- **REGIONE UMBRIA** — 150 euro per reddito imponibile fra 28000 e 50000 — a cliff, letta dal testo e citata sulla legge regionale
-- **REGIONE LAZIO** — 60 euro per reddito imponibile fra 28000 e 30000 — a cliff, letta dal testo e citata sulla legge regionale
-- **PROVINCIA AUTONOMA DI BOLZANO** — 430.5 euro per reddito imponibile fra 0 e 90000 — a cliff, letta dal testo e citata sulla legge regionale
-
-### `detrazione-regionale-non-modellata` — 1
-
-- **PROVINCIA AUTONOMA DI BOLZANO** — è una formula lineare crescente, e DetrazioneLocale esprime solo un importo fisso entro una banda di reddito; massimo 125 euro, e dove spetta l'addizionale mostrata resta più alta del reale di al più quella cifra
+- **REGIONE UMBRIA** — 150 euro per reddito imponibile fra 28001 e 50000 — estremo inferiore incluso, letta dal testo e citata sulla legge regionale
+- **REGIONE LAZIO** — 60 euro per reddito imponibile fra 28001 e 30000 — estremo inferiore incluso, letta dal testo e citata sulla legge regionale
+- **PROVINCIA AUTONOMA DI BOLZANO** — 430.5 euro per reddito imponibile fra 0 e 90000 — estremo inferiore incluso, letta dal testo e citata sulla legge regionale
+- **PROVINCIA AUTONOMA DI BOLZANO** — 125,00 × (RI − 50.000) / 25.000, massimo 125,00 per reddito imponibile fra 50000 e oltre — estremo inferiore incluso, letta dal testo e citata sulla legge regionale
 
 ### `detrazione-regionale-per-carichi` — 6
 
@@ -553,16 +550,16 @@ La fusione di comuni è un istituto con disciplina propria, e verosimilmente pre
 - **A112** — AIRUNO: la fascia 15000→28000 compare due volte, con aliquote diverse
 - **A785** — BENTIVOGLIO: la fascia 15000→28000 compare due volte, con aliquote diverse
 
+### `provvedimento-superato` — 2
+
+- **REGIONE PUGLIA** — 2178 del 2026-01-28 superato da 2207 del 2026-05-29, che è più recente e si applica all'intero periodo d'imposta: le aliquote salgono (D-080)
+- **REGIONE MOLISE** — 2186 del 2026-01-29 superato da 2227 del 2026-06-19, che è più recente e si applica all'intero periodo d'imposta: le aliquote salgono (D-080)
+
 ### `ricaduta-sul-fallback` — 3
 
 - **A112** — AIRUNO: la riga 2026 non è utilizzabile, si applica l'anno precedente per il c. 752
 - **A785** — BENTIVOGLIO: la riga 2026 non è utilizzabile, si applica l'anno precedente per il c. 752
 - **E965** — MARNATE: la riga 2026 non è utilizzabile, si applica l'anno precedente per il c. 752
-
-### `secondo-provvedimento-scartato` — 2
-
-- **REGIONE PUGLIA** — 2207 del 2026-05-29 scartato: pubblicato dopo 2178 del 2026-01-28, e non è più favorevole
-- **REGIONE MOLISE** — 2227 del 2026-06-19 scartato: pubblicato dopo 2186 del 2026-01-29, e non è più favorevole
 
 ### `set-scaglioni-inferito` — 1171
 

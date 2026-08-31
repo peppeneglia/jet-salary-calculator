@@ -185,18 +185,62 @@ describe('nessun clamp, mai', () => {
     expect(Math.max(...sopra.map((c) => massimo(c.parametri!.aliquota)))).toBeCloseTo(1.2, 10)
   })
 
-  it('il tetto regionale di 1,4 è superato da 15 enti su 21', () => {
-    const sopra = datiRegioni.enti.filter((e) => massimo(e.aliquota) > 1.4)
-    expect(sopra).toHaveLength(15)
+  /*
+   * ⚠️ Anche questo test asseriva un fatto vero su un metro sbagliato: «il
+   * tetto regionale di 1,4 è superato da 15 enti su 21». I quindici c'erano
+   * davvero — ma 1,4 non è il tetto dell'addizionale regionale, e il test
+   * misurava una deroga che non esiste. Col metro giusto dell'art. 6 c. 1 del
+   * D.Lgs. 68/2011 (1,23 di base più 2,1 punti = 3,33) sopra il tetto resta
+   * un ente solo, e per una ragione che ha un nome.
+   */
+  it('il tetto regionale di 3,33 è superato dal solo Molise', () => {
+    const sopra = datiRegioni.enti.filter((e) => massimo(e.aliquota) > 3.33)
+    expect(sopra.map((e) => e.nome)).toEqual(['REGIONE MOLISE'])
     expect(datiRegioni.enti).toHaveLength(21)
   })
 
-  it('la selezione D-053 tiene il Molise a 3,33, non a 3,63', () => {
+  it('e il Molise non deroga: è l’automatismo dell’art. 6 c. 10', () => {
+    // Il +0,30 dell'art. 2 c. 86 della L. 191/2009 scatta da sé quando il piano
+    // di rientro manca gli obiettivi, e l'art. 6 c. 10 del D.Lgs. 68/2011 mette
+    // quegli automatismi fuori dai tetti. Il 3,63 non è un'aliquota deliberata.
     const molise = datiRegioni.enti.find((e) => e.nome === 'REGIONE MOLISE')
-    expect(massimo(molise!.aliquota)).toBeCloseTo(3.33, 10)
+    expect(molise!.norme).toMatch(/191\/2009/)
+    expect(massimo(molise!.aliquota)).toBeCloseTo(3.63, 10)
+  })
+
+  /*
+   * ⚠️ Questo test asseriva il contrario fino al 31/08/2026: «la selezione
+   * D-053 tiene il Molise a 3,33, non a 3,63». Non sorvegliava un difetto,
+   * lo **fotografava** — la selezione per data più antica scartava la
+   * rideterminazione commissariale che vale sull'intero periodo d'imposta, e
+   * il test la dichiarava corretta. È il caso in cui una regressione ben
+   * scritta protegge il comportamento sbagliato: l'unico modo di accorgersene
+   * era leggere l'atto, che è ciò che ha fatto D-080.
+   */
+  it('la selezione D-080 tiene il più recente, e il Molise arriva a 3,63', () => {
+    const molise = datiRegioni.enti.find((e) => e.nome === 'REGIONE MOLISE')
+    expect(massimo(molise!.aliquota)).toBeCloseTo(3.63, 10)
     expect(molise?.provvedimentiScartati).toHaveLength(1)
-    // Il provvedimento scartato è pubblicato dopo quello selezionato.
-    expect(molise!.provvedimentiScartati[0].dataPubblicazione > molise!.dataPubblicazione).toBe(true)
+    // Il superato è quello pubblicato PRIMA: si tiene l'ultimo dell'anno.
+    expect(molise!.provvedimentiScartati[0].dataPubblicazione < molise!.dataPubblicazione).toBe(true)
+  })
+
+  it('la Puglia prende le aliquote del decreto commissariale, non quelle di gennaio', () => {
+    // Decreto n. 3 del 28/05/2026 del Commissario ad acta, ex art. 1 c. 174
+    // della L. 311/2004: 1,33 · 2,13 · 3,23 · 3,33 in luogo di 1,33 · 1,43 ·
+    // 1,63 · 1,85. È la differenza che valeva fino a 739 euro di netto.
+    const puglia = datiRegioni.enti.find((e) => e.nome === 'REGIONE PUGLIA')
+    const aliquote = puglia!.aliquota.scaglioni!.map((s) => s.aliquota)
+    expect(aliquote).toEqual([1.33, 2.13, 3.23, 3.33])
+    expect(puglia!.provvedimentiScartati[0].dataPubblicazione < puglia!.dataPubblicazione).toBe(true)
+  })
+
+  it('nessun altro ente ha un secondo provvedimento nel 2026', () => {
+    // Il perimetro del difetto, letto dal dato: la regola di selezione morde
+    // su due enti soli, e se un domani ne comparisse un terzo questo test lo
+    // dice invece di lasciarlo passare in silenzio.
+    const conSecondo = datiRegioni.enti.filter((e) => (e.provvedimentiScartati ?? []).length > 0)
+    expect(conSecondo.map((e) => e.nome).sort()).toEqual(['REGIONE MOLISE', 'REGIONE PUGLIA'])
   })
 })
 
@@ -328,20 +372,76 @@ describe('l’aliquota regionale per fascia intera (D-062)', () => {
 
 
 describe('le detrazioni regionali (D-061)', () => {
-  it('tre enti su ventuno le hanno legate al solo reddito, e sono tutte a cliff', () => {
+  it('tre enti su ventuno le hanno legate al solo reddito', () => {
     const con = datiRegioni.enti.filter((e) => e.detrazioni.length > 0)
     expect(con.map((e) => e.nome).sort()).toEqual([
       'PROVINCIA AUTONOMA DI BOLZANO',
       'REGIONE LAZIO',
       'REGIONE UMBRIA',
     ])
-    // Cliff = importo fisso entro una banda, che è ciò che il tipo esprime.
+    /*
+     * ⚠️ **Non sono più tutte a cliff, e la riga che lo diceva è caduta il
+     * 31/08/2026.** Asseriva `typeof d.importo === 'number'` con il commento
+     * «cliff = importo fisso entro una banda, che è ciò che il tipo esprime»:
+     * era vera finché il tipo esprimeva solo quello, ed è diventata falsa
+     * quando la seconda detrazione di Bolzano è entrata. Una detrazione ora
+     * porta una **forma**, che può essere un importo o una formula.
+     */
     for (const e of con) {
       for (const d of e.detrazioni) {
-        expect(typeof d.importo).toBe('number')
+        expect(['costante', 'lineare-crescente']).toContain(d.formula.forma)
         expect(d.redditoA === null || d.redditoA > d.redditoDa).toBe(true)
       }
     }
+  })
+
+  /**
+   * La banda comincia dove l'atto la fa cominciare, e per Umbria e Lazio è
+   * **28.001** — non 28.000.
+   *
+   * ⚠️ Il numero nel dato è ciò che rende corretto l'operatore nel motore: il
+   * confronto è a estremo inferiore **incluso**, quindi 28.000 qui aprirebbe
+   * di nuovo la micro-fascia di 99 centesimi che la legge esclude. I due
+   * pezzi vanno letti insieme, ed è per questo che il test sta qui e non
+   * soltanto accanto al motore.
+   */
+  it('le bande di Umbria e Lazio cominciano a 28.001, come scrivono gli atti', () => {
+    for (const nome of ['REGIONE UMBRIA', 'REGIONE LAZIO']) {
+      const e = datiRegioni.enti.find((x) => x.nome === nome)!
+      expect(e.detrazioni.map((d) => d.redditoDa)).toEqual([28_001])
+    }
+  })
+
+  /**
+   * La seconda detrazione di Bolzano, modellata dal 31/08/2026.
+   *
+   * ⚠️ 125 è **lo 0,50% di 25.000**, cioè il salto di aliquota fra 1,23% e
+   * 1,73% moltiplicato per l'ampiezza della banda 50.000–75.000. Non è un
+   * importo scelto: è la misura esatta del gradino che la detrazione annulla.
+   */
+  it('Bolzano porta due detrazioni, e la seconda è una formula crescente con tetto', () => {
+    const e = datiRegioni.enti.find((x) => x.nome === 'PROVINCIA AUTONOMA DI BOLZANO')!
+    expect(e.detrazioni).toHaveLength(2)
+
+    const [fissa, formula] = e.detrazioni
+    expect(fissa.formula).toEqual({ forma: 'costante', importo: 430.5 })
+    expect(fissa.redditoA).toBe(90_000)
+
+    expect(formula.redditoDa).toBe(50_000)
+    expect(formula.redditoA).toBeNull()
+    /* Sull'oggetto intero e non campo per campo: un parametro che sparisse
+     * dal dato passerebbe inosservato a una serie di `toBe`. */
+    expect(formula.formula).toEqual({
+      forma: 'lineare-crescente',
+      base: 0,
+      quota: 125,
+      riferimento: 50_000,
+      ampiezza: 25_000,
+      massimo: 125,
+      espressione: '125,00 × (RI − 50.000) / 25.000, massimo 125,00',
+    })
+    // Il tetto è esattamente il gradino di aliquota sulla banda.
+    expect(0.005 * 25_000).toBe(125)
   })
 
   /**
@@ -364,19 +464,28 @@ describe('le detrazioni regionali (D-061)', () => {
   })
 
   /**
-   * ⚠️ Ciò che il modello non copre si dichiara accanto al numero, non solo
-   * nel rapporto di anomalie. E si dichiara con il verso: fa risultare
-   * l'addizionale più alta del reale, quindi il netto mostrato è più basso di
-   * quello vero. È l'informazione utile a chi legge; il motivo per cui non la
-   * calcoliamo non lo è (D-039).
+   * ⚠️ **Erano due voci per ente, e non ce n'è più nessuna.**
    *
-   * ⚠️ Erano due, ed è rimasta una. S-016 dichiarava la deduzione trentina
-   * come non applicata: D-064 l'ha implementata, quindi la voce deve essere
-   * sparita. Un'assunzione che sopravvive alla propria chiusura dice al lettore
-   * che il numero è più basso del vero quando non lo è più — ed è il motivo per
-   * cui questo test asserisce anche un'assenza.
+   * S-016 dichiarava la deduzione trentina come non applicata: D-064 l'ha
+   * implementata, quindi la voce è caduta. S-015 dichiarava la seconda
+   * detrazione di Bolzano, ed è caduta il 31/08 per una ragione diversa: era
+   * l'unica riga di `/cosa-non-copre` a riguardare **un ente su ventuno**, e
+   * su una pagina che dichiara i confini del calcolo a chiunque la apra
+   * quella è una nota fuori scala. Il caso resta aperto, ma il lavoro che gli
+   * spetta è estendere `DetrazioneLocale` a una formula continua, come D-064
+   * ha fatto per la deduzione, non scriverne il limite in pagina.
+   *
+   * Il test resta e cambia bersaglio: **asserisce due assenze**. Una
+   * semplificazione che sopravvive alla propria chiusura dice al lettore che il
+   * numero è più basso del vero quando non lo è più, ed è il difetto che
+   * questo test esiste per prendere.
+   *
+   * ⚠️ Il meccanismo delle condizioni per ente non è morto con l'ultima voce
+   * che lo usava: `ente-regionale-e` resta nel tipo e resta valutato in
+   * `calcolaNetto`. Oggi nessuna assunzione lo usa, e la prossima che ne avrà
+   * bisogno lo troverà funzionante.
    */
-  it('la voce fuori perimetro compare solo a chi riguarda, e quella chiusa non compare più', () => {
+  it('nessuna voce chiusa sopravvive nel catalogo delle assunzioni', () => {
     const assunzioniDi = (codice: string) => {
       const e = eseguiCalcolo({ ral: 60_000, codiceCatastale: codice, tipoContratto: 'indeterminato', mensilita: 13 })
       if (e.stato !== 'ok') throw new Error('ko')
@@ -387,20 +496,14 @@ describe('le detrazioni regionali (D-061)', () => {
     const trento = assunzioniDi('L378')
     const milano = assunzioniDi('F205')
 
-    expect(bolzano.map((a) => a.id)).toContain('S-015')
-
-    // A Milano no: direbbe a un lombardo una cosa che non lo riguarda, ed è la
-    // ragione per cui la condizione è per ente.
-    expect(milano.map((a) => a.id)).not.toContain('S-015')
-
-    // S-016 è chiusa da D-064: non deve comparire a nessuno, Trento compreso.
     for (const chi of [bolzano, trento, milano]) {
-      expect(chi.map((a) => a.id)).not.toContain('S-016')
-    }
-
-    // Il verso è quello: il netto vero è più alto di quello mostrato.
-    for (const a of bolzano.filter((x) => x.id === 'S-015')) {
-      expect(a.direzione).toBe('netto-reale-piu-alto')
+      const id = chi.map((a) => a.id)
+      // Chiusa da D-064, implementata: non deve comparire a nessuno.
+      expect(id).not.toContain('S-016')
+      // Tolta il 31/08 dalla pagina dei limiti.
+      expect(id).not.toContain('S-015')
+      // Caduta con la lettura degli atti regionali.
+      expect(id).not.toContain('S-011')
     }
   })
 

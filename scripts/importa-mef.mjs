@@ -30,15 +30,17 @@
  * … fino a …»* — quindi si applicano alla quota compresa nella fascia.
  *
  * 4. Nessun clamp, mai. Il tetto comunale di 0,8 è derogato (dissesto e
- * predissesto, che il file etichetta in `NOTE`); quello regionale di 1,4 lo è
- * da 15 enti su 21, fino al 3,63 del Molise. Un clamp corromperebbe quasi tutto
- * il centro-sud.
+ * predissesto, che il file etichetta in `NOTE`); quello regionale di 3,33
+ * (art. 6 c. 1 D.Lgs. 68/2011: base 1,23 più 2,1 punti) lo supera il solo
+ * Molise, a 3,63, per l'automatismo sanitario salvato dall'art. 6 c. 10.
  *
  * 5. Regionale: nessun fallback (D-053). Tutti e 21 gli enti hanno
- * pubblicato entro gennaio 2026. Per gli enti con due provvedimenti si prende
- * quello con `DATA PUBBLICAZIONE` più antica dell'anno — regola meccanica e
- * dichiarata come tale, perché la colonna `ANNO` vale 2026 su tutte le righe
- * e non discrimina. La mappatura è `comune → ente impositore`, non
+ * pubblicato entro gennaio 2026. Per i due enti con due provvedimenti —
+ * Puglia e Molise, gli unici nel file — si prende quello con
+ * `DATA PUBBLICAZIONE` più RECENTE dell'anno (D-080), perché una
+ * rideterminazione commissariale ex art. 1 c. 174 L. 311/2004 vale
+ * sull'intero periodo d'imposta anche se pubblicata a giugno. La colonna
+ * `ANNO` vale 2026 su tutte le righe e non discrimina. La mappatura è `comune → ente impositore`, non
  * `comune → regione`: Trento e Bolzano sono righe separate e il Trentino-Alto
  * Adige non esiste come ente impositore.
  */
@@ -672,9 +674,14 @@ const LETTURE_DAL_TESTO = {
     detrazioni: [
       {
         prova: "detrazione dall'addizionale regionale all'irpef pari a 150,00 euro",
-        importo: 150,
-        redditoDa: 28_000,
+        // ⚠️ 28.001 e non 28.000: la l.r. 2/2025 art. 1 c. 3 scrive «compreso
+        // tra 28.001,00 e 50.000,00 euro», e `redditoDa` è l'estremo incluso.
+        // Con 28.000 e l'estremo escluso la detrazione spettava anche a
+        // 28.000,50, dentro una micro-fascia di 99 centesimi che la legge
+        // esclude.
+        redditoDa: 28_001,
         redditoA: 50_000,
+        formula: { forma: 'costante', importo: 150 },
       },
     ],
   },
@@ -686,7 +693,13 @@ const LETTURE_DAL_TESTO = {
       nota: 'sotto 28.000 il testo fissa una sola aliquota per il soggetto; sopra si torna alla progressione pubblicata',
     },
     detrazioni: [
-      { prova: 'detrazione pari a 60,00 euro', importo: 60, redditoDa: 28_000, redditoA: 30_000 },
+      {
+        prova: 'detrazione pari a 60,00 euro',
+        // Stessa forma dell'Umbria: «compreso tra euro 28.001,00 e 30.000,00».
+        redditoDa: 28_001,
+        redditoA: 30_000,
+        formula: { forma: 'costante', importo: 60 },
+      },
     ],
   },
   'PROVINCIA AUTONOMA DI TRENTO': {
@@ -710,9 +723,35 @@ const LETTURE_DAL_TESTO = {
     detrazioni: [
       {
         prova: "non superiore a 90.000,00 euro spetta una detrazione d'imposta di 430,50 euro",
-        importo: 430.5,
         redditoDa: 0,
         redditoA: 90_000,
+        formula: { forma: 'costante', importo: 430.5 },
+      },
+      {
+        // ⚠️ La seconda detrazione di Bolzano, modellata dal 31/08/2026.
+        //
+        // Era dichiarata non modellabile perché `DetrazioneLocale` portava un
+        // importo fisso. Il tipo ora porta una `FormulaDetrazione`, e la
+        // variante `lineare-crescente` esprime questa forma — che la variante
+        // decrescente NON poteva esprimere, contrariamente a quanto la tabella
+        // delle decisioni aperte affermava.
+        //
+        // Sopra 50.000 euro l'aliquota passa da 1,23% a 1,73%: il
+        // sovrapprelievo sulla banda vale 0,50% × (RI − 50.000), che a 75.000
+        // fa esattamente 125. La detrazione annulla il gradino fino a 75.000 e
+        // poi si ferma al proprio tetto.
+        prova: "detrazione determinata dall'importo di 125,00 euro moltiplicato per il rapporto",
+        redditoDa: 50_000,
+        redditoA: null,
+        formula: {
+          forma: 'lineare-crescente',
+          base: 0,
+          quota: 125,
+          riferimento: 50_000,
+          ampiezza: 25_000,
+          massimo: 125,
+          espressione: '125,00 × (RI − 50.000) / 25.000, massimo 125,00',
+        },
       },
     ],
     // ⚠️ La seconda detrazione di Bolzano — «125,00 euro moltiplicato per il
@@ -720,13 +759,12 @@ const LETTURE_DAL_TESTO = {
     // è continua, non a cliff, e `DetrazioneLocale` non sa esprimere una
     // formula: ha un importo fisso entro una banda. Resta fuori, dichiarata.
     // L'effetto è al più 125 euro e va nella direzione che si conosce.
-    detrazioniNonModellate: [
-      {
-        prova: "detrazione determinata dall'importo di 125,00 euro moltiplicato per il rapporto",
-        perche: 'è una formula lineare crescente, e DetrazioneLocale esprime solo un importo fisso entro una banda di reddito',
-        massimo: 125,
-      },
-    ],
+    /*
+     * ⚠️ `detrazioniNonModellate` era qui e non c'è più: conteneva la seconda
+     * detrazione di Bolzano, che dal 31/08/2026 è modellata. Il campo resta
+     * previsto dall'import — serve il giorno in cui un ente deliberi qualcosa
+     * che il tipo non sa dire — ma oggi nessun ente ne ha una.
+     */
   },
 }
 
@@ -800,8 +838,22 @@ function leggiRegionale2026() {
 
   const enti = []
   for (const [ente, provvedimenti] of perEnte) {
+    // D-080 — il più RECENTE dell'anno d'imposta, non il più antico.
+    //
+    // La regola precedente (D-053) prendeva il primo pubblicato e si dichiarava
+    // «meccanica, non un criterio di efficacia». Su Puglia e Molise la
+    // distinzione mordeva: per entrambi un provvedimento di metà 2026 ha
+    // rideterminato le aliquote con effetto sull'intero periodo d'imposta, e la
+    // regola teneva quelle superate — sottostima fino a 739 euro in Puglia, con
+    // il verso pericoloso (imposta troppo bassa, netto troppo alto).
+    //
+    // Il meccanismo è ricorrente, non un caso limite: l'art. 1 c. 174 della
+    // L. 311/2004 dispone che, se il commissario non ripiana entro il 31 maggio,
+    // le maggiorazioni si applicano NELL'ANNO IN CORSO. Un provvedimento di
+    // giugno che vale da gennaio è il funzionamento normale degli automatismi
+    // sanitari [D-080, Fonti §15.k e §15.l].
     const ordinati = [...provvedimenti.values()].sort((a, b) =>
-      a.pubblicazione === b.pubblicazione ? a.numero.localeCompare(b.numero) : a.pubblicazione.localeCompare(b.pubblicazione),
+      a.pubblicazione === b.pubblicazione ? b.numero.localeCompare(a.numero) : b.pubblicazione.localeCompare(a.pubblicazione),
     )
     const scelto = ordinati[0]
     const scartati = ordinati.slice(1)
@@ -835,11 +887,13 @@ function leggiRegionale2026() {
     const detrazioni = []
     for (const d of lettura?.detrazioni ?? []) {
       if (!provaPresente(ente, testoDisposizione, d.prova, 'detrazione regionale')) continue
-      detrazioni.push({ importo: d.importo, redditoDa: d.redditoDa, redditoA: d.redditoA })
+      detrazioni.push({ redditoDa: d.redditoDa, redditoA: d.redditoA, formula: d.formula })
+      const descritta =
+        d.formula.forma === 'costante' ? `${d.formula.importo} euro` : `${d.formula.espressione}`
       segnala(
         'detrazione-regionale-applicata',
         ente,
-        `${d.importo} euro per reddito imponibile fra ${d.redditoDa} e ${d.redditoA ?? 'oltre'} — a cliff, letta dal testo e citata sulla legge regionale`,
+        `${descritta} per reddito imponibile fra ${d.redditoDa} e ${d.redditoA ?? 'oltre'} — estremo inferiore incluso, letta dal testo e citata sulla legge regionale`,
       )
     }
     // D-064 — la deduzione dalla base, con la stessa disciplina delle altre
@@ -862,26 +916,23 @@ function leggiRegionale2026() {
       )
     }
 
-    // ⚠️ Art. 50 c. 3 terzo periodo — una maggiorazione più favorevole al
-    // contribuente può applicarsi retroattivamente all'anno in corso. Oggi non
-    // ricorre, perché entrambe le seconde delibere alzano le aliquote. La
-    // condizione va scritta lo stesso: una regola senza la propria condizione è
-    // muta il giorno in cui il caso si presenta (D-053).
+    // Ogni provvedimento superato lascia traccia, con il verso dello scarto.
+    //
+    // ⚠️ Il ramo «più favorevole» non è più un allarme, ed è il rovescio di
+    // D-080. Con la selezione per data più antica, un secondo provvedimento
+    // migliorativo sarebbe stato perso, e l'art. 50 c. 3 terzo periodo — che ne
+    // consente l'applicazione retroattiva all'anno in corso — imponeva di
+    // segnalarlo per una revisione a mano. Tenendo il più recente quel caso si
+    // risolve da sé: il migliorativo viene preso. Resta la distinzione, perché
+    // dice in che direzione l'ente ha mosso le aliquote.
     for (const alt of scartati) {
       const formaAlt = formaRegionale(ente, alt, true)
-      if (formaAlt && piuFavorevole(formaAlt, forma)) {
-        segnala(
-          'maggiorazione-piu-favorevole',
-          ente,
-          `il provvedimento ${alt.numero} del ${alt.pubblicazione} è più favorevole di quello selezionato (${scelto.numero} del ${scelto.pubblicazione}): l'art. 50 c. 3 terzo periodo ne consente l'applicazione retroattiva all'anno in corso, e la selezione per data va rivista a mano`,
-        )
-      } else {
-        segnala(
-          'secondo-provvedimento-scartato',
-          ente,
-          `${alt.numero} del ${alt.pubblicazione} scartato: pubblicato dopo ${scelto.numero} del ${scelto.pubblicazione}, e non è più favorevole`,
-        )
-      }
+      const migliorativo = formaAlt && piuFavorevole(forma, formaAlt)
+      segnala(
+        'provvedimento-superato',
+        ente,
+        `${alt.numero} del ${alt.pubblicazione} superato da ${scelto.numero} del ${scelto.pubblicazione}, che è più recente e si applica all'intero periodo d'imposta: le aliquote ${migliorativo ? 'scendono' : 'salgono'} (D-080)`,
+      )
     }
 
     // Le detrazioni per carichi di famiglia restano fuori perimetro (D-019),
@@ -1132,7 +1183,7 @@ function verifiche(giornaliero, annuale, comuni, entiRegionali, conteggi) {
   const massimoComunale = Math.max(
     ...[...annuale.values()].filter((v) => v.stato === 'risolto').map((v) => aliquoteMassime(v.parametri.aliquota)),
   )
-  const sopraUnoQuattro = entiRegionali.filter((e) => aliquoteMassime(e.aliquota) > 1.4)
+  const sopraIlTetto = entiRegionali.filter((e) => aliquoteMassime(e.aliquota) > 3.33)
   const massimoRegionale = Math.max(...entiRegionali.map((e) => aliquoteMassime(e.aliquota)))
 
   const milano = comuni.find((c) => c.codiceCatastale === 'F205')
@@ -1157,10 +1208,10 @@ function verifiche(giornaliero, annuale, comuni, entiRegionali, conteggi) {
     ['comuni sopra 0,8 nell\'annuale 2025', 12, sopraZeroOtto.length],
     ['massimo comunale nell\'annuale 2025', 1.2, massimoComunale],
     ['enti regionali', 21, entiRegionali.length],
-    ['enti regionali sopra 1,4', 15, sopraUnoQuattro.length],
+    ['enti regionali sopra il tetto di 3,33', 1, sopraIlTetto.length],
     ['righe nel prospetto regionale', 71, statisticheRegionali.righe],
     ['massimo regionale nel file', 3.63, statisticheRegionali.massimoNelFile],
-    ['massimo regionale dopo la selezione D-053', 3.33, massimoRegionale],
+    ['massimo regionale dopo la selezione D-080', 3.63, massimoRegionale],
     ['MILANO — stato', 'ereditato', milano?.stato],
     ['MILANO — forma aliquota', 'unica', milano?.parametri?.aliquota.forma],
     ['MILANO — aliquota', 0.8, milano?.parametri?.aliquota.aliquota],
@@ -1226,7 +1277,7 @@ const fileRegioni = {
   provenienza,
   artefatti: { regionale2026: artefatti.regionale2026 },
   regolaDiSelezione:
-    "Per ciascun ente si prende il provvedimento con DATA PUBBLICAZIONE più antica dell'anno d'imposta: la colonna ANNO vale 2026 su tutte le righe e non discrimina. È una regola meccanica, non un criterio di efficacia (D-053).",
+    "Per ciascun ente si prende il provvedimento con DATA PUBBLICAZIONE più recente dell'anno d'imposta: una rideterminazione commissariale ex art. 1 c. 174 della L. 311/2004 si applica all'intero periodo d'imposta anche se pubblicata dopo gennaio, quindi l'ultima pubblicata è quella efficace. Nel file 2026 riguarda due soli enti, Puglia e Molise (D-080, che sostituisce D-053).",
   mappaturaProvince: {
     nonVerificato:
       "La ripartizione province → ente impositore non è in nessuno dei tre file MEF e non è stata reperita su un atto. È di uso corrente ma va dichiarata non verificata finché non lo sarà.",

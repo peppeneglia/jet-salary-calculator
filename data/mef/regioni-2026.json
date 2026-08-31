@@ -14,7 +14,7 @@
    "enti": 21
   }
  },
- "regolaDiSelezione": "Per ciascun ente si prende il provvedimento con DATA PUBBLICAZIONE più antica dell'anno d'imposta: la colonna ANNO vale 2026 su tutte le righe e non discrimina. È una regola meccanica, non un criterio di efficacia (D-053).",
+ "regolaDiSelezione": "Per ciascun ente si prende il provvedimento con DATA PUBBLICAZIONE più recente dell'anno d'imposta: una rideterminazione commissariale ex art. 1 c. 174 della L. 311/2004 si applica all'intero periodo d'imposta anche se pubblicata dopo gennaio, quindi l'ultima pubblicata è quella efficace. Nel file 2026 riguarda due soli enti, Puglia e Molise (D-080, che sostituisce D-053).",
  "mappaturaProvince": {
   "nonVerificato": "La ripartizione province → ente impositore non è in nessuno dei tre file MEF e non è stata reperita su un atto. È di uso corrente ma va dichiarata non verificata finché non lo sarà.",
   "perEnte": {
@@ -198,9 +198,25 @@
    },
    "detrazioni": [
     {
-     "importo": 430.5,
      "redditoDa": 0,
-     "redditoA": 90000
+     "redditoA": 90000,
+     "formula": {
+      "forma": "costante",
+      "importo": 430.5
+     }
+    },
+    {
+     "redditoDa": 50000,
+     "redditoA": null,
+     "formula": {
+      "forma": "lineare-crescente",
+      "base": 0,
+      "quota": 125,
+      "riferimento": 50000,
+      "ampiezza": 25000,
+      "massimo": 125,
+      "espressione": "125,00 × (RI − 50.000) / 25.000, massimo 125,00"
+     }
     }
    ],
    "sogliaEsenzione": null,
@@ -446,9 +462,12 @@
    },
    "detrazioni": [
     {
-     "importo": 60,
-     "redditoDa": 28000,
-     "redditoA": 30000
+     "redditoDa": 28001,
+     "redditoA": 30000,
+     "formula": {
+      "forma": "costante",
+      "importo": 60
+     }
     }
    ],
    "sogliaEsenzione": null,
@@ -560,8 +579,8 @@
   },
   {
    "nome": "REGIONE MOLISE",
-   "numeroProvvedimento": "2186",
-   "dataPubblicazione": "2026-01-29",
+   "numeroProvvedimento": "2227",
+   "dataPubblicazione": "2026-06-19",
    "norme": "Art. 2 della L.R. n. 9/2013. Art. 1, comma 174, della Legge n. 311/2004. Art. 2, comma 86, della Legge n. 191/2009 - art.1 L.R. 15 dicembre 2023 n. 5",
    "note": null,
    "aliquota": {
@@ -570,22 +589,22 @@
      {
       "da": 0,
       "a": 15000,
-      "aliquota": 1.73
+      "aliquota": 2.03
      },
      {
       "da": 15000,
       "a": 28000,
-      "aliquota": 1.93
+      "aliquota": 2.23
      },
      {
       "da": 28000,
       "a": 50000,
-      "aliquota": 3.33
+      "aliquota": 3.63
      },
      {
       "da": 50000,
       "a": null,
-      "aliquota": 3.33
+      "aliquota": 3.63
      }
     ]
    },
@@ -594,8 +613,8 @@
    "deduzione": null,
    "provvedimentiScartati": [
     {
-     "numero": "2227",
-     "dataPubblicazione": "2026-06-19"
+     "numero": "2186",
+     "dataPubblicazione": "2026-01-29"
     }
    ]
   },
@@ -637,10 +656,10 @@
   },
   {
    "nome": "REGIONE PUGLIA",
-   "numeroProvvedimento": "2178",
-   "dataPubblicazione": "2026-01-28",
-   "norme": "Normativa Regione Puglia: legge regionale 28 marzo 2022, n.8. art. 3 della legge regionale 29 dicembre 2015, n.40.",
-   "note": null,
+   "numeroProvvedimento": "2207",
+   "dataPubblicazione": "2026-05-29",
+   "norme": "Normativa Regione Puglia: Decreto n. 3 del 28 maggio 2026 adottato dal Presidente della Regione Puglia in qualita' di Commissario ad acta ai sensi dell'articolo 1, comma 174, della Legge n. 311/2004. Art. 3 della legge regionale 29 dicembre 2015, n.40.",
+   "note": "Ai sensi dell'articolo 1, comma 174, della Legge n. 311/2004, il Presidente della Regione Puglia in qualita' di Commissario ad acta ha rideterminato le aliquote dell'addizionale regionale all'Imposta sul Reddito delle Persone Fisiche per la copertura del disavanzo del servizio sanitario regionale risultante dal conto economico al quarto trimestre 2025.",
    "aliquota": {
     "forma": "scaglioni-previgenti",
     "scaglioni": [
@@ -652,17 +671,17 @@
      {
       "da": 15000,
       "a": 28000,
-      "aliquota": 1.43
+      "aliquota": 2.13
      },
      {
       "da": 28000,
       "a": 50000,
-      "aliquota": 1.63
+      "aliquota": 3.23
      },
      {
       "da": 50000,
       "a": null,
-      "aliquota": 1.85
+      "aliquota": 3.33
      }
     ]
    },
@@ -671,8 +690,8 @@
    "deduzione": null,
    "provvedimentiScartati": [
     {
-     "numero": "2207",
-     "dataPubblicazione": "2026-05-29"
+     "numero": "2178",
+     "dataPubblicazione": "2026-01-28"
     }
    ]
   },
@@ -782,9 +801,12 @@
    },
    "detrazioni": [
     {
-     "importo": 150,
-     "redditoDa": 28000,
-     "redditoA": 50000
+     "redditoDa": 28001,
+     "redditoA": 50000,
+     "formula": {
+      "forma": "costante",
+      "importo": 150
+     }
     }
    ],
    "sogliaEsenzione": null,
