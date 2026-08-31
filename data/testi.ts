@@ -49,24 +49,21 @@ import { TAG } from './tag-lingua'
 
 const it: TestiTraccia = {
   // RAL
-  'ral.etichetta': 'Retribuzione annua lorda',
-  'ral.regola': 'Punto di partenza dichiarato dall’utente.',
-  'ral.spiegazione':
-    'La RAL comprende già le mensilità aggiuntive: il netto annuo non cambia con 12, 13 o 14 mensilità, cambia solo il divisore.',
+  'ral.etichetta': 'Retribuzione annua lorda (RAL)',
 
   // Contributi
   'contributi.etichetta': 'Contributi previdenziali IVS',
   'contributi.regola':
-    'Aliquota a carico del lavoratore sulla retribuzione imponibile, assunta al lordo di qualsiasi contributo e trattenuta.',
+    'Aliquota a carico del lavoratore, applicata alla retribuzione imponibile ai fini previdenziali.',
   'contributi.spiegazione.ordinaria':
-    'Non è una tassa: è contribuzione che genera un diritto pensionistico. Esce dalla busta e torna come prestazione futura.',
+    'Questa è solo la tua quota. L’azienda ne versa una molto più grande sulla stessa retribuzione, che non passa dalla tua busta e non entra in questo conto.',
   'contributi.spiegazione.apprendista':
-    'Non è una tassa: è contribuzione che genera un diritto pensionistico. L’aliquota dell’apprendista è ridotta rispetto a quella ordinaria, ed è l’unico valore del tipo di contratto che muove il netto.',
+    'Questa è solo la tua quota, e per l’apprendista la legge la riduce: è l’unico caso in cui il tipo di contratto muove il netto. L’azienda ne versa un’altra, che non passa dalla tua busta.',
   'base-contributiva.etichetta': 'Base contributiva',
   'base-contributiva.regola':
     'Le somme si assumono al lordo di qualsiasi contributo e trattenuta: la base è la retribuzione lorda.',
   'base-contributiva.spiegazione':
-    'Nel caso standard coincide con la RAL, e non per approssimazione: le voci che la legge esclude non rientrano in questo calcolo.',
+    'Coincide con la RAL, e non per approssimazione: le voci che la legge escluderebbe — TFR, previdenza complementare, premi — restano fuori da questo calcolo.',
 
   // Quota aggiuntiva 1%
   'quota.etichetta': 'Quota aggiuntiva 1%',
@@ -79,9 +76,9 @@ const it: TestiTraccia = {
   'quota.ragione.regime':
     'L’aliquota ordinaria a carico del lavoratore ({aliquotaOrdinaria}) non è inferiore al limite del {limite} previsto dalla norma.',
   'quota.spiegazione.sotto-soglia':
-    'È l’unica soglia sui contributi. Sotto la prima fascia non si applica.',
+    'È l’unica soglia che il ramo contributivo ha. Sopra, l’un per cento si applica alla sola parte eccedente.',
   'quota.ragione.sotto-soglia':
-    'La retribuzione imponibile ({retribuzione}) non supera la prima fascia di retribuzione pensionabile, pari a {soglia}.',
+    'La retribuzione imponibile si ferma a {retribuzione}.',
   'quota.spiegazione.applicata':
     'Si applica solo alla parte di retribuzione oltre {soglia}, non all’intera retribuzione.',
 
@@ -123,7 +120,7 @@ const it: TestiTraccia = {
   'irpef.regola':
     'Imposta progressiva per scaglioni sul reddito complessivo al netto degli oneri deducibili, ridotta dalle detrazioni fino alla concorrenza dell’imposta lorda.',
   'irpef.spiegazione':
-    'L’imposta erariale, quella che va allo Stato. Le detrazioni non sono una trattenuta: riducono l’imposta già calcolata, e non possono portarla sotto zero.',
+    'Qui sotto c’è il conto per intero: prima l’imposta piena, poi ogni detrazione che la abbassa, poi quello che resta da pagare.',
 
   // Gli scaglioni descrivono se stessi
   'scaglione.etichetta': 'Da {da} a {a} — {aliquota}',
@@ -134,16 +131,15 @@ const it: TestiTraccia = {
     'L’aliquota si applica alla sola quota di reddito compresa nella fascia: {quota}.',
 
   // Il gate delle addizionali
-  'gate.etichetta.aperto': 'Le addizionali sono dovute',
-  'gate.etichetta.chiuso': 'Le addizionali non sono dovute',
+  'gate.etichetta.aperto': 'Presupposto delle addizionali',
+  'gate.etichetta.chiuso': 'Presupposto delle addizionali',
   'gate.regola':
     'Le addizionali sono dovute se, per lo stesso anno, l’IRPEF al netto delle detrazioni e dei crediti risulta dovuta.',
   'gate.spiegazione':
-    'Il presupposto è binario: se l’imposta è dovuta, le addizionali si applicano sull’intera base; se non lo è, non si applicano affatto.',
-  'gate.ragione.aperto':
-    'L’IRPEF netta è {netta} e risulta dovuta: il presupposto delle addizionali è soddisfatto, quindi si applicano sull’intera base imponibile.',
+    'O si applicano sull’intera base, o non si applicano affatto: non c’è una via di mezzo.',
+  'gate.ragione.aperto': 'L’IRPEF netta è {netta}, quindi maggiore di zero.',
   'gate.ragione.chiuso':
-    'L’IRPEF netta è zero perché le detrazioni superano l’imposta lorda: il presupposto non è soddisfatto e nessuna delle due addizionali è dovuta.',
+    'L’IRPEF netta è zero: le detrazioni superano l’imposta lorda, e sotto quel pavimento non si scende.',
   'addizionale.spiegazione.gate':
     'Non dipende solo dal tuo reddito. Se l’IRPEF che devi risulta zero, l’addizionale non si paga affatto. Non si riduce: non è dovuta.',
   'addizionale.ragione.gate':
@@ -160,7 +156,7 @@ const it: TestiTraccia = {
   'regionale.regola':
     'Aliquota deliberata dall’ente impositore, applicata al reddito complessivo al netto degli oneri deducibili.',
   'regionale.spiegazione':
-    'Si calcola sulla stessa base dell’IRPEF, non su quello che resta dopo averla pagata. E le detrazioni non la toccano.',
+    'L’aliquota la decide la tua Regione, non lo Stato: cambiando residenza cambierebbe, a parità di stipendio.',
   'regionale.fascia-intera.etichetta': 'Aliquota {aliquota} sull’intero imponibile',
   'regionale.fascia-intera.regola':
     'Aliquota deliberata dall’ente per fascia di reddito e applicata all’intero imponibile, non per scaglioni.',
@@ -272,23 +268,20 @@ const it: TestiTraccia = {
 const en: TestiTraccia = {
   // RAL
   'ral.etichetta': 'RAL (gross annual salary)',
-  'ral.regola': 'Starting point, as entered by the user.',
-  'ral.spiegazione':
-    'The RAL already includes any extra monthly instalments: your annual net pay is the same whether it is paid over 12, 13 or 14 instalments: only the divisor changes.',
 
   // Contributi
   'contributi.etichetta': 'IVS social security contributions',
   'contributi.regola':
-    'Employee rate applied to the contributory earnings base, taken gross of any contribution or withholding.',
+    'Employee rate, applied to the contributory earnings base.',
   'contributi.spiegazione.ordinaria':
-    'This is not a tax: it is a contribution that builds a pension entitlement. It leaves your payslip now and comes back later as a benefit.',
+    'This is only your share. Your employer pays a much larger one on the same earnings, which never passes through your payslip and is not part of this calculation.',
   'contributi.spiegazione.apprendista':
-    'This is not a tax: it is a contribution that builds a pension entitlement. Under an apprendistato (apprenticeship contract) the employee rate is reduced, and that is the only way the type of contract moves your net pay.',
+    'This is only your share, and under an apprendistato (apprenticeship contract) the law reduces it: it is the one case where the type of contract moves your net pay. Your employer pays another share, which never reaches your payslip.',
   'base-contributiva.etichetta': 'Contributory earnings base',
   'base-contributiva.regola':
     'Sums are taken gross of any contribution or withholding: the base is gross pay.',
   'base-contributiva.spiegazione':
-    'In the standard case it matches the RAL, and not by approximation: the items the law excludes are not part of this calculation to begin with.',
+    'It matches the RAL, and not by approximation: the items the law would exclude — severance accrual, supplementary pension, bonuses — are outside this calculation to begin with.',
 
   // Quota aggiuntiva 1%
   'quota.etichetta': 'Additional 1% contribution',
@@ -301,9 +294,8 @@ const en: TestiTraccia = {
   'quota.ragione.regime':
     'The ordinary employee rate ({aliquotaOrdinaria}) is not below the {limite} limit set by the rule.',
   'quota.spiegazione.sotto-soglia':
-    'It is the only threshold on the contributions side. Below the first band it does not apply.',
-  'quota.ragione.sotto-soglia':
-    'Contributory earnings ({retribuzione}) do not exceed the first pensionable earnings band of {soglia}.',
+    'It is the only threshold the contributions side has. Above it, the extra one per cent applies to the excess alone.',
+  'quota.ragione.sotto-soglia': 'Contributory earnings stop at {retribuzione}.',
   'quota.spiegazione.applicata':
     'It applies only to the part of your pay above {soglia}, not to the whole of it.',
 
@@ -344,7 +336,7 @@ const en: TestiTraccia = {
   'irpef.regola':
     'A progressive bracket tax on total taxable income net of deductible charges, reduced by credits up to the amount of the gross tax.',
   'irpef.spiegazione':
-    'The state income tax. Credits are not a withholding: they reduce a tax that has already been computed, and they cannot push it below zero.',
+    'The full working is below: first the tax in full, then each credit that brings it down, then what is left to pay.',
 
   // Gli scaglioni descrivono se stessi
   'scaglione.etichetta': 'From {da} to {a} — {aliquota}',
@@ -355,16 +347,15 @@ const en: TestiTraccia = {
     'The rate applies only to the slice of income that falls inside this band: {quota}.',
 
   // Il gate delle addizionali
-  'gate.etichetta.aperto': 'The addizionali are due',
-  'gate.etichetta.chiuso': 'The addizionali are not due',
+  'gate.etichetta.aperto': 'Condition for the addizionali',
+  'gate.etichetta.chiuso': 'Condition for the addizionali',
   'gate.regola':
     'The addizionali are due if, for the same year, IRPEF net of credits and tax reliefs is itself due.',
   'gate.spiegazione':
-    'The condition is binary: if the tax is due, the addizionali apply to the whole base; if it is not, they do not apply at all.',
-  'gate.ragione.aperto':
-    'Net IRPEF is {netta} and is therefore due: the condition for the addizionali is met, so they apply to the whole taxable base.',
+    'Either they apply to the whole base, or they do not apply at all: there is no middle ground.',
+  'gate.ragione.aperto': 'Net IRPEF is {netta}, so greater than zero.',
   'gate.ragione.chiuso':
-    'Net IRPEF is zero because the credits exceed the gross tax: the condition is not met and neither addizionale is due.',
+    'Net IRPEF is zero: the credits exceed the gross tax, and it does not go below that floor.',
   'addizionale.spiegazione.gate':
     'It does not depend on your income alone. If the IRPEF you owe comes out at zero, the addizionale is not paid at all. It is not reduced: it is not due.',
   'addizionale.ragione.gate':
@@ -383,7 +374,7 @@ const en: TestiTraccia = {
   'regionale.regola':
     'Rate set by the levying authority, applied to total taxable income net of deductible charges.',
   'regionale.spiegazione':
-    'It is computed on the same income as IRPEF, not on what is left after paying it. And the tax credits do not touch it.',
+    'Your Region sets this rate, not the State: move house and it would change, on the very same salary.',
   'regionale.fascia-intera.etichetta': 'Rate of {aliquota} on the whole taxable income',
   'regionale.fascia-intera.regola':
     'Rate set by the authority per income band and applied to the whole taxable income, not bracket by bracket.',

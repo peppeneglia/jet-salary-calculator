@@ -144,6 +144,28 @@
   --color-verde-bordo: #cfe9bd;
 
   /*
+   * La scala dei grafici: **una sola famiglia, più il verde.**
+   *
+   * ⚠️ Qui c'erano quattro tinte — ardesia, ocra, prugna, verde — una per
+   * natura. Introducevano tre colori che il resto del prodotto non ha, e un
+   * calcolatore di stipendi che si presenta con una tavolozza a quattro tinte
+   * si legge come un cruscotto. La palette resta quella: **verde e grigi.**
+   *
+   * ⚠️ **Il verde continua a significare una cosa sola** — *quello che resta
+   * al dipendente* — e per questo lo prendono solo il netto e le somme che si
+   * aggiungono. Le voci che escono stanno su una **scala di grigi ordinata per
+   * posizione**, non per natura: a distinguerle è il gradino, e il nome ce
+   * l'hanno scritto accanto in legenda. Quattro gradini bastano — nessun
+   * calcolo del caso standard produce più di quattro voci in uscita — e il
+   * quinto ricomincia dal primo.
+   */
+  --color-grafico-1: #c3ccc5;
+  --color-grafico-2: #a2ada6;
+  --color-grafico-3: #808d86;
+  --color-grafico-4: #5f6d66;
+  --color-grafico-aggiunge: #a8d98c;
+
+  /*
    * La cornice verde ha un proprio primo piano, e **non cambia con il tema**.
    *
    * Senza questi due token la testata userebbe `inchiostro`, che sul tema scuro
@@ -226,6 +248,17 @@
     --color-verde-velo: #16240f;
     --color-verde-bordo: #33512a;
 
+    /*
+     * La stessa scala, invertita: su fondo scuro il gradino chiaro sta in
+     * cima. È la stessa ragione per cui qui `verde-testo` coincide con il
+     * verde pieno.
+     */
+    --color-grafico-1: #3d453f;
+    --color-grafico-2: #525c55;
+    --color-grafico-3: #6a756d;
+    --color-grafico-4: #838f86;
+    --color-grafico-aggiunge: #4f7d38;
+
     --color-avviso: #241c0e;
     --color-avviso-bordo: #4a3a18;
     --color-avviso-testo: #f5d98b;
@@ -250,6 +283,13 @@
   --color-bordo-azione: #66c239;
   --color-verde-velo: #16240f;
   --color-verde-bordo: #33512a;
+
+  /* La stessa scala invertita — vedi la nota nel blocco @media. */
+  --color-grafico-1: #3d453f;
+  --color-grafico-2: #525c55;
+  --color-grafico-3: #6a756d;
+  --color-grafico-4: #838f86;
+  --color-grafico-aggiunge: #4f7d38;
 
   --color-avviso: #241c0e;
   --color-avviso-bordo: #4a3a18;

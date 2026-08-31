@@ -44,8 +44,6 @@ function ValoreParametro({ parametro }: { parametro: Parametro }) {
     case 'soglia':
       return <span className="cifre">{inEuro(parametro.valore)}</span>
     case 'scaglioni':
-      // Le fasce che mordono davvero le espone il motore come passi annidati:
-      // ripeterle qui darebbe due elenchi della stessa cosa.
       return parametro.valore.forma === 'unica' ? (
         <span className="cifre">{inPercentuale(parametro.valore.aliquota)}</span>
       ) : (
@@ -69,30 +67,94 @@ function ValoreParametro({ parametro }: { parametro: Parametro }) {
 const stessaFonte = (a: Fonte, b: Fonte): boolean =>
   a.atto === b.atto && a.riferimento === b.riferimento
 
-/** Il parametro usato dal passo, con la fonte che dice da dove viene il numero. */
-function BloccoParametro({ parametro, mostraFonte }: { parametro: Parametro; mostraFonte: boolean }) {
-  const { t } = useTraduzione()
+/**
+ * Il valore applicato, su una riga.
+ *
+ * ⚠️ **Qui c'era una card**, con bordo, fondo proprio e tre righe dentro, per
+ * contenere `9,19%`. Un riquadro è un contenitore: promette che dentro ci sia
+ * un contenuto strutturato, e dentro c'era mezza riga. Su una voce con tre
+ * righe di prosa sopra, quella cornice era l'elemento più pesante del blocco e
+ * conteneva la cosa più corta.
+ *
+ * Ora è una riga come le altre: etichetta, due punti, valore. Il valore resta
+ * in evidenza perché è in `font-semibold` e in `cifre`, non perché ha una
+ * scatola intorno.
+ */
+function ValoreApplicato({ parametro }: { parametro: Parametro }) {
+  const { t, lingua } = useTraduzione()
+  const { inEuro, inPercentuale } = formato(lingua)
+
+  /*
+    ⚠️ **Le fasce si disegnano, non si scrivono.** Qui c'era la stringa
+    *«aliquote a scaglioni»*, cioè il nome della cosa al posto della cosa: chi
+    legge scopriva che ce ne sono diverse ma non quante, né quanto distanti.
+
+    La barra misura **l'aliquota**, non l'ampiezza della fascia, ed è la scelta
+    che rende la figura onesta: la progressività è una scala di aliquote, e una
+    barra proporzionale all'ampiezza direbbe che il primo scaglione «pesa» più
+    dell'ultimo perché è più largo. È lo stesso grafico di `/spiegazione`, qui
+    sui valori del calcolo appena fatto.
+
+    ⚠️ **Non ripete i passi annidati.** Quelli dicono *quanta imposta* ha
+    prodotto ciascuna fascia sul tuo reddito, e si fermano dove il reddito
+    finisce; questa dice *com'è fatta la scala*, per intero, comprese le fasce
+    che non ti riguardano — che è l'unico modo di vedere dove ti trovi dentro.
+  */
+  /*
+    ⚠️ Solo le due forme a scaglioni, non `fasce-intere`. Il Friuli Venezia
+    Giulia applica l'aliquota **all'intero imponibile** oltre una soglia, non
+    per quote: disegnarla con le stesse barre direbbe che è progressiva come le
+    altre, che è esattamente l'errore da 79,50 euro che il Caso 4 esiste per
+    prendere. Quella forma resta scritta, non disegnata.
+  */
+  if (
+    parametro.tipo === 'scaglioni' &&
+    (parametro.valore.forma === 'scaglioni-vigenti' ||
+      parametro.valore.forma === 'scaglioni-previgenti')
+  ) {
+    const scaglioni = parametro.valore.scaglioni
+    const massima = Math.max(...scaglioni.map((x) => x.aliquota))
+    return (
+      <div className="mt-2">
+        <p className="text-sm text-inchiostro-tenue select-none">
+          {t('passo.valoreApplicato')}:
+        </p>
+        <ul className="mt-1.5 space-y-2">
+          {scaglioni.map((x) => (
+            <li key={`${x.da}-${x.a ?? 'oltre'}`}>
+              <div className="flex flex-wrap items-baseline justify-between gap-x-4">
+                <span className="text-xs text-inchiostro-tenue">
+                  {x.a === null
+                    ? t('passo.scaglioneOltre', { da: inEuro(x.da) })
+                    : t('passo.scaglioneDaA', { da: inEuro(x.da), a: inEuro(x.a) })}
+                </span>
+                <span className="cifre text-xs font-semibold text-inchiostro">
+                  {inPercentuale(x.aliquota)}
+                </span>
+              </div>
+              <div
+                aria-hidden
+                className="mt-1 h-2 w-full overflow-hidden rounded-full bg-bordo-decorativo"
+              >
+                <div
+                  className="h-full rounded-full bg-verde"
+                  style={{ width: `${(x.aliquota / massima) * 100}%` }}
+                />
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )
+  }
 
   return (
-    <div className="mt-3 rounded-voce border border-bordo-decorativo bg-fondo px-3 py-2">
-      {/* «Parametro» è vocabolario interno: chi legge vede un valore. */}
-      <p className="text-xs font-medium text-inchiostro-nota">{t('passo.valoreApplicato')}</p>
-      <p className="mt-0.5 text-sm text-inchiostro">
+    <p className="mt-2 text-sm text-inchiostro-tenue">
+      <span className="select-none">{t('passo.valoreApplicato')}: </span>
+      <span className="font-semibold text-inchiostro">
         <ValoreParametro parametro={parametro} />
-      </p>
-      {/*
-        ⚠️ La citazione si mostra qui solo se non è già fra le regole del
-        passo (D-026). Le due coesistono perché dicono cose diverse — *si fa
-        così* e *il numero è questo* — ma quando sono la stessa norma, ripeterla
-        due volte a due righe di distanza non aggiunge niente e fa sembrare la
-        pagina più documentata di quanto sia.
-      */}
-      {mostraFonte ? (
-        <div className="mt-2">
-          <Fonti fonti={[parametro.fonte]} titolo={t('passo.daDoveVieneIlNumero')} />
-        </div>
-      ) : null}
-    </div>
+      </span>
+    </p>
   )
 }
 
@@ -139,20 +201,36 @@ function Valore({ passo }: { passo: Passo }) {
       annidata — IRPEF lorda, poi ogni detrazione che si accumula, poi il
       pavimento a zero. Non è un calcolo: sono due campi dello stesso esito.
     */
+    /*
+      ⚠️ **Un passo neutro pesa meno della voce che lo contiene**, e prima
+      pesava uguale: *Base contributiva 30.000,00* era in `text-lg` esattamente
+      come i *−2.757,00 €* dei contributi che gli stanno sopra. Due numeri
+      della stessa grandezza a due righe di distanza si leggono come due voci
+      pari, mentre uno è la base su cui l'altro si calcola — e per giunta il
+      più grande dei due era quello che non muove niente.
+    */
     return esito.entra === esito.esce ? (
-      <span className="cifre text-lg text-inchiostro-tenue">{inEuro(esito.esce)}</span>
+      <span className="cifre text-sm text-inchiostro-tenue">{inEuro(esito.esce)}</span>
     ) : (
-      <span className="cifre text-lg text-inchiostro-tenue">
-        <span className="text-base text-inchiostro-nota">{inEuro(esito.entra)} → </span>
+      <span className="cifre text-sm text-inchiostro-tenue">
+        <span className="text-inchiostro-nota">{inEuro(esito.entra)} → </span>
         {inEuro(esito.esce)}
       </span>
     )
   }
 
-  // Il verde ha un significato solo: quello che resta al dipendente.
+  /*
+    ⚠️ Questa è la cifra della voce, ed è la più grande della riga: `text-xl`
+    contro il `text-sm` dei passaggi interni. La gerarchia della riga si legge
+    ora nell'ordine giusto — quanto pesa, su cosa si calcola, con quale
+    parametro, per quale norma.
+
+    Il verde ha un significato solo: quello che resta al dipendente. Per questo
+    lo prende soltanto una voce che **aggiunge**, mai una che sottrae.
+  */
   return (
     <span
-      className={`cifre text-lg font-semibold ${
+      className={`cifre text-xl font-semibold ${
         esito.segno === 'aggiunge' ? 'text-verde-testo' : 'text-inchiostro'
       }`}
     >
@@ -179,66 +257,155 @@ function Ragione({ passo }: { passo: Passo }) {
   )
 }
 
+/**
+ * ⚠️ **Il rilievo della riga dice se la voce è stata applicata**, e prima non
+ * lo diceva nessuno: una voce applicata e una non dovuta avevano lo stesso
+ * riquadro bianco, lo stesso bordo e lo stesso peso, e a distinguerle restava
+ * una pastiglia grigia di due parole in fondo alla riga. Su un elenco di dieci
+ * voci di cui tre non si applicano, la cosa che conta — *questa mi tocca
+ * davvero* — era l'unica non visibile a colpo d'occhio.
+ *
+ * Ora: **applicata** ha carta piena e una barra verde sul fianco; **non
+ * dovuta** e **verifica** hanno fondo tenue, nessuna barra, titolo smorzato.
+ * La voce non dovuta non sparisce e non diventa una riga a zero: un numero
+ * mancante senza spiegazione è la forma peggiore di errore, perché è plausibile
+ * (D-033).
+ */
 export function RigaPasso({ passo, annidato = false }: { passo: Passo; annidato?: boolean }) {
   const { t, lingua } = useTraduzione()
   const { inEuro } = formato(lingua)
   const esito = passo.esito
 
+  const applicata = esito.stato === 'applicato' && esito.segno !== 'neutro'
+  const spenta = esito.stato === 'nonDovuto'
+  const neutro = esito.stato === 'applicato' && esito.segno === 'neutro'
+
+  /*
+    ⚠️ **La barra è verde, e basta un colore.** Ci avevo messo la tinta della
+    natura — una per contributi, una per IRPEF, una per le addizionali — per
+    legare la riga al segmento del grafico. Legava anche tre colori nuovi a un
+    prodotto che ne ha uno, e la palette è verde e grigi.
+
+    Qui il verde non dice *questi soldi restano a te*: dice **questa voce è
+    stata applicata**, che è l'unica distinzione che la riga deve fare a colpo
+    d'occhio. Il significato «quello che resta» vive sulle **cifre**, e lì
+    resta intatto: `verde-testo` lo prendono solo il netto e le voci che
+    aggiungono.
+  */
+  const accento = applicata ? 'border-l-4 border-l-verde' : ''
+
+  /*
+    Le fonti del passo più quella del parametro, senza doppioni: `stessaFonte`
+    confronta atto e riferimento, cioè il punto della norma, e ignora URL e
+    data di consultazione — che sono attributi della lettura, non dell'atto.
+  */
+  const fonti: Fonte[] = [...(passo.fonti ?? [])]
+  if (passo.parametro && !fonti.some((f) => stessaFonte(f, passo.parametro!.fonte))) {
+    fonti.push(passo.parametro.fonte)
+  }
+
   return (
     <li
-      className={
-        annidato
-          ? 'rounded-voce border border-bordo-decorativo bg-carta px-3 py-3 sm:px-4'
-          : 'rounded-blocco border border-bordo-decorativo bg-carta px-4 py-4 sm:px-5'
-      }
+      className={[
+        annidato ? 'rounded-voce px-3 py-3 sm:px-4' : 'rounded-blocco px-4 py-4 sm:px-5',
+        'border border-bordo-decorativo',
+        spenta || esito.stato === 'verifica' ? 'bg-fondo' : 'bg-carta',
+        accento,
+      ].join(' ')}
     >
+      {/*
+        ⚠️ **La cifra a destra è riservata a chi muove il netto**, e prima non
+        lo era: *Base contributiva — 30.000,00 €* stava nella stessa colonna di
+        destra dei *−2.757,00 €* dei contributi, incolonnata con loro. Due
+        numeri incolonnati si leggono come due addendi, e quello è invece la
+        base su cui il primo si calcola: la colonna diceva *sono voci pari*
+        mentre la gerarchia dice il contrario.
+
+        I passi neutri portano ora il proprio valore **in linea sotto
+        l'etichetta**, dove si legge come ciò che è — una grandezza esposta, non
+        un addendo.
+      */}
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h4 className={`font-medium text-inchiostro ${annidato ? 'text-sm' : 'text-base'}`}>
+        <h4
+          className={`${annidato ? 'text-sm' : 'text-base'} ${
+            spenta ? 'font-normal text-inchiostro-tenue' : 'font-medium text-inchiostro'
+          }`}
+        >
           {passo.etichetta}
         </h4>
-        <Valore passo={passo} />
+        {neutro ? null : <Valore passo={passo} />}
       </div>
 
-      {esito.stato === 'applicato' && esito.segno !== 'neutro' ? (
+      {neutro ? (
+        <p className="mt-0.5 text-sm">
+          <Valore passo={passo} />
+        </p>
+      ) : null}
+
+      {applicata ? (
         <p className="mt-0.5 text-xs text-inchiostro-tenue">
           {t('passo.calcolataSu')} <span className="cifre">{inEuro(esito.entra)}</span>
         </p>
       ) : null}
 
-      <p className="mt-2 max-w-prose text-sm leading-relaxed text-inchiostro-tenue">{passo.spiegazione}</p>
+      {/* Facoltativa dal 31/08: un passo che non ha nulla da aggiungere non aggiunge nulla. */}
+      {passo.spiegazione ? (
+        <p className="mt-2 max-w-prose text-sm leading-relaxed text-inchiostro-tenue">
+          {passo.spiegazione}
+        </p>
+      ) : null}
 
       <Ragione passo={passo} />
 
-      {passo.parametro ? (
-        <BloccoParametro
-          parametro={passo.parametro}
-          mostraFonte={!(passo.fonti ?? []).some((f) => stessaFonte(f, passo.parametro!.fonte))}
-        />
-      ) : null}
+      {passo.parametro ? <ValoreApplicato parametro={passo.parametro} /> : null}
 
-      {passo.fonti ? (
-        <div className="mt-3">
-          {/*
-            Due citazioni diverse e possono coesistere: la norma che dice *si fa
-            così* sta sul passo, la fonte che dice *il numero è questo* sta sul
-            parametro (D-026).
-          */}
-          <Fonti fonti={passo.fonti} titolo={t('passo.regolaApplicata')} />
-        </div>
+      {/*
+        ⚠️ **La regola non si apre più: è una frase dopo i due punti.**
+
+        Era dietro un `<details>`, e il concetto era sbagliato prima ancora
+        della resa. Un elemento apribile promette *qui sotto c'è dell'altro*, e
+        chi legge deve decidere se aprirlo — cioè spendere un gesto per sapere
+        se gli interessa. Ma la regola in linguaggio normativo è **una riga**,
+        ed è la riga che risponde alla domanda per cui esiste questo progetto:
+        *da dove viene questo numero*. Nasconderla dietro un clic la trattava
+        come materiale accessorio proprio nella pagina che la dichiara centrale.
+
+        Aperta costa due righe e si salta con gli occhi; chiusa costava un
+        gesto a chiunque la volesse. La forma apribile resta dov'è utile — le
+        domande della FAQ, che sono paragrafi interi e sono davvero
+        facoltative.
+      */}
+      {passo.regola ? (
+        <p className="mt-2 max-w-prose text-xs leading-relaxed text-inchiostro-tenue">
+          <span className="font-medium text-inchiostro-nota select-none">
+            {t('passo.regolaNormativa')}:{' '}
+          </span>
+          {passo.regola}
+        </p>
       ) : null}
 
       {/*
-        La regola in linguaggio normativo resta accessibile senza affollare la
-        riga: la spiegazione è per chi legge, questa è per chi verifica. Sta
-        prima dei passi annidati, altrimenti la regola del blocco finirebbe
-        sotto le righe che gli appartengono.
+        ⚠️ **Una sola sezione «Fonte», e prima erano due con due nomi
+        diversi.**
+
+        C'era *Regola applicata* sotto il passo e *Da dove viene il numero*
+        dentro la card del parametro, con una regola — D-026 — che decideva
+        quale mostrare e quale no in base a se coincidessero. Il risultato in
+        pagina: alcune voci con la fonte dentro un riquadro, altre con la fonte
+        fuori, altre con entrambe. Tre trattamenti per la stessa cosa, e la
+        differenza non era leggibile da fuori.
+
+        La distinzione di D-026 resta vera nel **dato** — la norma che dice
+        *si fa così* e la fonte che dice *il numero è questo* sono campi diversi
+        di `Passo` — ma non è una distinzione che serva a chi legge: chi vuole
+        verificare vuole l'elenco degli atti da aprire. Qui si uniscono in una
+        lista sola, **deduplicata**, sotto un'etichetta sola.
       */}
-      <details className="mt-3 text-xs">
-        <summary className="inline-flex min-h-9 cursor-pointer items-center rounded-voce text-inchiostro-nota hover:text-inchiostro">
-          {t('passo.regolaNormativa')}
-        </summary>
-        <p className="mt-1 leading-relaxed text-inchiostro-tenue">{passo.regola}</p>
-      </details>
+      {fonti.length > 0 ? (
+        <div className="mt-2">
+          <Fonti fonti={fonti} titolo={t('fonte.titolo')} accanto />
+        </div>
+      ) : null}
 
       {passo.dettaglio && passo.dettaglio.length > 0 ? (
         <ul className="mt-3 space-y-2 border-l-2 border-bordo-decorativo pl-2.5 sm:pl-4">
