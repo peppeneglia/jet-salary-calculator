@@ -11,6 +11,7 @@ import {
 } from '../_lib/api'
 import { perLaPagina } from '../_lib/arrotonda'
 import { messaggioErrore } from '../_lib/errori'
+import { moduloRicordato, type ModuloRicordato } from '../_lib/sessione'
 import { Avviso } from './avviso'
 import { Sezione } from './sezione'
 import { SezioneDettaglio } from './sezione-dettaglio'
@@ -75,6 +76,23 @@ export function Calcolatore({
 }) {
   const { t, lingua } = useTraduzione()
 
+  /**
+   * Il modulo ripreso dalla sessione, letto una volta sola al montaggio.
+   *
+   * ⚠️ **Si legge in un inizializzatore pigro e non in un effetto**, e le
+   * ragioni sono due. La prima: `SezioneInput` lo usa come valore iniziale dei
+   * propri campi, e letto in un effetto arriverebbe dopo il primo disegno, con
+   * il modulo che compare vuoto per un fotogramma e poi si riempie. La seconda
+   * è che da qui discendono `mostrato` e `inCorso`, e ricavarli è ciò che
+   * evita di doverli *impostare* dentro un effetto.
+   *
+   * Il valore non cambia mai dopo il montaggio: da lì in poi comanda lo stato
+   * dei campi, e questo resta la fotografia con cui la pagina è ripartita.
+   */
+  const [ripreso] = useState<ModuloRicordato | null>(() =>
+    typeof window === 'undefined' ? null : moduloRicordato(),
+  )
+
   const [risultato, setRisultato] = useState<Risultato | null>(null)
 
   /*
@@ -85,8 +103,16 @@ export function Calcolatore({
    */
   const mostrabile = useMemo(() => (risultato === null ? null : perLaPagina(risultato)), [risultato])
   const [errore, setErrore] = useState<Errore | null>(null)
-  const [inCorso, setInCorso] = useState(false)
-  const [mostrato, setMostrato] = useState(false)
+  /*
+    ⚠️ I due partono **accesi** quando la sessione aveva un modulo, e non è un
+    dettaglio di comodità: è ciò che evita di chiamare `setState` dentro
+    l'effetto che rifà il calcolo. Se una sessione ricordava qualcosa, allora
+    al primo disegno una richiesta sta per partire e le sezioni stanno per
+    aprirsi: sono fatti noti prima di rendere, quindi si ricavano invece di
+    essere impostati dopo.
+  */
+  const [inCorso, setInCorso] = useState(ripreso !== null)
+  const [mostrato, setMostrato] = useState(ripreso !== null)
 
   const esito = useRef<HTMLDivElement>(null)
 
@@ -163,6 +189,38 @@ export function Calcolatore({
     },
     [applica],
   )
+
+  /**
+   * ⚠️ **Il calcolo ripreso si rifà, non si ridisegna.**
+   *
+   * Al montaggio, se la sessione ricordava un modulo, si rimanda la stessa
+   * domanda. `mostrato` e `inCorso` sono già accesi dall'inizializzatore, quindi
+   * qui non si imposta niente: il corpo dell'effetto fa **solo** la richiesta, e
+   * resta dentro la regola che questo file già segue — nessun `setState`
+   * sincrono in un effetto, che è ciò che aveva fatto scartare `useEffect` in
+   * D-036.
+   *
+   * ⚠️ Non si scorre e non si sposta il fuoco. Chi torna da `/norme` sta
+   * rientrando dove era, e il browser gli ha già restituito la posizione:
+   * portarlo altrove sarebbe un secondo spostamento che non ha chiesto. È
+   * l'unica differenza rispetto a `calcola`, ed è la ragione per cui questo
+   * effetto non lo riusa.
+   */
+  const ripresoAvviato = useRef(false)
+  useEffect(() => {
+    if (ripresoAvviato.current || ripreso === null) return
+    ripresoAvviato.current = true
+
+    const richiesta: RichiestaCalcolo = {
+      ral: Number(ripreso.ral.replace(',', '.')),
+      codiceCatastale: ripreso.comune.codiceCatastale,
+      tipoContratto: ripreso.tipoContratto,
+      mensilita: ripreso.mensilita,
+      lingua,
+    }
+    ultimaRichiesta.current = richiesta
+    void chiediEApplica(richiesta)
+  }, [ripreso, lingua, chiediEApplica])
 
   const calcola = useCallback(
     async (richiesta: RichiestaCalcolo) => {
@@ -252,6 +310,7 @@ export function Calcolatore({
   return (
     <div className="space-y-6">
       <SezioneInput
+        ripreso={ripreso}
         codiciSuggeriti={codiciSuggeriti}
         contrattoIniziale={contrattoIniziale}
         mensilitaIniziale={mensilitaIniziale}

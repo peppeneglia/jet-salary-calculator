@@ -209,10 +209,32 @@ async function Chiusura() {
                 ['/come-e-fatta', 'piede.linkTecnica'],
               ] as const
             ).map(([href, chiave]) => (
+              /*
+                ⚠️ **Riempimento nero via, contorno al suo posto: il nero
+                pieno vuol dire «sei qui», e queste tre pagine non sono dove
+                sei.**
+
+                Portavano `bg-su-verde text-su-verde-contro`, che è
+                **esattamente** la coppia con cui `nav.tsx` marca la voce
+                corrente della testata. La stessa pastiglia nera compariva
+                quindi due volte nello stesso piede con due significati
+                opposti: sopra diceva *questa è la pagina che stai leggendo*,
+                sotto diceva *questa è una pagina dove puoi andare*. Un
+                lettore che ha imparato la prima regola in testata la applica
+                al piede e legge tre pagine selezionate insieme, che non
+                vuol dire niente.
+
+                Il nero resta riservato allo stato selezionato, qui e nei
+                segmenti della sezione 1, dove significa la stessa cosa. Questi
+                diventano bottoni di contorno: si vedono come controlli, hanno
+                lo stesso bersaglio da 44px, e non rivendicano uno stato che
+                non hanno. La gerarchia fra i tre resta affidata all'ordine,
+                come già decideva il commento qui sopra.
+              */
               <Link
                 key={href}
                 href={href}
-                className="inline-flex min-h-11 items-center rounded-voce bg-su-verde px-4 py-2 text-sm font-semibold text-su-verde-contro transition-opacity hover:opacity-90 active:opacity-75"
+                className="inline-flex min-h-11 items-center rounded-voce border border-su-verde/35 px-4 py-2 text-sm font-semibold text-su-verde transition-colors hover:border-su-verde/70 hover:bg-su-verde/10 active:bg-su-verde/15"
               >
                 {t(chiave)}
               </Link>

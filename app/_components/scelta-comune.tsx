@@ -228,7 +228,6 @@ export function SceltaComune({
       disponibili.map((c) => ({
         comune: c,
         nome: normalizza(c.nome),
-        provincia: normalizza(c.provincia),
       })),
     [disponibili],
   )
@@ -261,12 +260,49 @@ export function SceltaComune({
     return [...fuoriElenco, ...citta]
   }, [comuni, codiciSuggeriti, comuneCorrente])
 
+  /**
+   * Il filtro guarda **solo il nome del comune**, e l'ordine premia l'inizio.
+   *
+   * ⚠️ **La provincia è uscita dal confronto.** Il filtro faceva
+   * `nome.includes(q) || provincia.includes(q)`, e la seconda metà rendeva il
+   * campo inservibile proprio sulle ricerche più ovvie: scrivendo `mi` la
+   * provincia di Milano combacia per intero, quindi uscivano i suoi
+   * duecento comuni in ordine alfabetico — *Abbiategrasso*, *Albairate*,
+   * *Arconate* — e Milano non era da nessuna parte nelle prime schermate. Chi
+   * scrive in un campo intitolato *Comune* sta cercando un comune; la sigla
+   * della provincia serve a **distinguere** due omonimi, e per questo resta
+   * scritta accanto a ogni voce, ma non è una chiave di ricerca.
+   *
+   * ⚠️ **E l'ordine non è più alfabetico**, che era l'altra metà del difetto.
+   * Con il solo `includes`, `mila` trovava *Milano* e *Cusano Milanino*, e
+   * l'ordine del catalogo metteva davanti il secondo: si finiva per dover
+   * scrivere il nome intero per vedere comparire quello che si cercava dalla
+   * prima lettera. Qui i risultati escono in tre gruppi, nell'ordine in cui
+   * chi scrive se li aspetta:
+   *
+   * 1. il nome **è esattamente** quello scritto;
+   * 2. il nome **comincia** con quello scritto;
+   * 3. il nome lo **contiene** più avanti.
+   *
+   * Dentro ogni gruppo resta l'ordine del catalogo, che è alfabetico. Il
+   * confronto è già fra stringhe normalizzate: il costo per battuta resta
+   * quello di prima, meno il ramo sulla provincia che è sparito.
+   */
   const visibili = useMemo(() => {
     if (senzaRicerca) return suggeriti ?? disponibili
     const q = normalizza(bozza ?? '')
-    return indicizzati
-      .filter((c) => c.nome.includes(q) || c.provincia.includes(q))
-      .map((c) => c.comune)
+
+    const esatti: ComuneSelezionabile[] = []
+    const inizia: ComuneSelezionabile[] = []
+    const contiene: ComuneSelezionabile[] = []
+
+    for (const c of indicizzati) {
+      if (c.nome === q) esatti.push(c.comune)
+      else if (c.nome.startsWith(q)) inizia.push(c.comune)
+      else if (c.nome.includes(q)) contiene.push(c.comune)
+    }
+
+    return [...esatti, ...inizia, ...contiene]
   }, [senzaRicerca, suggeriti, disponibili, indicizzati, bozza])
 
   /** L'intestazione si mostra solo quando le voci sotto sono davvero le suggerite. */

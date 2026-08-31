@@ -6,6 +6,7 @@ import { useTraduzione } from '../_i18n/provider'
 import type { Errore, RichiestaCalcolo } from '../_lib/api'
 import type { ComuneSelezionabile } from '../_lib/comuni'
 import { messaggioErrore } from '../_lib/errori'
+import { ricordaModulo, type ModuloRicordato } from '../_lib/sessione'
 import { etichettaContratto } from '../_lib/testi'
 import { leggiRal, validaComune } from '../_lib/validazione'
 import { Avviso } from './avviso'
@@ -213,11 +214,34 @@ function Segmenti<T extends string | number>({
                 : 'border-bordo-controllo bg-carta text-inchiostro-tenue hover:border-bordo-controllo-forte hover:text-inchiostro'
             }`}
           >
+            {/*
+              ⚠️ **`tabIndex={0}` su tutti, e non è il comportamento
+              predefinito dei radio.**
+
+              Un gruppo di radio nativi ha una sola tappa nel percorso di
+              tabulazione: il tasto Tab entra sull'opzione già scelta ed esce
+              dal gruppo, mentre a spostarsi fra le opzioni sono le frecce.
+              È la convenzione, ed è giusta per un modulo lungo dove i gruppi
+              sono molti e passarli tutti sarebbe un percorso interminabile.
+
+              Qui non lo è. I campi sono quattro, i due gruppi hanno tre
+              opzioni ciascuno, e stanno affiancati come tre bottoni: chi vede
+              tre bersagli si aspetta di raggiungerli con tre Tab. Con il
+              comportamento nativo il tasto saltava da *Indeterminato* a *12*,
+              cioè scavalcava le due opzioni accanto e quelle sotto, e le
+              frecce — che le raggiungerebbero — non le annuncia nessuno.
+
+              Le frecce continuano a funzionare, perché i radio restano radio:
+              si aggiunge un modo di arrivarci, non se ne toglie uno. Quello
+              che si perde è la scorciatoia per uscire dal gruppo con un Tab
+              solo, e su un modulo di quattro campi costa poco.
+            */}
             <input
               type="radio"
               name={nome}
               value={String(o)}
               checked={scelto}
+              tabIndex={0}
               onChange={() => onCambia(o)}
               className="fuoco-delegato sr-only"
             />
@@ -230,12 +254,22 @@ function Segmenti<T extends string | number>({
 }
 
 export function SezioneInput({
+  ripreso,
   codiciSuggeriti,
   contrattoIniziale,
   mensilitaIniziale,
   inCorso,
   onCalcola,
 }: {
+  /**
+   * Il modulo con cui la sessione era stata lasciata, se ce n'era uno.
+   *
+   * ⚠️ Riempie i quattro campi al primo disegno e non viene più riletto: da lì
+   * in poi comanda lo stato. È l'unica prop che può valere `null` senza che
+   * significhi *valore mancante*: significa *sessione nuova*, cioè modulo
+   * vuoto, che è il comportamento voluto a ogni riavvio.
+   */
+  ripreso: ModuloRicordato | null
   /**
    * ⚠️ Non l'elenco — D-058. L'elenco lo chiede il campo alla prima
    * apertura; qui passano solo i codici delle città da mostrare per prime,
@@ -274,7 +308,7 @@ export function SezioneInput({
   const campoRal = useRef<HTMLInputElement>(null)
   const campoComune = useRef<HTMLInputElement>(null)
 
-  const [ral, setRal] = useState('')
+  const [ral, setRal] = useState(ripreso?.ral ?? '')
   /**
    * ⚠️ Il comune scelto si tiene per intero, non come codice (D-058).
    *
@@ -284,15 +318,19 @@ export function SezioneInput({
    * calcolabile. La selezione arriva completa da `SceltaComune`, che l'elenco
    * ce l'ha nel momento in cui si sceglie.
    */
-  const [comuneScelto, setComuneScelto] = useState<ComuneSelezionabile | null>(null)
+  const [comuneScelto, setComuneScelto] = useState<ComuneSelezionabile | null>(
+    ripreso?.comune ?? null,
+  )
   const codiceCatastale = comuneScelto?.codiceCatastale ?? ''
-  const [tipoContratto, setTipoContratto] = useState<TipoContratto>(contrattoIniziale)
+  const [tipoContratto, setTipoContratto] = useState<TipoContratto>(
+    ripreso?.tipoContratto ?? contrattoIniziale,
+  )
   /*
     Nessun ripiego: il valore da cui si parte lo decide `MENSILITA_INIZIALE` in
     `_lib/calcolo.ts` e arriva come prop. Un `?? 12` qui sarebbe la terza sede
     dello stesso numero (D-052).
   */
-  const [mensilita, setMensilita] = useState<Mensilita>(mensilitaIniziale)
+  const [mensilita, setMensilita] = useState<Mensilita>(ripreso?.mensilita ?? mensilitaIniziale)
 
   /**
    * Gli errori del modulo, per campo — D-043.
@@ -343,6 +381,19 @@ export function SezioneInput({
     }
 
     setErrori({})
+
+    /*
+      ⚠️ Si ricorda **qui e non in `calcola`**, perché qui il modulo è
+      completo. `RichiestaCalcolo` porta il codice catastale e non il comune con
+      nome e provincia: ricostruendolo da lì, tornando da `/norme` il campo
+      mostrerebbe `F205` finché l'elenco dei comuni non arriva. E si ricorda
+      dopo la validazione, non prima: un modulo storpiato non merita di
+      sopravvivere a un cambio di pagina.
+    */
+    if (comuneScelto !== null) {
+      ricordaModulo({ ral, comune: comuneScelto, tipoContratto, mensilita })
+    }
+
     onCalcola({
       ral: lettura.valore,
       codiceCatastale,
