@@ -36,6 +36,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import type { CodiceLingua } from '../../core/types'
 import { traduzione } from '../_i18n/server'
+import { Ricerca, combacia } from '../_components/ricerca'
 import { formato } from '../_lib/formato'
 import type { Scheda } from '../_lib/norme'
 import { SEZIONI } from '../_lib/norme'
@@ -139,7 +140,17 @@ function SchedaNorma({
   }
 }) {
   return (
-    <li className="rounded-blocco border border-bordo-decorativo bg-carta px-5 py-5">
+    /*
+      ⚠️ `id` e `scroll-mt`: è qui che atterrano le citazioni del calcolatore e
+      della spiegazione. Senza il margine di scorrimento la scheda finirebbe
+      incollata al bordo alto della finestra, con il titolo a filo: chi arriva
+      da un link deve vedere subito che è arrivato su una scheda, non su un
+      frammento di testo.
+    */
+    <li
+      id={scheda.id}
+      className="scroll-mt-4 rounded-blocco border border-bordo-decorativo bg-carta px-5 py-5 target:border-verde"
+    >
       <h3 className="text-base font-semibold tracking-tight text-inchiostro">
         {scheda.atto}
         {scheda.riferimento ? (
@@ -214,8 +225,47 @@ export default async function Norme({ searchParams }: PageProps<'/norme'>) {
   const { t, lingua } = await traduzione()
   const { inData } = formato(lingua)
 
-  const attive = sezioniChieste((await searchParams)[PARAMETRO])
-  const visibili = attive.length === 0 ? SEZIONI : SEZIONI.filter((s) => attive.includes(s.id))
+  const parametri = await searchParams
+  const attive = sezioniChieste(parametri[PARAMETRO])
+  const grezzo = parametri.q
+  const ricerca = (Array.isArray(grezzo) ? grezzo[0] : grezzo) ?? ''
+
+  const perSezione = attive.length === 0 ? SEZIONI : SEZIONI.filter((s) => attive.includes(s.id))
+
+  /**
+   * ⚠️ **La ricerca guarda tutto quello che la scheda mostra, e in una lingua
+   * sola: quella di chi legge.**
+   *
+   * Compresi `atto` e `riferimento`, che non si traducono: chi cerca *207/2024*
+   * o *art. 13* sta cercando la chiave con cui la norma si ritrova, ed è la
+   * ricerca più probabile su una pagina di questo genere. Comprese le note,
+   * perché è lì che stanno le cose che non si sanno prima di leggerle.
+   *
+   * Cercare anche nell'altra lingua darebbe risultati che poi non si vedono in
+   * pagina, e sarebbe il difetto peggiore di una ricerca: dire *c'è* e non
+   * mostrarlo.
+   */
+  const testoScheda = (s: Scheda): string =>
+    [
+      s.atto,
+      s.riferimento ?? '',
+      s.dispone[lingua],
+      s.effetto[lingua],
+      s.vigenza?.[lingua] ?? '',
+      s.ultimaModifica?.[lingua] ?? '',
+      ...(s.note ?? []).map((n) => n[lingua]),
+    ].join(' ')
+
+  /*
+    Una sezione entra se le resta almeno una scheda. Mostrarne una vuota, con il
+    proprio titolo e il proprio occhiello, direbbe che lì dentro c'è qualcosa
+    che combacia mentre non c'è.
+  */
+  const visibili = perSezione
+    .map((s) => ({ ...s, schede: s.schede.filter((x) => combacia(testoScheda(x), ricerca)) }))
+    .filter((s) => s.schede.length > 0)
+
+  const quante = visibili.reduce((n, s) => n + s.schede.length, 0)
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6 sm:py-14">
@@ -251,6 +301,26 @@ export default async function Norme({ searchParams }: PageProps<'/norme'>) {
             </Chip>
           ))}
         </nav>
+
+        {/*
+          La ricerca riporta il filtro per sezione dentro il form, altrimenti
+          ogni Invio cancellerebbe le chip selezionate. Le due cose si
+          compongono: si può cercare dentro una sezione sola.
+        */}
+        <Ricerca
+          azione="/norme"
+          valore={ricerca}
+          etichetta={t('norme.cercaEtichetta')}
+          segnaposto={t('norme.cercaSegnaposto')}
+          bottone={t('norme.cercaBottone')}
+          altri={attive.length === 0 ? [] : [[PARAMETRO, attive.join(',')]]}
+        />
+
+        {ricerca.trim() !== '' ? (
+          <p className="mt-3 text-sm text-inchiostro-tenue" aria-live="polite">
+            {t('norme.cercaEsito', { n: quante, ricerca })}
+          </p>
+        ) : null}
       </div>
 
       <main className="space-y-6">
@@ -268,7 +338,7 @@ export default async function Norme({ searchParams }: PageProps<'/norme'>) {
             <ul className="mt-5 space-y-4">
               {sezione.schede.map((scheda) => (
                 <SchedaNorma
-                  key={`${scheda.atto}-${scheda.riferimento ?? ''}`}
+                  key={scheda.id}
                   scheda={scheda}
                   lingua={lingua}
                   etichette={{
@@ -284,12 +354,6 @@ export default async function Norme({ searchParams }: PageProps<'/norme'>) {
           </section>
         ))}
 
-        <div className="rounded-sezione border border-bordo-decorativo bg-carta p-6 sm:p-8">
-          <h2 className="text-lg font-semibold tracking-tight text-inchiostro">
-            {t('norme.vuotoTitolo')}
-          </h2>
-          <p className="mt-2 leading-relaxed text-inchiostro-tenue">{t('norme.vuotoTesto')}</p>
-        </div>
       </main>
     </div>
   )

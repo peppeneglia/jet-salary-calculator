@@ -45,15 +45,16 @@ export const SPIEGAZIONE = {
     en: 'How a gross salary becomes take-home pay',
   },
   occhiello: {
-    it: 'Il percorso è lo stesso per chiunque, ovunque tu viva: cambiano le cifre, non i passaggi. Qui c’è per intero — che cosa esce dallo stipendio, in quale ordine, e perché l’ordine cambia il risultato. Sotto ogni passaggio ci sono le cifre che lo governano, con la norma che le stabilisce.',
-    en: 'The route is the same for everyone, wherever you live: the figures change, the steps do not. Here it is in full — what leaves your salary, in what order, and why the order changes the result. Under every step are the figures that govern it, with the rule that sets each one.',
+    it: 'Il percorso è lo stesso per chiunque, ovunque tu viva: cambiano le cifre, non i passaggi. Qui c’è per intero: che cosa esce dallo stipendio, in quale ordine, e perché l’ordine cambia il risultato. Sotto ogni passaggio ci sono le cifre che lo governano, con la norma che le stabilisce.',
+    en: 'The route is the same for everyone, wherever you live: the figures change, the steps do not. Here it is in full: what leaves your salary, in what order, and why the order changes the result. Under every step are the figures that govern it, with the rule that sets each one.',
   },
-  occhielloCifre: {
-    it: 'Le cifre sono quelle che il calcolatore applica davvero: non una copia scritta a mano, ma gli stessi valori letti dagli stessi file. E i grafici sono disegnati chiamando le stesse funzioni del calcolo.',
-    en: 'The figures are the ones the calculator actually applies: not a copy typed out by hand, but the same values read from the same files. And the charts are drawn by calling the same functions the calculation uses.',
-  },
-  anno: { it: 'Anno d’imposta', en: 'Tax year' },
   indice: { it: 'Vai a', en: 'Jump to' },
+  cercaEtichetta: { it: 'Cerca nella spiegazione', en: 'Search the explanation' },
+  cercaSegnaposto: {
+    it: 'Cerca una parola: detrazione, addizionale, cuneo…',
+    en: 'Search a word: credit, surcharge, wedge…',
+  },
+  cercaBottone: { it: 'Cerca', en: 'Search' },
 
   catenaTitolo: {
     it: 'La catena, in un colpo d’occhio',
@@ -92,8 +93,8 @@ export const SPIEGAZIONE = {
     en: 'The same tax, collected by the region and the municipality, at their own rates.',
   },
   catenaStessaBase: {
-    it: 'Le due strade partono dalla stessa cifra. La seconda non si calcola su quello che resta dopo aver pagato la prima: è l’errore più comune dei calcolatori improvvisati, e produce un numero credibile e sbagliato.',
-    en: 'Both routes start from the same figure. The second one is not computed on what is left after paying the first: that is the commonest mistake in home-made calculators, and it produces a believable, wrong number.',
+    it: 'Le due strade partono dalla stessa cifra: l’addizionale non si calcola su quello che resta dopo aver pagato l’IRPEF, ma sullo stesso imponibile.',
+    en: 'Both routes start from the same figure: the addizionale is not computed on what is left after paying the IRPEF, but on the same taxable base.',
   },
   catenaAggiunge: { it: 'Voci che aggiungono', en: 'Items that add' },
   catenaAggiungeNota: {
@@ -107,8 +108,8 @@ export const SPIEGAZIONE = {
   },
 
   fonteEtichetta: {
-    it: 'Da dove viene questo numero',
-    en: 'Where this figure comes from',
+    it: 'Fonti',
+    en: 'Sources',
   },
 
   primoTitolo: { it: 'Prima escono i contributi', en: 'Contributions come out first' },
@@ -167,8 +168,8 @@ export const SPIEGAZIONE = {
     en: 'Lowers the tax once it has been worked out, euro for euro. It is worth the same amount to everyone, whatever the band.',
   },
   detrazioniP1: {
-    it: 'Le detrazioni hanno un limite, ed è quello che si sente di meno: non possono portare l’imposta sotto zero. Se valgono più dell’imposta, l’eccedenza non diventa un credito da incassare — si perde. È il motivo per cui, sotto un certo stipendio, aggiungere detrazioni non cambia più niente.',
-    en: 'Tax credits carry a limit, and it is the least talked about: they cannot push the tax below zero. If they are worth more than the tax, the excess does not turn into money you can claim — it is lost. That is why, below a certain salary, adding credits changes nothing at all.',
+    it: 'Le detrazioni hanno un limite, ed è quello che si sente di meno: non possono portare l’imposta sotto zero. Se valgono più dell’imposta, l’eccedenza non diventa un credito da incassare: si perde. È il motivo per cui, sotto un certo stipendio, aggiungere detrazioni non cambia più niente.',
+    en: 'Tax credits carry a limit, and it is the least talked about: they cannot push the tax below zero. If they are worth more than the tax, the excess does not turn into money you can claim: it is lost. That is why, below a certain salary, adding credits changes nothing at all.',
   },
 
   localiTitolo: { it: 'Poi arrivano Regione e Comune', en: 'Then the region and the municipality' },
@@ -177,8 +178,8 @@ export const SPIEGAZIONE = {
     en: 'Two more taxes, on the same income, at rates decided locally.',
   },
   localiP1: {
-    it: 'Le addizionali non le fissa lo Stato: le delibera ogni Regione e ogni Comune. Due persone con lo stesso stipendio, in due città diverse, non pagano la stessa cifra — ed è la ragione per cui un calcolatore che non ti chiede dove vivi non può darti il numero giusto.',
-    en: 'The surcharges are not set by the state: each region and each municipality adopts its own. Two people on the same salary in two different towns do not pay the same amount — which is why a calculator that never asks where you live cannot give you the right figure.',
+    it: 'Le addizionali non le fissa lo Stato: le delibera ogni Regione e ogni Comune. Due persone con lo stesso stipendio, in due città diverse, non pagano la stessa cifra. È la ragione per cui un calcolatore che non ti chiede dove vivi non può darti il numero giusto.',
+    en: 'The surcharges are not set by the state: each region and each municipality adopts its own. Two people on the same salary in two different towns do not pay the same amount. That is why a calculator that never asks where you live cannot give you the right figure.',
   },
   localiPunto1Titolo: {
     it: 'Si calcolano sull’imponibile, non su quello che resta',
@@ -193,8 +194,8 @@ export const SPIEGAZIONE = {
     en: 'If IRPEF ends up at zero, they are not due at all',
   },
   localiPunto2: {
-    it: 'Non si riducono: si spengono. La legge le lega all’esito dell’imposta statale, e la condizione è secca — o si pagano sull’intero reddito, o non si pagano.',
-    en: 'They do not shrink: they switch off. The law ties them to the outcome of the state tax, and the condition is all-or-nothing — either they are paid on the whole income, or they are not paid.',
+    it: 'Non si riducono: si spengono. La legge le lega all’esito dell’imposta statale, e la condizione è secca: o si pagano sull’intero reddito, o non si pagano.',
+    en: 'They do not shrink: they switch off. The law ties them to the outcome of the state tax, and the condition is all-or-nothing: either they are paid on the whole income, or they are not paid.',
   },
   localiPunto3Titolo: {
     it: 'Molti Comuni fissano una soglia sotto la quale non si paga',
@@ -222,8 +223,8 @@ export const SPIEGAZIONE = {
     en: 'There are sums your employer pays you that the law declares untaxable. They do not enter your income, so they do not push the tax up, and they add to what is left to you.',
   },
   aggiungeP2: {
-    it: 'Non sono uno sconto sulle imposte e non sono un rimborso: sono soldi in più. Per questo, nel dettaglio del calcolo, il loro segno è positivo — e per questo quella sezione non si può chiamare «trattenute».',
-    en: 'They are not a discount on tax and they are not a refund: they are extra money. That is why their sign is positive in the breakdown — and why that section cannot be called “deductions”.',
+    it: 'Non sono uno sconto sulle imposte e non sono un rimborso: sono soldi in più. Per questo, nel dettaglio del calcolo, il loro segno è positivo, e per questo quella sezione non si può chiamare «trattenute».',
+    en: 'They are not a discount on tax and they are not a refund: they are extra money. That is why their sign is positive in the breakdown, and why that section cannot be called “deductions”.',
   },
   aggiungeP3: {
     it: 'Quanto valgono dipende dal reddito, e una di esse dipende anche da come è andato il calcolo dell’imposta. Sotto certi stipendi arrivano intere; sopra una soglia spariscono.',
@@ -264,17 +265,26 @@ export const SPIEGAZIONE = {
   gradiniAsseY: { it: 'Netto', en: 'Net pay' },
   gradiniEtichetta: { it: 'Qui il netto scende', en: 'Net pay drops here' },
   gradiniNota: {
-    it: 'È uno schema, non un calcolo: serve a mostrare la forma. Dove cadano davvero quei punti dipende dal Comune in cui vivi, perché molte soglie le fissa il Comune — non esiste un elenco valido per tutti.',
-    en: 'This is a diagram, not a calculation: it shows the shape. Where those points actually fall depends on the municipality you live in, because many thresholds are set by the municipality — there is no single list that holds for everyone.',
+    it: 'È uno schema, non un calcolo: serve a mostrare la forma. Dove cadano davvero quei punti dipende dal Comune in cui vivi, perché molte soglie le fissa il Comune, e non esiste un elenco valido per tutti.',
+    en: 'This is a diagram, not a calculation: it shows the shape. Where those points actually fall depends on the municipality you live in, because many thresholds are set by the municipality, and there is no single list that holds for everyone.',
   },
 
   bustaTitolo: {
     it: 'Perché questo conto non coincide con la tua busta paga',
     en: 'Why this figure does not match your payslip',
   },
+  /**
+   * ⚠️ **Annunciava due domande dopo averne posta una.**
+   *
+   * Il titolo chiede *perché questo conto non coincide con la tua busta paga*,
+   * cioè una domanda sola; la riga sotto rispondeva *«sono due domande
+   * diverse»*, lasciando cercare quale fosse la seconda. Intendeva dire che il
+   * calcolatore e la busta paga rispondono a domande diverse, il che è vero e
+   * utile, ma detto così si legge come un rinvio a qualcosa che non c'è.
+   */
   bustaP1: {
-    it: 'Sono due domande diverse, e nessuna delle due risposte è sbagliata.',
-    en: 'They are two different questions, and neither answer is wrong.',
+    it: 'Perché il calcolatore e la busta paga rispondono a due domande diverse, e nessuna delle due risposte è sbagliata.',
+    en: 'Because the calculator and your payslip answer two different questions, and neither answer is wrong.',
   },
   bustaP2: {
     it: 'Qui si proietta il netto di un anno intero, per uno stipendio percepito tutto nell’anno. Una busta paga dice quanto arriva quel mese, e contiene voci che appartengono ad anni diversi: le addizionali di un anno si pagano a rate in quello dopo, e a dicembre si ricalcola tutto sull’anno effettivo.',
@@ -306,15 +316,6 @@ export const SPIEGAZIONE = {
     it: 'Non è un’aliquota alternativa: si somma a quella del dipendente, e solo sulla parte di retribuzione che supera la prima fascia pensionabile.',
     en: 'It is not an alternative rate: it adds to the employee one, and only on the part of pay above the first pension band.',
   },
-  contributiApprendistaNota: {
-    it: 'La legge non fissa un numero per l’apprendista: dispone di ridurre «di tre punti» l’aliquota ordinaria, e lo fa su una base leggermente diversa. La differenza che ne esce non è quindi di tre punti.',
-    en: 'The law sets no figure for apprentices: it provides for cutting the ordinary rate “by three points”, and does so on a slightly different base. The resulting gap is therefore not three points.',
-  },
-
-  irpefCambio: {
-    it: 'L’aliquota centrale è scesa per il 2026: era il 35%, e la nota all’articolo dice quale legge l’ha sostituita. I confini degli scaglioni non si sono mossi — è cambiata solo lei.',
-    en: 'The middle rate came down for 2026: it used to be 35%, and the footnote to the article names the law that replaced it. The bracket boundaries did not move — only the rate did.',
-  },
 
   detrazioneCurvaTitolo: {
     it: 'Quanto vale, al crescere del reddito',
@@ -335,8 +336,13 @@ export const SPIEGAZIONE = {
     en: 'How it is worked out, band by band',
   },
   detrazioneTroncamento: {
-    it: 'Il rapporto dentro la formula si tronca alla quarta cifra decimale — non si arrotonda. Lo scrive la norma, e non è un dettaglio di stile: cambia il centesimo, e cambiarlo sarebbe applicare una formula diversa da quella di legge.',
-    en: 'The ratio inside the formula is truncated at the fourth decimal — not rounded. The rule says so, and it is not a matter of style: it changes the cent, and changing it would mean applying a formula other than the one in law.',
+    it: 'Il rapporto dentro la formula si tronca alla quarta cifra decimale, non si arrotonda. Lo scrive la norma, e non è un dettaglio di stile: cambia il centesimo, e cambiarlo sarebbe applicare una formula diversa da quella di legge.',
+    en: 'The ratio inside the formula is truncated at the fourth decimal, not rounded. The rule says so, and it is not a matter of style: it changes the cent, and changing it would mean applying a formula other than the one in law.',
+  },
+  /** La frase che introduce i due minimi, che prima erano due cifre nude. */
+  detrazioneMinimiIntro: {
+    it: 'I due minimi della prima fascia sono questi:',
+    en: 'The two floors on the first band are these:',
   },
   detrazioneMinimi: {
     it: 'Nella prima fascia la detrazione non può scendere sotto un minimo, più alto per i contratti a tempo determinato. I due minimi mordono solo per chi ha lavorato una parte dell’anno: su un anno intero la detrazione piena è più alta di entrambi, e nessuno dei due si attiva mai.',
@@ -348,8 +354,8 @@ export const SPIEGAZIONE = {
     en: 'The wedge cut: two measures that hand over to each other',
   },
   cuneoOcchiello: {
-    it: 'Non è un passaggio della catena: è un fenomeno a cavallo di due passaggi. Sotto una certa soglia una somma si aggiunge al netto senza essere tassata; sopra, una detrazione abbassa l’imposta. Non si sovrappongono mai, perché la norma usa parole diverse ai due lati — «non superiore a» di qua, «superiore a» di là.',
-    en: 'It is not a step in the chain: it is a phenomenon straddling two steps. Below a certain threshold a sum is added to take-home pay untaxed; above it, a credit lowers the tax. They never overlap, because the law uses different words on each side — “not above” on one, “above” on the other.',
+    it: 'Non è un passaggio della catena: è un fenomeno a cavallo di due passaggi. Sotto una certa soglia una somma si aggiunge al netto senza essere tassata; sopra, una detrazione abbassa l’imposta. Non si sovrappongono mai, perché la norma usa parole diverse ai due lati: «non superiore a» di qua, «superiore a» di là.',
+    en: 'It is not a step in the chain: it is a phenomenon straddling two steps. Below a certain threshold a sum is added to take-home pay untaxed; above it, a credit lowers the tax. They never overlap, because the law uses different words on each side: “not above” on one, “above” on the other.',
   },
   cuneoSomma: { it: 'La somma', en: 'The sum' },
   cuneoDetrazione: { it: 'La detrazione', en: 'The credit' },
@@ -379,28 +385,23 @@ export const SPIEGAZIONE = {
     it: 'Più scuro, più alta l’aliquota massima',
     en: 'Darker means a higher top rate',
   },
-  mappaGeometrie: {
-    it: 'I confini sono quelli pubblicati dall’ISTAT. Non sono un dato fiscale: servono a disegnare, e il tracciato è semplificato per stare in pagina.',
-    en: 'The boundaries are those published by ISTAT. They are not tax data: they are there to draw with, and the outline is simplified to fit the page.',
-  },
+  /**
+   * ⚠️ Era un paragrafo sul nostro dataset, ora è un fatto in una riga.
+   *
+   * Spiegava perché le sagome sono ventuno e le regioni venti, cioè rispondeva
+   * a una domanda che chi legge non si era fatto. Quello che gli serve sapere è
+   * che sulla mappa Trento e Bolzano si cliccano separatamente, ed è quello che
+   * dice adesso.
+   */
   regionaleVentuno: {
-    it: 'Sulla mappa il Trentino-Alto Adige non compare, e non è una dimenticanza: l’addizionale la deliberano separatamente le Province autonome di Trento e di Bolzano. Come ente che fissa l’aliquota quella regione non esiste — e per questo le sagome sono una più delle regioni d’Italia.',
-    en: 'Trentino-Alto Adige is missing from the map, and that is not an oversight: the surcharge is set separately by the autonomous provinces of Trento and Bolzano. As the authority that sets the rate that region does not exist — which is why there is one shape more than there are Italian regions.',
-  },
-  regionaleGruppiTitolo: { it: 'Su quali valori si posano', en: 'Where the rates cluster' },
-  regionaleAddensamento: {
-    it: 'C’è un fatto che i dati mostrano e che nessuno racconta: regioni senza alcun rapporto fra loro atterrano sullo stesso identico secondo decimale, e le distanze fra i gruppi sono regolari. Sembra la firma di aumenti imposti da una norma statale più che di scelte fatte una per una. Quale norma sia non lo sappiamo ancora — ed è scritto qui invece di essere taciuto.',
-    en: 'There is a fact the data shows and nobody tells: regions with no connection to one another land on the very same second decimal, and the gaps between the clusters are regular. It looks like the signature of increases imposed by a national rule rather than of choices made one by one. Which rule we do not yet know — and that is written here rather than left unsaid.',
-  },
-  regionaleTetto: {
-    it: 'La norma statale consente a ciascun ente di portare l’aliquota fino a un tetto. La maggioranza lo supera, e di molto. Quale norma lo consenta è una delle domande rimaste aperte: due enti citano il disavanzo sanitario, gli altri non dicono niente.',
-    en: 'National law lets each authority raise its rate up to a ceiling. Most of them go past it, by a lot. Which rule allows that is one of the questions left open: two authorities cite a healthcare deficit, the rest say nothing.',
+    it: 'Sulla mappa il Trentino-Alto Adige è rappresentato dalle due Province autonome, Trento e Bolzano, perché l’addizionale la deliberano separatamente.',
+    en: 'On the map Trentino-Alto Adige appears as its two autonomous provinces, Trento and Bolzano, because each sets the surcharge separately.',
   },
 
   comunaleTitolo: { it: 'E quanto chiede il Comune', en: 'And what the municipality asks' },
   comunaleOcchiello: {
-    it: 'Il terzo livello, e il più frammentato: ogni Comune delibera per conto proprio, e quasi nessuno lo fa allo stesso modo. Non c’è una mappa che tenga — ci sono le forme che quelle delibere assumono, contate una per una.',
-    en: 'The third level, and the most fragmented: every municipality decides for itself, and almost none of them in the same way. No map could hold this — what follows is the shapes those decisions take, counted one by one.',
+    it: 'Il terzo livello, e il più frammentato: ogni Comune delibera per conto proprio, e quasi nessuno lo fa allo stesso modo. Non c’è una mappa che tenga: ci sono le forme che quelle delibere assumono, contate una per una.',
+    en: 'The third level, and the most fragmented: every municipality decides for itself, and almost none of them in the same way. No map could hold this: what follows is the shapes those decisions take, counted one by one.',
   },
   comunaleConAddizionale: {
     it: 'Comuni con un’addizionale da pagare',
@@ -427,19 +428,14 @@ export const SPIEGAZIONE = {
     it: 'Il tetto è una norma, e questi Comuni lo superano. La norma che glielo consenta non l’abbiamo trovata: il valore resta quello che il ministero pubblica, senza ritocchi. Ritoccarlo per farlo rientrare produrrebbe un numero più ordinato e sbagliato.',
     en: 'The ceiling is in law, and these municipalities exceed it. We could not find the rule that lets them: the figure stays as the ministry publishes it, untouched. Trimming it to fit would produce a tidier and wrong number.',
   },
-  comunaleMilano: { it: 'Il caso di partenza', en: 'The starting case' },
-  comunaleMilanoTesto: {
-    it: 'Milano non ha deliberato per il 2026, e la legge dice di applicare quella già vigente l’anno prima. È il Comune da cui parte il calcolatore, e passa dal ramo di ripiego — non da quello principale. Trattare come zero i Comuni che non deliberano darebbe qui un numero sbagliato in modo invisibile.',
-    en: 'Milan set no rate for 2026, and the law says to apply the one already in force the year before. It is the municipality the calculator starts from, and it comes through the fallback branch — not the main one. Treating municipalities that do not decide as zero would give an invisibly wrong figure right here.',
-  },
 
   tiTitolo: { it: 'Il trattamento integrativo', en: 'The supplementary allowance' },
   tiImporto: { it: 'Importo', en: 'Amount' },
   tiSoglia: { it: 'Spetta fino a', en: 'Granted up to' },
   tiScartoEtichetta: { it: 'Scarto sulla condizione', en: 'Margin on the condition' },
   tiCondizione: {
-    it: 'Non basta stare sotto la soglia: spetta solo a chi ha imposta da pagare, cioè a chi ha un’imposta lorda più alta della propria detrazione diminuita di un piccolo scarto. È il contrario di come si immagina un aiuto ai redditi bassi — chi non paga imposta non lo prende.',
-    en: 'Being under the threshold is not enough: it goes only to those with tax to pay, that is, whose gross tax exceeds their credit less a small margin. It is the opposite of how you would imagine support for low incomes — someone with no tax to pay does not get it.',
+    it: 'Non basta stare sotto la soglia: spetta solo a chi ha imposta da pagare, cioè a chi ha un’imposta lorda più alta della propria detrazione diminuita di un piccolo scarto. È il contrario di come si immagina un aiuto ai redditi bassi: chi non paga imposta non lo prende.',
+    en: 'Being under the threshold is not enough: it goes only to those with tax to pay, that is, whose gross tax exceeds their credit less a small margin. It is the opposite of how you would imagine support for low incomes: someone with no tax to pay does not get it.',
   },
   tiScarto: {
     it: 'Quello scarto ha una storia precisa: la stessa legge che ha alzato la detrazione per lavoro dipendente lo ha sottratto qui, dello stesso importo, per lasciare la soglia di accesso esattamente dov’era.',
@@ -458,15 +454,6 @@ export const SPIEGAZIONE = {
     en: 'These are the steps visible in the charts above, measured on the same curves. The last one has no single value: each municipality sets its own threshold, so the drop is as large as that municipality’s rate applied to the whole base.',
   },
 
-  provenienzaTitolo: { it: 'Da dove vengono queste cifre', en: 'Where these figures come from' },
-  provenienzaP1: {
-    it: 'Le aliquote di legge e le soglie stanno in un file di parametri, ciascuna accanto all’atto che la stabilisce e alla data in cui è stato letto. I valori degli enti locali arrivano invece dagli elenchi del Ministero dell’Economia e delle Finanze, convertiti una volta sola e senza correzioni.',
-    en: 'The statutory rates and thresholds live in a parameter file, each next to the act that sets it and the date it was read. The local authorities’ figures come instead from the lists published by the Italian Ministry of Economy and Finance, converted once and left uncorrected.',
-  },
-  provenienzaP2: {
-    it: 'Nessun numero di questa pagina è stato riscritto a mano per mostrarlo: sono gli stessi che il calcolatore legge quando fa il conto, e i grafici sono disegnati chiamando le stesse funzioni. È la ragione per cui i conteggi possono sembrare insoliti — non vengono da un comunicato, vengono dal contare le righe.',
-    en: 'No figure on this page was retyped in order to show it: they are the same ones the calculator reads when it runs, and the charts are drawn by calling the same functions. That is why the counts may look unusual — they do not come from a press release, they come from counting rows.',
-  },
   chiusuraTitolo: { it: 'Dove continuare', en: 'Where to go next' },
   chiusuraTesto: {
     it: 'Questa pagina racconta il meccanismo. Le norme che lo stabiliscono, una per una, stanno nell’archivio; i confini di quello che qui non viene calcolato stanno nella pagina dei limiti.',
@@ -476,6 +463,48 @@ export const SPIEGAZIONE = {
   chiusuraNorme: { it: 'Leggi le norme →', en: 'Read the law →' },
   chiusuraNonCopre: { it: 'Cosa non copriamo →', en: 'What we do not cover →' },
 } as const satisfies Readonly<Record<string, Multilingua>>
+
+/**
+ * L'occhiello sulle cifre, con dentro l'anno d'imposta.
+ *
+ * ⚠️ **L'anno sta in questa frase e non più in una pastiglia sotto il
+ * titolo.** Il riquadro con *Anno d'imposta 2026* dava il rilievo di un
+ * controllo a un qualificatore, e lo dava nel punto più visibile dopo il
+ * titolo, su una pagina che spiega un **meccanismo** che ogni anno è lo stesso.
+ *
+ * Riceve la cifra invece di scriverla: arriva da `regime2026.anno`, cioè dal
+ * regime che il motore applica davvero, quindi non può restare indietro
+ * rispetto ai parametri che la pagina mostra. È la ragione per cui questo file
+ * non contiene nessun numero, e per cui questa è una funzione e non una
+ * stringa.
+ */
+/**
+ * Quanti passaggi combaciano con la ricerca.
+ *
+ * ⚠️ Dice **passaggi** e non risultati, perché la pagina non si accorcia: la
+ * ricerca restringe l'indice, e questa frase deve dire che cosa è
+ * successo davvero.
+ */
+export const cercaEsito = (n: number, ricerca: string): Multilingua =>
+  n === 0
+    ? {
+        it: `Nessun passaggio parla di «${ricerca}».`,
+        en: `No step mentions “${ricerca}”.`,
+      }
+    : n === 1
+      ? {
+          it: `Un passaggio parla di «${ricerca}».`,
+          en: `One step mentions “${ricerca}”.`,
+        }
+      : {
+          it: `${n} passaggi parlano di «${ricerca}».`,
+          en: `${n} steps mention “${ricerca}”.`,
+        }
+
+export const occhielloCifre = (anno: string): Multilingua => ({
+  it: `Le cifre sono quelle che il calcolatore applica davvero per l’anno d’imposta ${anno}: non una copia scritta a mano, ma gli stessi valori letti dagli stessi file. E i grafici sono disegnati chiamando le stesse funzioni del calcolo.`,
+  en: `The figures are the ones the calculator actually applies for tax year ${anno}: not a copy typed out by hand, but the same values read from the same files. And the charts are drawn by calling the same functions the calculation uses.`,
+})
 
 /**
  * L'etichetta di una fascia di reddito.
@@ -538,29 +567,19 @@ export const contributiCondizione = (limite: string): Multilingua => ({
   en: `The additional share is owed because the employee rate sits below ${limite}. That is a condition, not a given: were the rate to rise above that limit, the contribution would switch itself off.`,
 })
 
-/**
- * ⚠️ **Punti, non per cento**, e la differenza non è pedanteria: fra 9,19% e
- * 5,84% ci sono 3,35 *punti percentuali*, mentre «il 3,35% in meno» sarebbe una
- * riduzione del 3,35% di 9,19, cioè un altro numero.
- */
-export const differenzaApprendista = (punti: string): Multilingua => ({
-  it: `Fra le due aliquote ci sono ${punti} punti, non tre`,
-  en: `Between the two rates there are ${punti} points, not three`,
-})
-
 export const detrazioneSaltoTesto = (soglia: string, salto: string): Multilingua => ({
   it: `Il gradino a ${soglia} va nella direzione contraria a quella che ci si aspetta: superando quella soglia la detrazione non cala, sale di ${salto}. È l’effetto di due lettere della stessa norma che si raccordano male, e nel grafico è il muro che sale.`,
   en: `The step at ${soglia} runs the opposite way to what you would expect: crossing that threshold the credit does not fall, it rises by ${salto}. It is the effect of two paragraphs of the same rule that meet badly, and in the chart it is the wall going up.`,
 })
 
 export const minimoGenerale = (importo: string): Multilingua => ({
-  it: `Minimo ${importo}`,
-  en: `Floor of ${importo}`,
+  it: `Non scende sotto ${importo}, qualunque sia la retribuzione`,
+  en: `It never falls below ${importo}, whatever the pay`,
 })
 
 export const minimoDeterminato = (importo: string): Multilingua => ({
-  it: `Minimo ${importo} a tempo determinato`,
-  en: `Floor of ${importo} on fixed-term contracts`,
+  it: `Con un contratto a tempo determinato il minimo sale a ${importo}`,
+  en: `On a fixed-term contract that floor rises to ${importo}`,
 })
 
 export const cuneoRaccordo = (soglia: string, somma: string, detrazione: string): Multilingua => ({
@@ -569,46 +588,49 @@ export const cuneoRaccordo = (soglia: string, somma: string, detrazione: string)
 })
 
 export const cuneoMarginale = (da: string, a: string, aliquota: string): Multilingua => ({
-  it: `Fra ${da} e ${a} succede una cosa che nessun calcolatore mostra: su ogni euro in più agiscono insieme l’aliquota del ${aliquota}, la discesa della detrazione per lavoro dipendente e la discesa di questa. Sommandole, di quell’euro in più resta meno della metà.`,
-  en: `Between ${da} and ${a} something happens that no calculator shows: on every extra euro the ${aliquota} rate, the decline of the employee credit and the decline of this one all act at once. Added up, less than half of that extra euro survives.`,
+  it: `Fra ${da} e ${a} succede una cosa inaspettata: su ogni euro in più agiscono insieme l’aliquota del ${aliquota}, la discesa della detrazione per lavoro dipendente e la discesa di questa. Sommandole, di quell’euro in più resta meno della metà.`,
+  en: `Between ${da} and ${a} something unexpected happens: on every extra euro the ${aliquota} rate, the decline of the employee credit and the decline of this one all act at once. Added up, less than half of that extra euro survives.`,
 })
 
 export const enteMenoEPiu = (bassa: string, alta: string): Multilingua => ({
-  it: `Dalla più bassa, ${bassa}, alla più alta, ${alta}`,
-  en: `From the lowest, ${bassa}, to the highest, ${alta}`,
+  it: `Dalla più bassa (${bassa}) alla più alta (${alta})`,
+  en: `From the lowest (${bassa}) to the highest (${alta})`,
 })
 
-export const sagomeControRegioni = (sagome: string, regioni: string): Multilingua => ({
-  it: `${sagome} sagome contro ${regioni} regioni`,
-  en: `${sagome} shapes against ${regioni} regions`,
-})
-
-export const tettoRegionale = (tetto: string, sopra: string, totale: string): Multilingua => ({
-  it: `Il tetto di legge è ${tetto}, e lo superano ${sopra} enti su ${totale}.`,
-  en: `The statutory ceiling is ${tetto}, and ${sopra} authorities out of ${totale} exceed it.`,
-})
+/**
+ * Il tetto, e chi lo supera per nome.
+ *
+ * ⚠️ **Riceve i nomi e non il conteggio, e la frase cambia forma con quanti
+ * sono.** Diceva *«lo superano 1 enti su 21»*: scritta per il plurale, e messa
+ * davanti a un numero che dopo la correzione sul tetto applicabile è sceso a
+ * uno. Con un ente solo il conteggio non informa; il nome sì.
+ *
+ * Le tre forme non sono un vezzo: sono i tre casi che i dati possono davvero
+ * produrre, e sceglierli qui evita che la pagina scriva una frase sgrammaticata
+ * il giorno in cui il numero si muove.
+ */
+export const tettoRegionale = (tetto: string, nomi: readonly string[]): Multilingua => {
+  if (nomi.length === 0) {
+    return {
+      it: `Il tetto di legge è ${tetto}, e nessun ente lo supera.`,
+      en: `The statutory ceiling is ${tetto}, and no authority exceeds it.`,
+    }
+  }
+  if (nomi.length === 1) {
+    return {
+      it: `Il tetto di legge è ${tetto}, e un solo ente lo supera: ${nomi[0]}.`,
+      en: `The statutory ceiling is ${tetto}, and one authority exceeds it: ${nomi[0]}.`,
+    }
+  }
+  return {
+    it: `Il tetto di legge è ${tetto}, e lo superano ${nomi.length} enti: ${nomi.join(', ')}.`,
+    en: `The statutory ceiling is ${tetto}, and ${nomi.length} authorities exceed it: ${nomi.join(', ')}.`,
+  }
+}
 
 export const tettoComunale = (tetto: string): Multilingua => ({
   it: `Il tetto di legge è ${tetto}`,
   en: `The statutory ceiling is ${tetto}`,
-})
-
-export const contaEnti = (n: number): Multilingua =>
-  n === 1 ? { it: 'un ente', en: 'one authority' } : { it: `${n} enti`, en: `${n} authorities` }
-
-export const milanoRegola = (aliquota: string, soglia: string): Multilingua => ({
-  it: `Sotto ${soglia} di imponibile non si paga nulla; sopra, ${aliquota} sull’intera base — perché è un’esenzione con soglia secca, non una franchigia.`,
-  en: `Below ${soglia} of taxable income nothing is due; above it, ${aliquota} on the whole base — because it is a hard-threshold exemption, not an allowance.`,
-})
-
-export const estrazioneEnti = (data: string): Multilingua => ({
-  it: `Elenchi del ministero estratti il ${data} e convertiti una volta sola: mentre usi il sito non viene interrogato nessun servizio esterno.`,
-  en: `Ministry lists extracted on ${data} and converted once: no external service is queried while you use the site.`,
-})
-
-export const confiniIstat = (data: string): Multilingua => ({
-  it: `Confini ISTAT estratti il ${data}, ridisegnati semplificati.`,
-  en: `ISTAT boundaries extracted on ${data}, redrawn simplified.`,
 })
 
 /**

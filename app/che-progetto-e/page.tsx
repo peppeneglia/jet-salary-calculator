@@ -36,7 +36,7 @@ import Link from 'next/link'
 import { traduzione } from '../_i18n/server'
 import { coperturaComuni } from '../_lib/comuni'
 import { formato } from '../_lib/formato'
-import { PROGETTO, coperturaComuniNota, coperturaEstrazione } from '../_lib/testi-progetto'
+import { PROGETTO, coperturaComuniNota } from '../_lib/testi-progetto'
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await traduzione()
@@ -66,7 +66,7 @@ function Cifra({ valore, etichetta, nota }: { valore: string; etichetta: string;
 
 export default async function CheProgettoE() {
   const { lingua } = await traduzione()
-  const { inData, tag } = formato(lingua)
+  const { tag } = formato(lingua)
 
   /**
    * I conteggi vanno scritti con il separatore della lingua, come ogni altro
@@ -129,9 +129,23 @@ export default async function CheProgettoE() {
           <h2 className="text-xl font-semibold tracking-tight text-inchiostro sm:text-2xl">
             {PROGETTO.coperturaTitolo[lingua]}
           </h2>
-          <p className="mt-4 max-w-2xl leading-relaxed text-inchiostro-tenue">
-            {PROGETTO.coperturaP1[lingua]}
-          </p>
+          {/*
+            ⚠️ **Il «perché» arriva subito, e prima arrivava per ultimo.**
+
+            Il titolo promette due cose — *quanto è ampio* e *perché più del
+            necessario* — e la seconda risposta stava in fondo, dopo i quattro
+            riquadri con i conteggi. Chi leggeva incontrava prima la
+            rivendicazione (*tutta l'Italia*) e i numeri che la sostengono, e
+            solo alla fine la ragione per cui quei numeri esistono: nell'ordine
+            sbagliato, l'ampiezza si legge come vanto.
+
+            Ora la ragione sta fra la rivendicazione e i conteggi, che è il
+            punto in cui la domanda si forma.
+          */}
+          <div className="mt-4 max-w-2xl space-y-3 leading-relaxed text-inchiostro-tenue">
+            <p>{PROGETTO.coperturaP1[lingua]}</p>
+            <p>{PROGETTO.coperturaP2[lingua]}</p>
+          </div>
 
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             <Cifra
@@ -163,8 +177,16 @@ export default async function CheProgettoE() {
             />
           </div>
 
-          <div className="mt-6 max-w-2xl space-y-3 leading-relaxed text-inchiostro-tenue">
-            <p>{coperturaEstrazione(inData(coperturaComuni.estrattoIl))[lingua]}</p>
+          {/*
+            ⚠️ Via la riga sugli elenchi ministeriali. Diceva da dove vengono i
+            dati degli enti, ed era vera finché il prospetto MEF era la sola
+            citazione del livello regionale: da quando diciannove enti su
+            ventuno portano la propria legge regionale, quella frase descrive
+            una parte del quadro come se fosse tutto. Dove i dati entrano è
+            spiegato in `/come-e-fatta`, e ogni singola aliquota porta la
+            propria fonte accanto al numero.
+          */}
+          <div className="mt-6 max-w-2xl leading-relaxed text-inchiostro-tenue">
             <p>{PROGETTO.coperturaP3[lingua]}</p>
           </div>
         </section>

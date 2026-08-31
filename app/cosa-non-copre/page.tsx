@@ -24,7 +24,7 @@
 import type { Metadata } from 'next'
 import type { CondizioneAssunzione } from '../../core/types'
 import { assunzioni } from '../../data/assunzioni'
-import { VoceAssunzione } from '../_components/assunzioni'
+import { Fonti } from '../_components/fonte'
 import { traduzione } from '../_i18n/server'
 import { formato } from '../_lib/formato'
 import { etichettaContratto } from '../_lib/testi'
@@ -54,6 +54,8 @@ export default async function CosaNonCopre() {
         return undefined
       case 'ral-supera':
         return t('nonCopre.quandoRalSupera', { soglia: inEuro(condizione.soglia.valore) })
+      case 'ral-sotto':
+        return t('nonCopre.quandoRalSotto', { soglia: inEuro(condizione.soglia.valore) })
       case 'contratto-diverso-da':
         return t('nonCopre.quandoContrattoDiverso', {
           contratto: etichettaContratto(condizione.contratto, t).toLowerCase(),
@@ -75,18 +77,68 @@ export default async function CosaNonCopre() {
         </p>
       </div>
 
+      {/*
+        ⚠️ **Erano quindici riquadri, ora è un elenco puntato.**
+
+        Ogni voce stava in una card con bordo, fondo proprio e in cima una
+        pastiglia grigia con dentro *Non cambia la cifra* o *In questo caso
+        prendi più di quanto calcoliamo*. Le pastiglie erano tre stringhe
+        ripetute quindici volte: la cosa più visibile di ogni riquadro era anche
+        quella che non distingueva un riquadro dall'altro, e chi scorreva la
+        pagina leggeva tre etichette alternate invece di quindici limiti.
+
+        E i riquadri promettevano una struttura che non c'era. Una card dice
+        *qui dentro c'è un oggetto con delle parti*; dentro c'era un paragrafo.
+        Quindici contenitori per quindici paragrafi sono quindici cornici da
+        attraversare per leggere un testo che si sarebbe letto meglio di
+        seguito.
+
+        Ora è prosa con un elenco: il verso in cui il conto si sposta resta,
+        ma **in coda alla frase** invece che sopra, dove pesa quanto pesa. La
+        struttura di `data/assunzioni.ts` non cambia di un campo: cambia come si
+        rende.
+      */}
       <main>
-        <ul className="space-y-3">
-          {assunzioni.map(({ assunzione, condizione }) => (
-            <VoceAssunzione
-              key={assunzione.id}
-              assunzione={assunzione}
-              quando={quandoVale(condizione)}
-            />
-          ))}
+        <ul className="max-w-2xl space-y-5">
+          {assunzioni.map(({ assunzione, condizione }) => {
+            const quando = quandoVale(condizione)
+            const direzione =
+              assunzione.direzione === 'nessuna'
+                ? undefined
+                : assunzione.direzione === 'netto-reale-piu-alto'
+                  ? t('assunzioni.direzionePiuAlto')
+                  : t('assunzioni.direzionePiuBasso')
+
+            return (
+              <li key={assunzione.id} className="flex gap-3 leading-relaxed">
+                <span aria-hidden className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-inchiostro-nota" />
+                <div>
+                  <p className="text-inchiostro-tenue">{assunzione.testo[lingua]}</p>
+
+                  {/*
+                    ⚠️ Condizione e verso in una riga sola sotto il testo, e
+                    solo dove ci sono. *Non cambia la cifra* non si scrive: è
+                    l'assenza di conseguenza, e dirla su otto voci su quindici
+                    riempie l'elenco di righe che non aggiungono niente.
+                  */}
+                  {quando || direzione ? (
+                    <p className="mt-1 text-sm text-inchiostro-nota">
+                      {[quando, direzione].filter(Boolean).join(' ')}
+                    </p>
+                  ) : null}
+
+                  {assunzione.fonte ? (
+                    <div className="mt-2">
+                      <Fonti fonti={[assunzione.fonte]} titolo={t('fonte.titolo')} accanto />
+                    </div>
+                  ) : null}
+                </div>
+              </li>
+            )
+          })}
         </ul>
 
-        <div className="mt-8 rounded-sezione border border-bordo-decorativo bg-carta p-6 sm:p-8">
+        <div className="mt-10 max-w-2xl border-t border-bordo-decorativo pt-6">
           <h2 className="text-lg font-semibold tracking-tight text-inchiostro">
             {t('nonCopre.percheTitolo')}
           </h2>

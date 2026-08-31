@@ -51,6 +51,7 @@ import { regime2026, tettiAddizionali } from '../../data/regime-2026'
 import { Barre, Legenda, Scaglioni, Spezzata, type Barra, type Tacca } from '../_components/cifre-grafici'
 import { Fonti } from '../_components/fonte'
 import { MappaEnti } from '../_components/mappa-enti'
+import { Ricerca, combacia } from '../_components/ricerca'
 import { Sezione } from '../_components/sezione'
 import { traduzione } from '../_i18n/server'
 import {
@@ -59,35 +60,27 @@ import {
   curvaDetrazioneCuneo,
   curvaSommaCuneo,
   detrazioneMassimaArt13,
-  differenzaAliquoteContributive,
   distribuzioneRegionale,
   entiPerLaMappa,
   gradiniSommaCuneo,
-  provenienzaGeometrie,
   raccordoCuneo,
-  sagomeControRegioniIstat,
   saltoDetrazione,
 } from '../_lib/cifre'
 import {
   CODICE_COMUNE_INIZIALE,
-  coperturaComuni,
   distribuzioneComunale,
   risolviComune,
 } from '../_lib/comuni'
 import { formato } from '../_lib/formato'
 import {
   SPIEGAZIONE,
-  confiniIstat,
-  contaEnti,
   contributiCondizione,
   contributiOltre,
   contributiPrimaFascia,
   cuneoMarginale,
   cuneoRaccordo,
   detrazioneSaltoTesto,
-  differenzaApprendista,
   enteMenoEPiu,
-  estrazioneEnti,
   fasciaDa,
   fasciaFino,
   fasciaOltre,
@@ -95,10 +88,10 @@ import {
   gradinoSale,
   gradinoScende,
   gradiniRaccordoEscluso,
-  milanoRegola,
+  cercaEsito,
+  occhielloCifre,
   minimoDeterminato,
   minimoGenerale,
-  sagomeControRegioni,
   tettoComunale,
   tettoRegionale,
 } from '../_lib/testi-spiegazione'
@@ -137,17 +130,35 @@ function Anello({
         esito ? 'border-verde-bordo bg-verde-velo' : 'border-bordo-decorativo bg-fondo'
       }`}
     >
+      {/*
+        ⚠️ **Senza segno non c'è pastiglia, e prima c'era un punto.**
+
+        I segni di questa catena sono un'aritmetica che si legge dall'alto in
+        basso: `−` i contributi, `=` l'imponibile, `+` le somme che si
+        aggiungono, `=` il netto. Lo stipendio lordo è il **punto di partenza**,
+        cioè l'unico anello che non è un'operazione, e gli veniva messo davanti
+        un `·` per riempire la colonna. Un simbolo che non significa niente
+        messo in fila con quattro che significano qualcosa non è neutro: chi
+        legge cerca cosa voglia dire, e la risposta è che non vuol dire nulla.
+
+        Lo spazio resta occupato, così i quattro segni sotto restano
+        incolonnati e la catena continua a leggersi come una colonna sola.
+      */}
       <div className="flex items-start gap-3">
-        <span
-          aria-hidden
-          className={`cifre mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-sm font-semibold ${
-            esito
-              ? 'border-verde-bordo bg-carta text-verde-testo'
-              : 'border-bordo-decorativo bg-carta text-inchiostro-tenue'
-          }`}
-        >
-          {segno ?? '·'}
-        </span>
+        {segno === undefined ? (
+          <span aria-hidden className="mt-0.5 h-7 w-7 shrink-0" />
+        ) : (
+          <span
+            aria-hidden
+            className={`cifre mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-sm font-semibold ${
+              esito
+                ? 'border-verde-bordo bg-carta text-verde-testo'
+                : 'border-bordo-decorativo bg-carta text-inchiostro-tenue'
+            }`}
+          >
+            {segno}
+          </span>
+        )}
         <div>
           <p
             className={`font-semibold tracking-tight ${esito ? 'text-verde-testo' : 'text-inchiostro'}`}
@@ -189,24 +200,54 @@ function Cifra({
   etichetta,
   nota,
   avviso,
+  testoPrima,
 }: {
   valore: string
   etichetta: string
   nota?: string
   avviso?: boolean
+  /**
+   * L'etichetta sopra la cifra invece che sotto.
+   *
+   * ⚠️ **Serve dove il numero da solo non si riconosce.** Nelle cifre di
+   * copertura — *7.897 Comuni*, *2.841 con soglia di esenzione* — il numero è
+   * il soggetto della frase e sta bene per primo: chi legge lo prende e poi
+   * scopre di cosa. Le tre cifre del trattamento integrativo sono il caso
+   * opposto: *1.200 €*, *15.000 €* e *75 €* messi in fila si leggono come tre
+   * importi omogenei, mentre sono un beneficio, una soglia e uno scarto
+   * tecnico. Senza sapere prima quale sia quale, la fila di numeri grandi non
+   * comunica niente e va riletta dal basso.
+   */
+  testoPrima?: boolean
 }) {
+  const cifra = (
+    <p
+      className={`cifre text-2xl font-semibold tracking-tight sm:text-3xl ${avviso ? 'text-avviso-testo' : 'text-inchiostro'}`}
+    >
+      {valore}
+    </p>
+  )
+  const testo = (
+    <p className={`text-sm font-medium ${avviso ? 'text-avviso-testo' : 'text-inchiostro'}`}>
+      {etichetta}
+    </p>
+  )
+
   return (
     <div
       className={`rounded-blocco border p-4 sm:p-5 ${avviso ? 'border-avviso-bordo bg-avviso' : 'border-bordo-decorativo bg-fondo'}`}
     >
-      <p
-        className={`cifre text-2xl font-semibold tracking-tight sm:text-3xl ${avviso ? 'text-avviso-testo' : 'text-inchiostro'}`}
-      >
-        {valore}
-      </p>
-      <p className={`mt-1 text-sm font-medium ${avviso ? 'text-avviso-testo' : 'text-inchiostro'}`}>
-        {etichetta}
-      </p>
+      {testoPrima ? (
+        <>
+          {testo}
+          <div className="mt-1">{cifra}</div>
+        </>
+      ) : (
+        <>
+          {cifra}
+          <div className="mt-1">{testo}</div>
+        </>
+      )}
       {nota ? (
         <p
           className={`mt-1 text-sm leading-relaxed ${avviso ? 'text-avviso-testo' : 'text-inchiostro-tenue'}`}
@@ -312,20 +353,18 @@ function SchemaGradino({ descrizione }: { descrizione: string }) {
   )
 }
 
-export default async function Spiegazione() {
+export default async function Spiegazione({ searchParams }: PageProps<'/spiegazione'>) {
   const { lingua } = await traduzione()
-  const { inEuro, inEuroTondo, inPercentuale, inData, tag } = formato(lingua)
+
+  /*
+    La ricerca sta nell'URL, come il filtro di `/norme`: la pagina resta un
+    server component e la sua prosa non attraversa il confine (D-069).
+  */
+  const grezzo = (await searchParams).q
+  const ricerca = (Array.isArray(grezzo) ? grezzo[0] : grezzo) ?? ''
+  const { inEuro, inEuroTondo, inPercentuale, tag } = formato(lingua)
 
   const conta = new Intl.NumberFormat(tag, { useGrouping: 'always' })
-  /*
-   * I punti percentuali si scrivono senza il simbolo, ed è il motivo per cui
-   * `formato(lingua)` espone il proprio tag BCP 47: la differenza fra due
-   * aliquote non è una percentuale, e `inPercentuale` la scriverebbe come tale.
-   */
-  const punti = new Intl.NumberFormat(tag, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })
 
   const { contributi, irpef, detrazioneLavoroDipendente, cuneo, trattamentoIntegrativo, fontiRegola } =
     regime2026
@@ -347,7 +386,6 @@ export default async function Spiegazione() {
    */
   const comuneIniziale = risolviComune(CODICE_COMUNE_INIZIALE)
   const enti0 = comuneIniziale?.stato === 'calcolabile' ? comuneIniziale.enti : undefined
-  const comunale = enti0 && enti0.comunale.stato !== 'nonIstituito' ? enti0.comunale : undefined
   const enteInizialeMappa = enti0?.regionale.nome ?? enti[0]?.nome ?? ''
 
   /**
@@ -393,7 +431,6 @@ export default async function Spiegazione() {
       etichetta: SPIEGAZIONE.contributiApprendista[lingua],
       valore: contributi.aliquotaApprendista.valore,
       scritto: inPercentuale(contributi.aliquotaApprendista.valore),
-      nota: differenzaApprendista(punti.format(differenzaAliquoteContributive))[lingua],
     },
     {
       etichetta: SPIEGAZIONE.contributiQuota[lingua],
@@ -444,17 +481,40 @@ export default async function Spiegazione() {
   ]
 
   /** Le voci dell'indice: le sei sezioni più i due riquadri che hanno un titolo proprio. */
+  /**
+   * L'indice, e con esso il bersaglio della ricerca.
+   *
+   * ⚠️ **La ricerca qui non nasconde niente, e su una pagina narrativa è la
+   * differenza che conta.** In `/norme` filtrare è giusto: sono trentaquattro
+   * schede indipendenti, e vederne tre è una risposta completa. Qui le sezioni
+   * sono una catena — i contributi escono per primi *perché* tutto il resto si
+   * calcola più in basso — e nasconderne sei per mostrarne una lascerebbe in
+   * pagina un pezzo di ragionamento senza le sue premesse.
+   *
+   * Quindi la ricerca **restringe l'indice**: dice in quali passaggi la parola
+   * compare, e da lì ci si va con un clic. La pagina resta intera.
+   *
+   * ⚠️ Il testo su cui si cerca è dichiarato voce per voce, e non raccolto
+   * automaticamente da un prefisso. Un prefisso — *tutte le chiavi che
+   * cominciano per `cuneo`* — sembrerebbe più intelligente e sarebbe più
+   * fragile: una chiave rinominata uscirebbe dalla ricerca senza che nulla
+   * fallisca, e il difetto si vedrebbe solo cercando la parola giusta.
+   */
   const indice = [
-    ['catena', SPIEGAZIONE.catenaTitolo[lingua]],
-    ['contributi', SPIEGAZIONE.primoTitolo[lingua]],
-    ['irpef', SPIEGAZIONE.scaglioniTitolo[lingua]],
-    ['detrazioni', SPIEGAZIONE.detrazioniTitolo[lingua]],
-    ['locali', SPIEGAZIONE.localiTitolo[lingua]],
-    ['aggiunge', SPIEGAZIONE.aggiungeTitolo[lingua]],
-    ['cuneo', SPIEGAZIONE.cuneoTitolo[lingua]],
-    ['netto', SPIEGAZIONE.nettoTitolo[lingua]],
-    ['gradini', SPIEGAZIONE.gradiniTitolo[lingua]],
+    ['catena', SPIEGAZIONE.catenaTitolo[lingua], [SPIEGAZIONE.catenaOcchiello, SPIEGAZIONE.catenaRal, SPIEGAZIONE.catenaContributi, SPIEGAZIONE.catenaImponibile, SPIEGAZIONE.catenaIrpef, SPIEGAZIONE.catenaLocali, SPIEGAZIONE.catenaAggiunge, SPIEGAZIONE.catenaNetto, SPIEGAZIONE.catenaStessaBase]],
+    ['contributi', SPIEGAZIONE.primoTitolo[lingua], [SPIEGAZIONE.primoOcchiello, SPIEGAZIONE.primoP1, SPIEGAZIONE.primoP2, SPIEGAZIONE.primoP3, SPIEGAZIONE.primoAliquota, SPIEGAZIONE.contributiOrdinaria, SPIEGAZIONE.contributiApprendista, SPIEGAZIONE.contributiQuota, SPIEGAZIONE.contributiQuotaNota]],
+    ['irpef', SPIEGAZIONE.scaglioniTitolo[lingua], [SPIEGAZIONE.scaglioniOcchiello, SPIEGAZIONE.scaglioniP1, SPIEGAZIONE.scaglioniP2, SPIEGAZIONE.scaglioniGraficoTitolo]],
+    ['detrazioni', SPIEGAZIONE.detrazioniTitolo[lingua], [SPIEGAZIONE.detrazioniOcchiello, SPIEGAZIONE.detrazioniDeduzioneTitolo, SPIEGAZIONE.detrazioniDetrazioneTitolo, SPIEGAZIONE.detrazioneCurvaTitolo, SPIEGAZIONE.detrazioneTroncamento, SPIEGAZIONE.detrazioneMinimi, SPIEGAZIONE.detrazioneMinimiIntro]],
+    ['locali', SPIEGAZIONE.localiTitolo[lingua], [SPIEGAZIONE.localiOcchiello, SPIEGAZIONE.localiP1, SPIEGAZIONE.localiP2, SPIEGAZIONE.mappaTitolo, SPIEGAZIONE.mappaOcchiello, SPIEGAZIONE.comunaleTitolo, SPIEGAZIONE.regionaleVentuno]],
+    ['aggiunge', SPIEGAZIONE.aggiungeTitolo[lingua], [SPIEGAZIONE.aggiungeOcchiello, SPIEGAZIONE.aggiungeP1, SPIEGAZIONE.aggiungeP2, SPIEGAZIONE.aggiungeP3, SPIEGAZIONE.tiTitolo, SPIEGAZIONE.tiCondizione, SPIEGAZIONE.tiScarto]],
+    ['cuneo', SPIEGAZIONE.cuneoTitolo[lingua], [SPIEGAZIONE.cuneoOcchiello, SPIEGAZIONE.cuneoSomma, SPIEGAZIONE.cuneoDetrazione]],
+    ['netto', SPIEGAZIONE.nettoTitolo[lingua], [SPIEGAZIONE.nettoOcchiello]],
+    ['gradini', SPIEGAZIONE.gradiniTitolo[lingua], [SPIEGAZIONE.gradiniP1, SPIEGAZIONE.gradiniP2, SPIEGAZIONE.gradiniElencoTitolo]],
   ] as const
+
+  const trovati = indice.filter(([, titolo, prosa]) =>
+    combacia([titolo, ...prosa.map((m) => m[lingua])].join(' '), ricerca),
+  )
 
   return (
     <div className="mx-auto w-full max-w-4xl px-3 py-8 sm:px-6 sm:py-14">
@@ -466,18 +526,22 @@ export default async function Spiegazione() {
           {SPIEGAZIONE.occhiello[lingua]}
         </p>
         <p className="mt-3 max-w-2xl leading-relaxed text-inchiostro-tenue">
-          {SPIEGAZIONE.occhielloCifre[lingua]}
+          {occhielloCifre(String(regime2026.anno))[lingua]}
         </p>
 
         {/*
-          L'anno non è scritto in una stringa: arriva dal regime che il motore
-          applica, quindi non può restare indietro rispetto ai parametri che la
-          pagina mostra.
+          ⚠️ **La pastiglia con l'anno d'imposta non c'è più.**
+
+          Era un riquadro con bordo proprio, sotto l'occhiello, con dentro
+          *Anno d'imposta 2026*: cioè il rilievo di un controllo dato a un
+          qualificatore. Su una pagina che spiega **il meccanismo** — e il
+          meccanismo è lo stesso ogni anno — l'anno è la cosa meno importante
+          che ci sia scritta, e stava nel punto più visibile dopo il titolo.
+
+          Non si perde: l'anno resta dentro la prosa dell'occhiello, che è dove
+          si legge senza doverlo cercare, e continua ad arrivare da
+          `regime2026.anno` invece che da una stringa scritta a mano.
         */}
-        <p className="mt-4 inline-flex items-center rounded-voce border border-bordo-decorativo bg-fondo px-3 py-1.5 text-sm text-inchiostro-tenue">
-          {SPIEGAZIONE.anno[lingua]}
-          <span className="cifre ml-1.5 font-semibold text-inchiostro">{regime2026.anno}</span>
-        </p>
 
         {/*
           ⚠️ L'indice esiste perché la pagina è diventata lunga il doppio, e
@@ -486,8 +550,21 @@ export default async function Spiegazione() {
           con JavaScript spento — che su una pagina di sole cifre e prosa è il
           minimo.
         */}
-        <nav aria-label={SPIEGAZIONE.indice[lingua]} className="mt-6 flex flex-wrap gap-1.5">
-          {indice.map(([id, testo]) => (
+        <Ricerca
+          azione="/spiegazione"
+          valore={ricerca}
+          etichetta={SPIEGAZIONE.cercaEtichetta[lingua]}
+          segnaposto={SPIEGAZIONE.cercaSegnaposto[lingua]}
+          bottone={SPIEGAZIONE.cercaBottone[lingua]}
+        />
+
+        {/*
+          L'indice si restringe alla ricerca; la pagina sotto resta intera.
+          Quando nessun passaggio combacia si dice, invece di lasciare una
+          barra di navigazione vuota che sembra rotta.
+        */}
+        <nav aria-label={SPIEGAZIONE.indice[lingua]} className="mt-4 flex flex-wrap gap-1.5">
+          {trovati.map(([id, testo]) => (
             <a
               key={id}
               href={`#${id}`}
@@ -497,6 +574,12 @@ export default async function Spiegazione() {
             </a>
           ))}
         </nav>
+
+        {ricerca.trim() !== '' ? (
+          <p className="mt-3 text-sm text-inchiostro-tenue" aria-live="polite">
+            {cercaEsito(trovati.length, ricerca)[lingua]}
+          </p>
+        ) : null}
       </div>
 
       <main className="space-y-4 sm:space-y-6">
@@ -549,8 +632,19 @@ export default async function Spiegazione() {
                 e non in fondo al diagramma: è una proprietà di quel nodo, cioè
                 del punto in cui la catena si biforca. In fondo si leggerebbe
                 come una postilla sull'intera pagina.
+
+                ⚠️ **Non è più un avviso giallo, ed è cambiata anche la
+                frase.** Diceva che calcolare la seconda su ciò che resta dopo
+                la prima è *«l'errore più comune dei calcolatori
+                improvvisati»*. Due ragioni per toglierla, e la seconda pesa più
+                della prima. La prima è di tono: mettersi a giudicare il lavoro
+                altrui in una pagina che spiega il proprio è una posizione che
+                si regge solo finché non si sbaglia niente, e nessuno può
+                permettersela. La seconda è che l'avviso in giallo prometteva un
+                pericolo dove c'è un fatto: le due addizionali hanno la stessa
+                base, e basta dirlo.
               */}
-              <p className="mt-4 rounded-voce border border-avviso-bordo bg-avviso px-4 py-3 text-sm leading-relaxed text-avviso-testo sm:ml-10">
+              <p className="mt-4 max-w-prose text-sm leading-relaxed text-inchiostro-tenue sm:ml-10">
                 {SPIEGAZIONE.catenaStessaBase[lingua]}
               </p>
             </Anello>
@@ -606,7 +700,6 @@ export default async function Spiegazione() {
             </div>
 
             <div className="mt-6 max-w-2xl space-y-3 leading-relaxed text-inchiostro-tenue">
-              <p>{SPIEGAZIONE.contributiApprendistaNota[lingua]}</p>
               <p>
                 {contributiCondizione(inPercentuale(quotaAggiuntiva.aliquotaMassimaRegime.valore))[lingua]}
               </p>
@@ -670,7 +763,6 @@ export default async function Spiegazione() {
 
             <div className="mt-6 max-w-2xl space-y-3 leading-relaxed text-inchiostro-tenue">
               <p>{SPIEGAZIONE.scaglioniP2[lingua]}</p>
-              <p>{SPIEGAZIONE.irpefCambio[lingua]}</p>
             </div>
           </Sezione>
         </div>
@@ -774,18 +866,37 @@ export default async function Spiegazione() {
               <p>{SPIEGAZIONE.detrazioneTroncamento[lingua]}</p>
               <p>{SPIEGAZIONE.detrazioneMinimi[lingua]}</p>
             </div>
-            <p className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-inchiostro-tenue">
-              <span>
-                {minimoGenerale(inEuroTondo(detrazioneLavoroDipendente.minimi.valore.generale))[lingua]}
-              </span>
-              <span>
-                {
-                  minimoDeterminato(
-                    inEuroTondo(detrazioneLavoroDipendente.minimi.valore.tempoDeterminato),
-                  )[lingua]
-                }
-              </span>
+            {/*
+              ⚠️ **Due minimi con una frase che li introduce, e un elenco.**
+
+              Erano due frammenti affiancati su una riga, senza niente che
+              dicesse di che cosa fossero il minimo: *Non scende sotto 690 €* e
+              *Con un contratto a tempo determinato il minimo sale a 1.380 €*,
+              messi lì dopo un paragrafo che parlava d'altro. Chi leggeva
+              trovava due cifre e doveva risalire da solo a che cosa si
+              riferissero.
+            */}
+            <p className="mt-4 max-w-2xl leading-relaxed text-inchiostro-tenue">
+              {SPIEGAZIONE.detrazioneMinimiIntro[lingua]}
             </p>
+            <ul className="mt-2 max-w-2xl space-y-1.5">
+              {[
+                minimoGenerale(
+                  inEuroTondo(detrazioneLavoroDipendente.minimi.valore.generale),
+                )[lingua],
+                minimoDeterminato(
+                  inEuroTondo(detrazioneLavoroDipendente.minimi.valore.tempoDeterminato),
+                )[lingua],
+              ].map((voce) => (
+                <li key={voce} className="flex gap-3 leading-relaxed text-inchiostro-tenue">
+                  <span
+                    aria-hidden
+                    className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-inchiostro-nota"
+                  />
+                  <span>{voce}</span>
+                </li>
+              ))}
+            </ul>
           </Sezione>
         </div>
 
@@ -864,56 +975,70 @@ export default async function Spiegazione() {
               />
             </div>
 
+            {/*
+              ⚠️ **Via la riga «21 sagome contro 20 regioni».**
+
+              Diceva una cosa vera e interna: che il Trentino-Alto Adige come
+              ente impositore non esiste, quindi le sagome sono ventuno mentre
+              le regioni sono venti. È una nota sul **nostro dataset**, non
+              sull'addizionale, e chi legge questa pagina vuole sapere quanto
+              paga, non come abbiamo contato i poligoni. L'attribuzione a ISTAT
+              resta perché la licenza la richiede.
+            */}
+            {/*
+              ⚠️ **Tolte due righe, e riscritta la terza.**
+
+              Se n'è andato il paragrafo che spiegava perché il Trentino-Alto
+              Adige non compare sulla mappa: era un ragionamento sul **nostro
+              dataset** (ventun sagome contro venti regioni) in mezzo a una
+              sezione che spiega quanto si paga. Se n'è andata anche la riga
+              sull'estrazione dei confini ISTAT, che datava un file invece di
+              qualificare un numero.
+
+              Quello che resta è il fatto, detto in un inciso dentro la frase
+              che presenta la mappa: le due Province autonome ci stanno
+              separate, perché separatamente deliberano.
+            */}
             <p className="mt-6 max-w-2xl leading-relaxed text-inchiostro-tenue">
               {SPIEGAZIONE.regionaleVentuno[lingua]}
             </p>
-            <p className="mt-2 text-sm text-inchiostro-nota">
-              {
-                sagomeControRegioni(
-                  conta.format(sagomeControRegioniIstat.sagome),
-                  conta.format(sagomeControRegioniIstat.regioni),
-                )[lingua]
-              }
-              {' · '}
-              {confiniIstat(inData(provenienzaGeometrie.estrattoIl))[lingua]}
-            </p>
 
-            <p className="mt-6 text-xs font-medium text-inchiostro-nota">
-              {SPIEGAZIONE.regionaleGruppiTitolo[lingua]}
-            </p>
-            <ul className="mt-2 space-y-2">
-              {regionale.gruppi.map((g) => (
-                <li
-                  key={g.aliquota}
-                  className="rounded-blocco border border-bordo-decorativo bg-fondo p-3 sm:p-4"
-                >
-                  <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                    <span className="cifre text-lg font-semibold text-inchiostro">{g.aliquota}</span>
-                    <span className="text-sm text-inchiostro-nota">
-                      {contaEnti(g.enti.length)[lingua]}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-sm leading-relaxed text-inchiostro-tenue">
-                    {g.enti.join(' · ')}
-                  </p>
-                </li>
-              ))}
-            </ul>
+            {/*
+              ⚠️ **Via l'elenco «Su quali valori si posano».**
 
+              Erano sei o sette riquadri, uno per aliquota, ciascuno con dentro
+              i nomi degli enti che la applicano. Ripeteva con un elenco quello
+              che la mappa dice con un'occhiata, e lo ripeteva **peggio**: la
+              mappa colora ogni ente secondo la propria aliquota massima e si
+              clicca per avere le fasce per intero, l'elenco dava un solo
+              numero per ente e costringeva a cercare il proprio nome in sette
+              righe. Due rese dello stesso dato, e quella buona era già sopra.
+            */}
+
+            {/*
+              ⚠️ **Due paragrafi tolti e il tetto riscritto.**
+
+              Se n'è andato l'addensamento: *«regioni senza alcun rapporto fra
+              loro atterrano sullo stesso identico secondo decimale … quale
+              norma sia non lo sappiamo ancora»*. È un'osservazione vera e
+              interessante, ma è una **nostra domanda aperta** messa davanti a
+              chi vuole sapere quanto paga, e finiva col dire *c'è qualcosa che
+              non abbiamo capito* accanto a una cifra che il calcolatore applica
+              con sicurezza.
+
+              Se n'è andato per la stessa ragione il paragrafo sul tetto
+              superato *«e di molto»*, che chiudeva su un'altra domanda aperta
+              (*quale norma lo consenta*).
+
+              ⚠️ **E la frase che resta diceva un numero sbagliato in una lingua
+              sgrammaticata**: *«lo superano 1 enti su 21»*. Il conteggio è
+              sceso a uno solo dopo la correzione sul tetto applicabile, e la
+              frase era scritta per il plurale. Con un ente solo la cosa da dire
+              non è quanti sono: è **quale**, e per quale ragione.
+            */}
             <div className="mt-6 max-w-2xl space-y-3 leading-relaxed text-inchiostro-tenue">
-              <p>{SPIEGAZIONE.regionaleAddensamento[lingua]}</p>
-              <p>{SPIEGAZIONE.regionaleTetto[lingua]}</p>
-            </div>
-
-            <div className="mt-4 rounded-blocco border border-avviso-bordo bg-avviso p-4 sm:p-5">
-              <p className="text-sm leading-relaxed text-avviso-testo">
-                {
-                  tettoRegionale(
-                    regionale.tetto,
-                    conta.format(regionale.sopraIlTetto),
-                    conta.format(regionale.totale),
-                  )[lingua]
-                }
+              <p>
+                {tettoRegionale(regionale.tetto, regionale.nomiSopraIlTetto)[lingua]}
               </p>
             </div>
             <div className="mt-4">
@@ -964,28 +1089,19 @@ export default async function Spiegazione() {
               />
             </div>
 
-            {comunale && comunale.parametri.aliquota.forma === 'unica' ? (
-              <div className="mt-6 rounded-blocco border border-bordo-decorativo bg-fondo p-4 sm:p-5">
-                <p className="font-semibold tracking-tight text-inchiostro">
-                  {SPIEGAZIONE.comunaleMilano[lingua]} · {comunale.nome}
-                </p>
-                <p className="mt-2 text-sm leading-relaxed text-inchiostro">
-                  {
-                    milanoRegola(
-                      inPercentuale(comunale.parametri.aliquota.aliquota),
-                      inEuroTondo(comunale.parametri.sogliaEsenzione ?? euro(0)),
-                    )[lingua]
-                  }
-                </p>
-                <p className="mt-2 text-sm leading-relaxed text-inchiostro-tenue">
-                  {SPIEGAZIONE.comunaleMilanoTesto[lingua]}
-                </p>
-                <div className="mt-4 border-t border-bordo-decorativo pt-3">
-                  <Fonti fonti={[comunale.fonte]} titolo={SPIEGAZIONE.fonteEtichetta[lingua]} />
-                </div>
-              </div>
-            ) : null}
+            {/*
+              ⚠️ **Via il riquadro «Il caso di partenza · Milano».**
 
+              Mostrava aliquota e soglia di esenzione di un comune preso come
+              esempio, con la sua fonte. Aveva senso finché il calcolatore si
+              apriva precompilato su Milano: era *il* caso, e la spiegazione lo
+              seguiva. Da quando la sezione 1 parte vuota, Milano non è più il
+              caso di partenza di niente — è un comune fra 7.897, e dargli un
+              riquadro proprio su questa pagina suggerisce a chi legge che
+              debba riguardarlo. La meccanica della soglia secca resta spiegata
+              qui sopra, che è dove va spiegata: vale per tutti i comuni che ne
+              hanno una, e il proprio si vede calcolando.
+            */}
             <div className="mt-4">
               <Fonti
                 fonti={[tettiAddizionali.comunale.fonte]}
@@ -1013,16 +1129,24 @@ export default async function Spiegazione() {
               {SPIEGAZIONE.tiTitolo[lingua]}
             </h3>
 
+            {/*
+              Testo prima, cifra dopo: le tre cifre sono un beneficio, una
+              soglia e uno scarto, e in fila si leggono come tre importi uguali
+              finché non si scopre quale sia quale.
+            */}
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
               <Cifra
+                testoPrima
                 valore={inEuro(trattamentoIntegrativo.importo.valore)}
                 etichetta={SPIEGAZIONE.tiImporto[lingua]}
               />
               <Cifra
+                testoPrima
                 valore={inEuroTondo(trattamentoIntegrativo.sogliaRedditoComplessivo.valore)}
                 etichetta={SPIEGAZIONE.tiSoglia[lingua]}
               />
               <Cifra
+                testoPrima
                 valore={inEuroTondo(trattamentoIntegrativo.scartoSulGate.valore)}
                 etichetta={SPIEGAZIONE.tiScartoEtichetta[lingua]}
               />
@@ -1263,16 +1387,18 @@ export default async function Spiegazione() {
           </div>
         </section>
 
-        <section className="rounded-sezione border border-bordo-decorativo bg-fondo p-4 sm:p-8">
-          <h2 className="text-xl font-semibold tracking-tight text-inchiostro sm:text-2xl">
-            {SPIEGAZIONE.provenienzaTitolo[lingua]}
-          </h2>
-          <div className="mt-4 max-w-2xl space-y-3 leading-relaxed text-inchiostro-tenue">
-            <p>{SPIEGAZIONE.provenienzaP1[lingua]}</p>
-            <p>{estrazioneEnti(inData(coperturaComuni.estrattoIl))[lingua]}</p>
-            <p>{SPIEGAZIONE.provenienzaP2[lingua]}</p>
-          </div>
-        </section>
+        {/*
+          ⚠️ **Via la sezione «Da dove vengono queste cifre».**
+
+          Raccontava in tre paragrafi che le aliquote arrivano dagli elenchi
+          ministeriali, a quale data sono state estratte e che a runtime non si
+          interroga nessun servizio. È vero e vale la pena dirlo, ma non qui: è
+          una sezione **sul calcolatore** in fondo a una pagina che spiega **il
+          meccanismo**, e chi ci arriva ha appena letto sette sezioni di norme.
+          Ogni cifra di questa pagina porta già la propria fonte accanto, che è
+          la risposta specifica alla stessa domanda; quella generale sta in
+          `/come-e-fatta`, che è la pagina che risponde a *com'è costruita*.
+        */}
 
         <section className="rounded-sezione border border-bordo-decorativo bg-carta p-6 sm:p-8">
           <h2 className="text-lg font-semibold tracking-tight text-inchiostro">

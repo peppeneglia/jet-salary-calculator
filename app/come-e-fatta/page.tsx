@@ -32,7 +32,7 @@ import Link from 'next/link'
 import pacchetto from '../../package.json'
 import type { CodiceLingua, Multilingua } from '../../core/types'
 import { traduzione } from '../_i18n/server'
-import { COMANDI, PERCHE_PACCHETTO, TECNICA, URL_REPO } from '../_lib/testi-tecnica'
+import { COMANDI, PERCHE_PACCHETTO, TECNICA, URL_REPO, URL_SITO } from '../_lib/testi-tecnica'
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await traduzione()
@@ -129,8 +129,34 @@ export default async function ComeEFatta() {
    * stanno nel file, che è alfabetico perché lo tiene tale chi installa, e non
    * un ordine deciso qui che divergerebbe al primo pacchetto nuovo.
    */
-  const runtime = Object.entries(pacchetto.dependencies)
-  const sviluppo = Object.entries(pacchetto.devDependencies)
+  /**
+   * ⚠️ **L'ordine non è più quello alfabetico del file, ed è una scelta.**
+   *
+   * `Object.entries` restituisce le dipendenze nell'ordine in cui stanno in
+   * `package.json`, che npm tiene alfabetico. Il risultato era che la prima
+   * riga della lista a runtime — la più letta, quella che dà il tono a tutta
+   * la sezione — era `i18next`, cioè la libreria delle traduzioni, mentre
+   * `react` compariva terza. Chi legge per capire su cosa è costruita l'app si
+   * trova davanti come cosa principale un dettaglio di internazionalizzazione.
+   *
+   * L'ordine ora lo dà `PERCHE_PACCHETTO`, cioè l'elenco delle ragioni: chi ha
+   * scritto perché un pacchetto è entrato ha anche deciso quanto conta. Le
+   * dipendenze **restano quelle vere** e il verso dell'attraversamento non
+   * cambia — si percorrono i pacchetti installati, non le ragioni — quindi un
+   * pacchetto entrato senza motivazione continua a comparire, in fondo e con
+   * lo spazio della ragione vuoto. Cambia solo dove si guarda per l'ordine.
+   */
+  const perRilevanza = (a: [string, string], b: [string, string]): number => {
+    const ordine = Object.keys(PERCHE_PACCHETTO)
+    const posizione = (n: string) => {
+      const i = ordine.indexOf(n)
+      return i === -1 ? Number.MAX_SAFE_INTEGER : i
+    }
+    return posizione(a[0]) - posizione(b[0]) || a[0].localeCompare(b[0])
+  }
+
+  const runtime = Object.entries(pacchetto.dependencies).sort(perRilevanza)
+  const sviluppo = Object.entries(pacchetto.devDependencies).sort(perRilevanza)
   const script = Object.entries(pacchetto.scripts)
 
   return (
@@ -163,19 +189,34 @@ export default async function ComeEFatta() {
             <P testo={TECNICA.stackP2} lingua={lingua} />
           </div>
 
+          {/*
+            ⚠️ **Il nome tecnico resta, e sotto c'è che cosa vuol dire.**
+
+            Le due liste si intitolavano *A runtime* e *In sviluppo*: chi sa
+            già cosa significa non ha bisogno di leggerle, chi non lo sa non lo
+            ricava. Sostituirle con una parafrasi le avrebbe rese comprensibili
+            e irriconoscibili, perché sono i termini con cui quelle due liste si
+            chiamano ovunque, `package.json` compreso.
+
+            Restano quindi il nome e la glossa, che è la stessa forma di
+            `Dipendenza` qui sotto: la cosa, e perché c'è.
+          */}
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             {(
               [
-                [TECNICA.stackRuntime, runtime],
-                [TECNICA.stackSviluppo, sviluppo],
+                [TECNICA.stackRuntime, TECNICA.stackRuntimeNota, runtime],
+                [TECNICA.stackSviluppo, TECNICA.stackSviluppoNota, sviluppo],
               ] as const
-            ).map(([intestazione, voci]) => (
+            ).map(([intestazione, nota, voci]) => (
               <div
                 key={intestazione.it}
                 className="rounded-blocco border border-bordo-decorativo bg-fondo p-4 sm:p-5"
               >
                 <p className="text-sm font-semibold tracking-tight text-inchiostro">
                   {intestazione[lingua]}
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-inchiostro-tenue">
+                  {nota[lingua]}
                 </p>
                 <ul className="mt-3">
                   {voci.map(([nome, versione]) => (
@@ -216,11 +257,6 @@ export default async function ComeEFatta() {
             pagina. Una promessa e la sua attenuazione separate da tre schermate
             sono, in pratica, la promessa da sola.
           */}
-          <div className="mt-6 rounded-blocco border border-avviso-bordo bg-avviso p-4 sm:p-5">
-            <p className="max-w-2xl text-sm leading-relaxed text-avviso-testo">
-              {TECNICA.cartelleRiserva[lingua]}
-            </p>
-          </div>
         </section>
 
         <section className="rounded-sezione border border-bordo-decorativo bg-carta p-5 sm:p-8">
@@ -233,11 +269,6 @@ export default async function ComeEFatta() {
             <P testo={TECNICA.importP3} lingua={lingua} />
           </div>
 
-          <div className="mt-6 rounded-blocco border border-avviso-bordo bg-avviso p-4 sm:p-5">
-            <p className="max-w-2xl text-sm leading-relaxed text-avviso-testo">
-              {TECNICA.importRiserva[lingua]}
-            </p>
-          </div>
         </section>
 
         <section className="rounded-sezione border border-bordo-decorativo bg-carta p-5 sm:p-8">
@@ -303,29 +334,31 @@ export default async function ComeEFatta() {
             </li>
           </ul>
 
-          <ul className="mt-6 space-y-3">
-            <Blocco titolo={TECNICA.verificheBuildTitolo[lingua]}>
-              {TECNICA.verificheBuild[lingua]}
-            </Blocco>
-          </ul>
-
-          <div className="mt-6 max-w-2xl space-y-3 leading-relaxed text-inchiostro-tenue">
-            <p>{TECNICA.verificheRegola[lingua]}</p>
-            <p>{TECNICA.verificheCosa[lingua]}</p>
-          </div>
-
           {/*
-            ⚠️ Il limite più grande che resta, e sta in pagina invece che in un
-            file di documentazione. Una prova che dichiara i propri limiti è più
-            difendibile di una che li lascia trovare a chi valuta.
+            ⚠️ **Quattro blocchi tolti da questa sezione, e uno di essi era
+            anche diventato falso.**
+
+            Erano: il comando di build che non è quello del framework, la regola
+            di lint scritta per il progetto, il fatto che le verifiche stiano
+            sul motore e non sui componenti, e il riquadro sul *limite più
+            grande che resta*. Le prime tre sono note di cucina interna: dicono
+            a chi legge come è organizzato il nostro lavoro, non che cosa può
+            aspettarsi dal calcolatore.
+
+            La quarta è il caso che vale la pena registrare. Diceva che
+            **nessuna verifica confronta il motore con un numero derivato a mano
+            dalla norma**, e al 31/08 non era più vero: `derivati-dalla-norma`
+            fa esattamente quel confronto su quattro casi più quattro gemelli,
+            con valori attesi prodotti fuori da questo codice. Una riserva
+            sopravvissuta alla propria chiusura dichiara il prodotto più debole
+            di quanto sia — è lo stesso difetto che ha fatto cadere S-011 e
+            S-016, qui su una pagina che parla di verifiche.
+
+            Resta `verificheCi`, che è ancora vera: nessuna integrazione
+            continua, i comandi si lanciano a mano.
           */}
-          <div className="mt-6 rounded-blocco border border-avviso-bordo bg-avviso p-4 sm:p-5">
-            <p className="max-w-2xl text-sm leading-relaxed text-avviso-testo">
-              {TECNICA.verificheLimite[lingua]}
-            </p>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-avviso-testo">
-              {TECNICA.verificheCi[lingua]}
-            </p>
+          <div className="mt-6 max-w-2xl leading-relaxed text-inchiostro-tenue">
+            <p>{TECNICA.verificheCi[lingua]}</p>
           </div>
         </section>
 
@@ -352,11 +385,6 @@ export default async function ComeEFatta() {
             </Blocco>
           </ul>
 
-          <div className="mt-6 rounded-blocco border border-avviso-bordo bg-avviso p-4 sm:p-5">
-            <p className="max-w-2xl text-sm leading-relaxed text-avviso-testo">
-              {TECNICA.sicurezzaRiserva[lingua]}
-            </p>
-          </div>
         </section>
 
         <section className="rounded-sezione border border-bordo-decorativo bg-carta p-5 sm:p-8">
@@ -378,18 +406,34 @@ export default async function ComeEFatta() {
 
           {/*
             `noopener` accanto a `noreferrer` come per ogni link esterno del
-            sito: si apre in una scheda nuova perché è l'unico link che porta
-            fuori, e chi lo segue non deve perdere la pagina che stava leggendo.
+            sito: si aprono in una scheda nuova perché sono gli unici link che
+            portano fuori, e chi li segue non deve perdere la pagina che stava
+            leggendo.
+
+            ⚠️ **Sono due, e prima era uno.** La sezione si intitola *dove sta
+            il codice e dove gira*, e dava da aprire solo la prima metà: il
+            repository. L'indirizzo pubblico del sito era nominato nel testo e
+            non raggiungibile, che su una pagina che spiega il deploy è la metà
+            che manca — e per chi legge il repo su GitHub è anche il link che
+            serve di più.
           */}
-          <div className="mt-6">
-            <a
-              href={URL_REPO}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="inline-flex min-h-11 items-center rounded-voce border border-bordo-controllo bg-carta px-4 py-2 text-sm font-medium text-inchiostro transition-colors hover:border-bordo-controllo-forte"
-            >
-              {TECNICA.deployRepoLink[lingua]}
-            </a>
+          <div className="mt-6 flex flex-wrap gap-2">
+            {(
+              [
+                [URL_REPO, TECNICA.deployRepoLink],
+                [URL_SITO, TECNICA.deploySitoLink],
+              ] as const
+            ).map(([href, etichetta]) => (
+              <a
+                key={href}
+                href={href}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="inline-flex min-h-11 items-center rounded-voce border border-bordo-controllo bg-carta px-4 py-2 text-sm font-medium text-inchiostro transition-colors hover:border-bordo-controllo-forte"
+              >
+                {etichetta[lingua]}
+              </a>
+            ))}
           </div>
         </section>
 

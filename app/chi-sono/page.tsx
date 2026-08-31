@@ -78,9 +78,11 @@ export default async function ChiSono() {
         <h1 className="text-3xl font-semibold tracking-tight text-inchiostro sm:text-4xl">
           {CHI_SONO.titolo[lingua]}
         </h1>
-        <p className="mt-3 max-w-2xl leading-relaxed text-inchiostro-tenue">
-          {CHI_SONO.occhiello[lingua]}
-        </p>
+        {/*
+          ⚠️ Niente occhiello sotto il titolo: la presentazione la fa il primo
+          riquadro, che si apre con il nome. Vedi la nota in
+          `_lib/testi-chi-sono.ts`.
+        */}
       </div>
 
       <main className="space-y-4 sm:space-y-6">

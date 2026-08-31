@@ -352,12 +352,20 @@ export const entiPerLaMappa = (lingua: CodiceLingua): readonly EnteInMappa[] => 
       })
     }
     for (const d of detrazioni) {
+      /*
+       * ⚠️ Una detrazione può essere un importo o una formula: Bolzano ne ha
+       * una che cresce col reddito. Della formula si mostra l'espressione come
+       * la scrive l'atto — ridurla al solo tetto direbbe un numero che spetta
+       * a un reddito solo.
+       */
+      const quanto =
+        d.formula.forma === 'costante' ? inEuroTondo(d.formula.importo) : d.formula.espressione
       regoleProprie.push({
         etichetta: ETICHETTA_DETRAZIONE[lingua],
         valore:
           d.redditoA === null
-            ? inEuroTondo(d.importo)
-            : `${inEuroTondo(d.importo)} · ${fasciaFino(inEuroTondo(d.redditoA))[lingua].toLowerCase()}`,
+            ? quanto
+            : `${quanto} · ${fasciaFino(inEuroTondo(d.redditoA))[lingua].toLowerCase()}`,
       })
     }
 
@@ -428,10 +436,25 @@ export const distribuzioneRegionale = (lingua: CodiceLingua) => {
     per.set(e.aliquotaMassimaValore, gruppo)
   }
 
+  /**
+   * ⚠️ **I nomi, non solo il conteggio.**
+   *
+   * La pagina diceva *«il tetto è 3,33%, e lo superano 1 enti su 21»*: una
+   * frase scritta per il plurale, davanti a un numero che dopo la correzione
+   * sul tetto applicabile è sceso a **uno**. Quando l'insieme ha un elemento
+   * solo, contarlo non dice niente e dirne il nome dice tutto.
+   *
+   * Il conteggio resta perché la frase deve reggere anche se domani gli enti
+   * sopra il tetto tornassero a essere molti: chi la scrive sceglie in base a
+   * quanti sono, e ha bisogno di entrambi.
+   */
+  const oltre = enti.filter((e) => e.sopraIlTetto)
+
   return {
     totale: enti.length,
     tetto: inPercentuale(tetto),
-    sopraIlTetto: enti.filter((e) => e.sopraIlTetto).length,
+    sopraIlTetto: oltre.length,
+    nomiSopraIlTetto: oltre.map((e) => e.nome).sort((a, b) => a.localeCompare(b, lingua)),
     gruppi: [...per.entries()]
       .sort((a, b) => a[0] - b[0])
       .map(([valore, nomi]) => ({

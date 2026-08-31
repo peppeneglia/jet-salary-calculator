@@ -44,6 +44,7 @@ import {
   type EntiRisolti,
   type Fonte,
   type FormaAliquota,
+  type FormulaDetrazione,
   type FormaAliquotaRegionale,
   type Multilingua,
   type ParametriComunali,
@@ -99,7 +100,7 @@ const { regionale2026 } = datiRegioni.artefatti
 
 const fonteGiornaliero2026: Fonte = {
   atto: `MEF, ${giornaliero2026.descrizione.split(':')[0]}`,
-  url: 'https://www1.finanze.gov.it/finanze/index_addcom.php',
+  url: 'https://www1.finanze.gov.it/finanze2/dipartimentopolitichefiscali/fiscalitalocale/nuova_addcomirpef/sceltaregione.htm',
   consultataIl: giornaliero2026.estrattoIl,
   provenienza: 'importata',
   estrattoIl: giornaliero2026.estrattoIl,
@@ -107,7 +108,7 @@ const fonteGiornaliero2026: Fonte = {
 
 const fonteAnnuale2025: Fonte = {
   atto: `MEF, ${annuale2025.dicituraInFile.replace(/^Elenco/, 'Elenco annuale addizionale comunale IRPEF 2025,')}`,
-  url: 'https://www1.finanze.gov.it/finanze/index_addcom.php',
+  url: 'https://www1.finanze.gov.it/finanze2/dipartimentopolitichefiscali/fiscalitalocale/nuova_addcomirpef/sceltaregione.htm',
   consultataIl: annuale2025.estrattoIl,
   provenienza: 'importata',
   estrattoIl: annuale2025.estrattoIl,
@@ -117,7 +118,7 @@ const fonteAnnuale2025: Fonte = {
 const normaDiFallback: Fonte = {
   atto: datiComuni.normaDiFallback.atto,
   riferimento: datiComuni.normaDiFallback.riferimento,
-  url: 'https://def.finanze.it',
+  url: 'https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:legge:2024-12-30;207~art1!vig=',
   consultataIl: '2026-08-27',
   provenienza: 'verificata',
 }
@@ -235,11 +236,12 @@ const deduzioneSenzaNormaStatale: Multilingua = {
  * aliquote* e *quali sono*, su tre fonti che concordano — non la lettera del
  * comma. Leggerla è ciò che chiuderebbe la verifica del tutto.
  *
- * ⚠️ **Sei enti su ventuno**, e il resto della tabella resta vuoto finché non
- * si fa lo stesso lavoro su ciascuno. Ciò che cambia dal 31/08 è la conseguenza
- * per gli altri quindici: non portano più una riserva, portano il prospetto
- * ministeriale come fonte. Questa tabella non li qualifica in negativo — dice
- * soltanto di quale ente si conosce anche l'articolo di legge.
+ * ✅ **Ventuno enti su ventuno, dal 31/08/2026.** Gli ultimi due — Puglia e
+ * Molise — sono entrati con D-080: erano rimasti fuori non per lavoro non
+ * fatto, ma perché il loro dato era superato, e attaccare l'atto giusto a
+ * un'aliquota che quell'atto ha rideterminato avrebbe dato a un numero
+ * sbagliato l'aria di essere verificato. Corretto il dato, è caduta la ragione
+ * dell'esclusione. Gli enti letti non portano più una riserva, portano l'atto.
  *
  * ⚠️ **E i tre non stanno qui per la stessa ragione. Sono tre casi diversi, e
  * la riserva caduta li copriva tutti con una frase sola: è il difetto che aveva.**
@@ -447,6 +449,362 @@ const fontiRegionaliVerificate: Readonly<Record<string, Fonte>> = {
     consultataIl: '2026-08-31',
     provenienza: 'verificata',
   },
+  /*
+   * ✅ **L'Abruzzo è il primo ente che usa gli scaglioni VIGENTI dell'IRPEF, e
+   * lo scrive.** La l.r. 9/2025 rinvia espressamente all'art. 11 c. 1 del TUIR
+   * «come modificato dall'art. 1 c. 2 lett. a) della l. 207/2024», cioè ai tre
+   * scaglioni 28.000/50.000: **non si è avvalso della facoltà del c. 727** di
+   * tenere i quattro previgenti. Conferma che `forma: scaglioni-vigenti` nel
+   * dato non è un'inferenza dell'import — è quello che dice la legge.
+   *
+   * Maggiorazioni sulla base: +0,44 · +1,64 · +2,10 → 1,67 · 2,87 · 3,33.
+   * Sul primo scaglione 0,44 sta sotto il tetto di 0,5 punti dell'art. 6 c. 3,
+   * e l'Abruzzo l'ha *abbassata* rispetto allo 0,50 flat che applicava fino al
+   * 2024: ha ridotto sul primo scaglione e alzato sugli altri due.
+   */
+  'REGIONE ABRUZZO': {
+    atto: 'L.R. Abruzzo 12/12/2006 n. 44, come sostituito dall’art. 1 c. 1 della L.R. Abruzzo 04/04/2025 n. 9',
+    riferimento: 'art. 1 c. 8 — maggiorazioni di 0,44 · 1,64 · 2,10 punti sull’aliquota di base',
+    url: 'http://www2.consiglio.regione.abruzzo.it/leggi_tv/abruzzo_lr/2025/lr25009/Articolato.asp',
+    consultataIl: '2026-08-31',
+    provenienza: 'verificata',
+  },
+  /*
+   * 🔴 **La Campania è l'ente che corregge una nostra affermazione.**
+   *
+   * La sua base non è 1,23%: è **1,53%**. All'aliquota di base statale si somma
+   * una **maggiorazione automatica di 0,30 punti** imposta dall'art. 2 c. 86
+   * della L. 191/2009 per le regioni in piano di rientro sanitario, resa
+   * applicabile alla Campania dal 2014 dall'art. 11 c. 15 del D.L. 76/2013.
+   * Sopra quella base la Regione delibera +0,20 · +1,43 · +1,67 · +1,80.
+   *
+   * Sul primo scaglione i due pezzi sommano 0,30 + 0,20 = **0,50 punti esatti**,
+   * cioè il tetto dell'art. 6 c. 3: la manovra regionale è calibrata su ciò che
+   * resta dopo la maggiorazione statale.
+   *
+   * ⚠️ **Corregge *Fonti* §15.f, che aveva liquidato i piani di rientro come
+   * ipotesi superflua.** Era vero il punto stretto — non servono a spiegare il
+   * 3,33%, che è il tetto ordinario — ma non il punto largo: **i piani di
+   * rientro esistono e spostano davvero l'aliquota**, dentro il tetto e non
+   * oltre. Rettifica registrata in §15.i.
+   *
+   * ⚠️ **Le detrazioni campane esistono e restano fuori perimetro.** Sono 30
+   * euro per figlio a chi ha imponibile fino a 28.000 e almeno due figli a
+   * carico, e 40 euro per figlio con disabilità: la soglia di reddito è solo la
+   * *condizione di accesso*, l'importo dipende dal **numero di figli**, con
+   * ripartizione ex art. 12 TUIR. Sono per carichi di famiglia, quindi
+   * l'array vuoto in `detrazioni` è corretto — quel campo porta le sole
+   * detrazioni legate al **solo reddito** (D-019, D-061).
+   */
+  'REGIONE CAMPANIA': {
+    atto: 'L.R. Campania 28/12/2021 n. 31, come sostituito dall’art. 1 c. 1 della L.R. Campania 30/03/2022 n. 7, su base maggiorata ex art. 2 c. 86 della L. 191/2009',
+    riferimento: 'art. 1 — maggiorazioni di 0,20 · 1,43 · 1,67 · 1,80 punti su base 1,53%',
+    url: 'https://entrate.regione.campania.it/ca/addizionale-irpef',
+    consultataIl: '2026-08-31',
+    provenienza: 'verificata',
+  },
+  /*
+   * L'Emilia-Romagna scrive **solo maggiorazioni**, mai aliquote piene: *«di
+   * 0,10 punti percentuali per i redditi fino a 15.000,00 euro»* e così via.
+   * Le quattro percentuali del prospetto sono un calcolo del ministero, non
+   * un numero che stia nella legge — ed è la conferma più netta finora che il
+   * modello base-più-maggiorazione della §15.f è la forma in cui le regioni
+   * legiferano davvero.
+   *
+   * ⚠️ La l.r. 1/2025 fissa **tre annualità in tre commi distinti**, e il 2026
+   * differisce dal 2025 sul solo terzo scaglione: la maggiorazione scende da
+   * 1,70 a 1,55 punti (2,93% → 2,78%), e scenderà a 1,40 nel 2027. La l.r.
+   * 9/2025 tocca soltanto il comma del 2027, e in modo lessicale.
+   */
+  'REGIONE EMILIA-ROMAGNA': {
+    atto: 'L.R. Emilia-Romagna 20/12/2006 n. 19, come sostituito dall’art. 2 della L.R. Emilia-Romagna 31/03/2025 n. 1',
+    riferimento: 'art. 2 c. 2 — maggiorazioni di 0,10 · 0,70 · 1,55 · 2,10 punti sull’aliquota di base, per il solo 2026',
+    url: 'https://demetra.regione.emilia-romagna.it/al/articolo?urn=er:assemblealegislativa:legge:2006;19',
+    consultataIl: '2026-08-31',
+    provenienza: 'verificata',
+  },
+  /*
+   * ✅ **La Basilicata è l'unico ente che non deroga: paga l'aliquota di base e
+   * basta.** Non c'è un atto regionale da citare perché non ce n'è uno — e
+   * l'assenza è la risposta, non una lacuna. Per questo la fonte qui è la norma
+   * statale, non una legge regionale.
+   *
+   * ⚠️ Ma «non deroga» non vuol dire «non ha mai legiferato»: dal 2014 al 2021
+   * la l.r. 8/2014 art. 16 applicava maggiorazioni selettive sui redditi alti
+   * (1,73% fra 55.000 e 75.000, 2,33% oltre). Sono cessate **di fatto** dal
+   * 2022, e la scheda ministeriale di quell'anno lo dice: *«In mancanza della
+   * legge regionale, per il 2022 si applica l'aliquota base»*. Nessun atto di
+   * abrogazione risulta: le soglie regionali 55.000/75.000 hanno semplicemente
+   * smesso di corrispondere agli scaglioni statali dopo la L. 234/2021, e
+   * l'art. 6 c. 4 del D.Lgs. 68/2011 ammette aliquote differenziate
+   * **esclusivamente in relazione agli scaglioni di reddito** statali.
+   */
+  'REGIONE BASILICATA': {
+    atto: 'D.Lgs. 06/05/2011 n. 68, come mod. dall’art. 28 c. 1 del D.L. 201/2011 — la Basilicata non deroga e applica l’aliquota di base',
+    riferimento: 'art. 6 c. 1 — aliquota di base 1,23%',
+    url: 'https://www1.finanze.gov.it/finanze2/dipartimentopolitichefiscali/fiscalitalocale/addregirpef/addregirpef.php?reg=02',
+    consultataIl: '2026-08-31',
+    provenienza: 'verificata',
+  },
+  /*
+   * 🔴 **Sulla Liguria la colonna **`NORME`** del MEF porta fuori strada, ed è
+   * il secondo caso dopo la Valle d'Aosta.** Il prospetto cita la l.r. 3/2022
+   * art. 1: quella norma esiste ed è la disciplina «a regime», ma sui **quattro
+   * scaglioni previgenti** e con maggiorazioni diverse (0 / 0,58 / 1,08 / 1,10).
+   * **I numeri del 2026 non stanno lì.** Stanno nell'art. 2 bis della l.r.
+   * 19/2023, che l'art. 2 bis della l.r. 17/2024 — inserito dalla l.r. 3/2025 —
+   * richiama per gli anni 2025, 2026 e 2027.
+   *
+   * ⚠️ **E il primo scaglione non è un'esenzione.** La legge scrive
+   * maggiorazione «0,00 per cento»: si paga l'aliquota di base 1,23%. Chi legge
+   * «niente addizionale sotto i 28.000» sta leggendo un titolo, non la norma.
+   *
+   * Terzo ente che usa gli scaglioni VIGENTI, e anche qui per rinvio espresso —
+   * all'art. 1 c. 1 del D.Lgs. 216/2023.
+   */
+  'REGIONE LIGURIA': {
+    atto: 'L.R. Liguria 09/10/2024 n. 17 art. 2 bis (inserito dalla L.R. 31/03/2025 n. 3), che richiama l’art. 2 bis della L.R. Liguria 28/12/2023 n. 19',
+    riferimento: 'maggiorazioni di 0,00 · 1,95 · 2,00 punti sull’aliquota di base, per gli anni 2025-2027',
+    url: 'https://lrv.regione.liguria.it/liguriass_prod/articolo?urndoc=urn:nir:regione.liguria:legge:2023-12-28;19',
+    consultataIl: '2026-08-31',
+    provenienza: 'verificata',
+  },
+  /*
+   * ✅ **La Calabria porta un pezzo di quadro generale che mancava.** La sua
+   * maggiorazione di 0,50 punti è del 2002, quando la base era 0,9% e il totale
+   * faceva 1,4%. A trasportarla sulla base nuova è l'**art. 29 c. 14 del D.L.
+   * 216/2011**: *«le maggiorazioni già vigenti alla data di entrata in vigore
+   * del presente decreto si intendono applicate sulla predetta aliquota di base
+   * dell'1,23 per cento»*. È la norma che spiega perché tante maggiorazioni
+   * regionali anteriori al 2011 valgano ancora oggi sulla base 1,23 — e **non è
+   * la norma sui piani di rientro**, come il rinvio del MEF lasciava supporre.
+   *
+   * ⚠️ La Calabria **è** in piano di rientro, ma il +0,30 dell'art. 2 c. 86
+   * della L. 191/2009 **non le è applicato**: se lo fosse, l'aliquota sarebbe
+   * 2,03% come in Molise. Essere in piano di rientro non implica la
+   * maggiorazione automatica.
+   *
+   * Gli scaglioni introdotti nel 2007 furono abrogati nel 2008: da allora
+   * l'aliquota è unica, e coincide col tetto di 0,5 punti del c. 3, quindi
+   * resta legittima anche sul primo scaglione.
+   */
+  'REGIONE CALABRIA': {
+    atto: 'L.R. Calabria 07/08/2002 n. 30, come mod. dall’art. 18 c. 1 della L.R. Calabria 11/01/2006 n. 1, riparametrata sulla base 1,23% dall’art. 29 c. 14 del D.L. 216/2011',
+    riferimento: 'art. 1 c. 1 — maggiorazione di 0,50 punti sull’aliquota di base',
+    url: 'https://www.consiglioregionale.calabria.it/bdf/api/BDF?numero=30&anno=2002',
+    consultataIl: '2026-08-31',
+    provenienza: 'verificata',
+  },
+  /*
+   * ✅ **Le Marche sono il primo ente in cui il fallback statale opera davvero**,
+   * e non per il 2026 soltanto: né per il 2025 né per il 2026 la Regione ha
+   * approvato una legge sull'addizionale. Le aliquote si applicano per effetto
+   * dell'**art. 1 c. 728 della L. 207/2024** — *scaglioni e aliquote già vigenti
+   * nell'anno precedente* — e la sostanza resta quella della l.r. 5/2022, che è
+   * permanente e mai modificata. Il c. 728 non crea il contenuto: lo trascina.
+   *
+   * Maggiorazioni 0 · 0,30 · 0,47 · 0,50: primo scaglione **esattamente alla
+   * base**, massimo a base + 0,50. È la manovra più contenuta fra gli enti a
+   * scaglioni.
+   *
+   * ⚠️ L'agevolazione marchigiana non è una detrazione ma una **disapplicazione
+   * della maggiorazione** — si torna a 1,23% su tutto — e richiede reddito fino
+   * a 50.000 **e** un figlio con handicap a carico. Dipende da carichi di
+   * famiglia e disabilità: fuori perimetro (D-019), array `detrazioni` vuoto
+   * correttamente.
+   */
+  'REGIONE MARCHE': {
+    atto: 'L.R. Marche 23/03/2022 n. 5, applicata al 2026 per effetto dell’art. 1 c. 728 della L. 30/12/2024 n. 207',
+    riferimento: 'art. 1 c. 1 — maggiorazioni di 0 · 0,30 · 0,47 · 0,50 punti sull’aliquota di base',
+    url: 'https://www.consiglio.marche.it/banche_dati_e_documentazione/leggi/dettaglio.php?arc=vig&idl=2241',
+    consultataIl: '2026-08-31',
+    provenienza: 'verificata',
+  },
+  /*
+   * ✅ **Il Friuli conferma la forma a fascia intera, ma con un argomento più
+   * forte di quello che avevamo.** Noi ci reggevamo sulla frase del prospetto
+   * MEF — *«1,23 per cento sull'intero importo»*. Quella locuzione **non sta
+   * nell'atto regionale**: è del ministero.
+   *
+   * L'atto fa qualcosa di più netto. Non crea scaglioni: **condiziona la
+   * riduzione al soggetto**. *«per i soggetti aventi un reddito imponibile …
+   * non superiore a 15.000 euro l'aliquota … è ridotta dello 0,53 per cento»*.
+   * Chi supera i 15.000 semplicemente **non è fra quei soggetti**, e resta
+   * sull'aliquota di base, che è unica e piatta per costruzione. Non è una
+   * fascia intera per scelta: è una fascia intera perché **non c'è nessuna
+   * fascia**, solo una platea di beneficiari.
+   *
+   * ⚠️ Due dettagli che cambiano la citazione: lo **0,70% non è scritto da
+   * nessuna parte nella legge** — è 1,23 meno 0,53; e la soglia si misura sul
+   * *reddito imponibile ai fini dell'addizionale regionale*, non sul reddito
+   * complessivo.
+   */
+  'REGIONE FRIULI VENEZIA GIULIA': {
+    atto: 'L.R. Friuli Venezia Giulia 25/07/2012 n. 14',
+    riferimento: 'art. 1 c. 5 — riduzione di 0,53 punti per i soggetti con imponibile fino a 15.000 euro',
+    url: 'https://lexview-int.regione.fvg.it/fontinormative/xml/scarico.aspx?ANN=2012&LEX=0014&tip=0&lang=ita',
+    consultataIl: '2026-08-31',
+    provenienza: 'verificata',
+  },
+  /*
+   * ⚠️ **La Sardegna è il secondo ente su cui la ricerca ha creduto di trovare
+   * un difetto e non c'era.** Come per la Campania, esiste una detrazione che
+   * il nostro `detrazioni` non porta: 200 euro per ogni figlio **minorenne**
+   * fiscalmente a carico, più 100 per figlio con disabilità, a chi ha
+   * imponibile fino a 50.000.
+   *
+   * Ma il reddito è **solo la condizione di accesso**: senza figli minorenni a
+   * carico non spetta nulla, e l'importo dipende dal loro numero e dai mesi di
+   * carico. È una detrazione **per carichi di famiglia** — fuori perimetro per
+   * D-019 — e l'array vuoto è corretto. È la stessa distinzione della Campania,
+   * ed è la seconda volta che regge senza doverla riscrivere.
+   *
+   * ⚠️ Da correggere invece l'aspettativa sull'aliquota: **la l.r. 13/2022 non
+   * fissa alcuna aliquota**, novella soltanto la detrazione della l.r. 48/2018.
+   * La Sardegna non ha una legge propria sull'aliquota: applica la base, come
+   * la Basilicata.
+   */
+  'REGIONE SARDEGNA': {
+    atto: 'D.Lgs. 06/05/2011 n. 68, come mod. dall’art. 28 del D.L. 201/2011 — la Sardegna non deroga sull’aliquota; la L.R. Sardegna 28/12/2018 n. 48 art. 2, come mod. dalla L.R. 11/07/2022 n. 13, dispone la sola detrazione per figli minorenni a carico',
+    riferimento: 'art. 6 c. 1 — aliquota di base 1,23%',
+    url: 'https://www.sardegnaentrate.it/index.php?xsl=1131&s=34&v=9&c=94067',
+    consultataIl: '2026-08-31',
+    provenienza: 'verificata',
+  },
+  /*
+   * ⚠️ **Sulla Toscana il prospetto cita l'atto modificativo invece della sede
+   * vigente** — terzo modo di sbagliare, dopo il rinvio errato della Valle
+   * d'Aosta e la legge superata della Liguria. `NORME` dice «art. 1 l.r.
+   * 48/2023»: quella legge esiste e ha davvero cambiato le aliquote, ma è una
+   * **novella**. Le maggiorazioni vivono nell'art. 4 c. 1 della l.r. 77/2012,
+   * di cui la 48/2023 ha sostituito le sole lettere c) e d).
+   *
+   * Da lì il gradino che ci aveva incuriositi — quasi due punti fra secondo e
+   * terzo scaglione, 1,43% → 3,32%. **Non è un'anomalia del dato: è voluto.**
+   * Sono state alzate solo le due lettere alte, lasciando intatte le due basse.
+   *
+   * ⚠️ Le detrazioni per carichi di famiglia toscane **stavano** nell'art. 5
+   * della stessa l.r. 77/2012, ma è **abrogato dal 2013**: qui l'array vuoto
+   * non è una scelta di perimetro — non c'è nulla, nemmeno fuori perimetro.
+   */
+  'REGIONE TOSCANA': {
+    atto: 'L.R. Toscana 27/12/2012 n. 77, come mod. da ultimo dall’art. 1 della L.R. Toscana 28/12/2023 n. 48',
+    riferimento: 'art. 4 c. 1 — maggiorazioni di 0,19 · 0,20 · 2,09 · 2,10 punti sull’aliquota di base',
+    url: 'https://raccoltanormativa.consiglio.regione.toscana.it/articolo?urndoc=urn%3Anir%3Aregione.toscana%3Alegge%3A2012-12-27%3B77&pr=idx%2C0%3Bartic%2C1%3Barticparziale%2C0&anc=art4',
+    consultataIl: '2026-08-31',
+    provenienza: 'verificata',
+  },
+  /*
+   * ✅ **L'Umbria conferma alla lettera la lettura più delicata del progetto**,
+   * quella su cui poggia il Caso 3 di *Casi di test*.
+   *
+   * - Il c. 1 scrive **maggiorazioni per scaglioni**: 0,50 · 1,79 · 1,89 · 2,10.
+   * - Il c. 2 **disapplica le sole lettere a) e b)** a chi ha imponibile fino a
+   *   28.000: restano gli scaglioni, con la sola aliquota di base. Per costruzione
+   *   è «per scaglioni con maggiorazione zero», e in concreto fa 1,23% su tutto.
+   * - La soglia è un **cliff**: a 28.000,01 le maggiorazioni tornano ad applicarsi
+   *   **anche sulle prime due fasce**.
+   * - ✅ Il c. 3 scrive letteralmente **«compreso tra 28.001,00 e 50.000,00»**,
+   *   non «superiore a 28.000». **La micro-fascia 28.000,01–28.000,99 paga le
+   *   aliquote piene e non ha la detrazione** — è esattamente il confine che
+   *   avevamo messo fra le decisioni aperte, e ora ha una risposta testuale.
+   * - Il c. 3 si fonda **espressamente sull'art. 6 c. 6 del D.Lgs. 68/2011**:
+   *   secondo ente, dopo il Lazio, che nomina quella norma.
+   *
+   * ⚠️ La misura è **temporanea**: l'art. 24 della l.r. 5/2025 ne ha limitato
+   * l'efficacia agli anni 2025-2027, sostituendo «a decorrere dall'anno
+   * d'imposta 2025». Non è a regime.
+   */
+  'REGIONE UMBRIA': {
+    atto: 'L.R. Umbria 11/04/2025 n. 2, come mod. dall’art. 24 della L.R. Umbria 29/07/2025 n. 5',
+    riferimento: 'art. 1 commi 1, 2 e 3 — maggiorazioni di 0,50 · 1,79 · 1,89 · 2,10 punti, disapplicate fino a 28.000, e detrazione di 150 euro fra 28.001 e 50.000',
+    url: 'https://leggi.alumbria.it/mostra_atto.php?id=249873',
+    consultataIl: '2026-08-31',
+    provenienza: 'verificata',
+  },
+  /*
+   * ✅ **La Sicilia è l'ente che mostra il movimento inverso: una maggiorazione
+   * che è stata spenta.** Aveva 0,5 punti dal 2007 per il risanamento sanitario
+   * (l.r. 12/2007, allora 1,4% su base 0,9%), diventati 1,73% col rialzo della
+   * base nel 2011. Ridotta a 0,27 punti per il solo 2018, e **azzerata dal 2019**
+   * dall'art. 1 c. 10-quater della l.r. 4/2015, inserito dall'art. 8 della
+   * l.r. 15/2017. Da allora paga la sola aliquota di base.
+   *
+   * ⚠️ **Ed è in piano di rientro sanitario, eppure sta alla base.** La
+   * maggiorazione automatica scatta solo a disavanzo non coperto, mentre
+   * l'art. 2 c. 80 della L. 191/2009 consente la riduzione alle regioni in
+   * piano con disavanzo decrescente. Insieme alla Calabria — in piano, senza
+   * il +0,30 — smonta l'equazione «piano di rientro ⇒ aliquota maggiorata».
+   */
+  'REGIONE SICILIA': {
+    atto: 'D.Lgs. 06/05/2011 n. 68 art. 6 c. 1 — la maggiorazione siciliana è azzerata dall’art. 1 c. 10-quater della L.R. Sicilia 09/02/2015 n. 4, inserito dall’art. 8 della L.R. Sicilia 11/08/2017 n. 15',
+    riferimento: 'aliquota di base 1,23%, senza maggiorazione regionale dal 2019',
+    url: 'https://www.regione.sicilia.it/istituzioni/regione/strutture-regionali/assessorato-economia/dipartimento-finanze-credito/portale-tributi/addizionale-irpef',
+    consultataIl: '2026-08-31',
+    provenienza: 'verificata',
+  },
+  /*
+   * Il Veneto non deroga sull'aliquota ordinaria: applica la base. L'unica
+   * norma regionale vigente è l'agevolazione allo **0,9% per i disabili** e per
+   * chi ha un disabile fiscalmente a carico, con imponibile fino a 50.000 —
+   * soglia elevata da 45.000 dall'art. 9 della l.r. 30/2022. Dipende da
+   * **disabilità**, non dal solo reddito: fuori perimetro.
+   *
+   * ⚠️ **La genesi spiega una stranezza.** Nel 2005 lo 0,9% era la vecchia
+   * aliquota di base: quel comma la *manteneva* per i disabili mentre gli altri
+   * la alzavano. Quando nel 2011 la base è salita a 1,23%, quello 0,9% — norma
+   * permanente — è diventato di fatto una **riduzione sotto la base**.
+   *
+   * ✅ E toglie un dubbio che avevamo posto: **ridurre è espressamente
+   * consentito.** L'art. 6 c. 1 del D.Lgs. 68/2011 dice che le regioni possono
+   * *«aumentare o diminuire»* l'aliquota di base. Non serviva cercare altro.
+   */
+  'REGIONE VENETO': {
+    atto: 'L.R. Veneto 26/11/2005 n. 19, come mod. dall’art. 9 della L.R. Veneto 23/12/2022 n. 30 — il Veneto non deroga sull’aliquota ordinaria e applica la base',
+    riferimento: 'art. 1 c. 5 — aliquota agevolata 0,9% per disabili e per chi ha un disabile a carico, con imponibile fino a 50.000 euro',
+    url: 'https://www.regione.veneto.it/web/tributi-regionali/addirpef-determinazione-dellimposta',
+    consultataIl: '2026-08-31',
+    provenienza: 'verificata',
+  },
+  /*
+   * ✅ **Puglia — l'ente che ha chiuso D-080, e che conferma il modello.**
+   *
+   * Non è una legge regionale: è un **decreto commissariale**. Il Presidente
+   * della Regione, in qualità di Commissario ad acta ex art. 1 c. 174 della
+   * L. 311/2004, ha rideterminato le aliquote *«per la copertura del disavanzo
+   * del servizio sanitario regionale risultante dal conto economico al quarto
+   * trimestre 2025»*. Vale sull'intero periodo d'imposta benché pubblicato a
+   * maggio, ed è la ragione per cui D-053 è stata sostituita.
+   *
+   * ⚠️ **E il testo conferma dall'esterno il quadro di *Fonti* §15.f**: parla di
+   * *«maggiorazioni all'aliquota di base»* ex art. 6 del D.Lgs. 68/2011, non di
+   * aliquote piene. È la seconda conferma indipendente dopo il Piemonte.
+   */
+  'REGIONE PUGLIA': {
+    atto: 'Decreto n. 3 del 28/05/2026 del Presidente della Regione Puglia in qualità di Commissario ad acta, ex art. 1 c. 174 della L. 311/2004',
+    riferimento: 'rideterminazione delle maggiorazioni all’aliquota di base ex art. 6 del D.Lgs. 68/2011 — 1,33 · 2,13 · 3,23 · 3,33',
+    url: 'https://www.regione.puglia.it/web/tributi/addizionale-regionale-irpef/aliquote',
+    consultataIl: '2026-08-31',
+    provenienza: 'verificata',
+  },
+  /*
+   * ✅ **Molise — l'unico ente la cui aliquota non l'ha decisa nessuno.**
+   *
+   * Il +0,30 non è una scelta della Regione: è l'**automatismo dell'art. 2
+   * c. 86 della L. 191/2009**, scattato perché il Molise non ha raggiunto gli
+   * obiettivi del piano di rientro nel 2025. Per questo la citazione porta due
+   * leggi regionali *e* la norma statale che le scavalca: le prime fissano la
+   * struttura, la seconda aggiunge i punti. È il caso che l'art. 6 c. 10 del
+   * D.Lgs. 68/2011 mette fuori dai tetti, e spiega il 3,63% — il massimo
+   * d'Italia, che nessun organo regionale ha deliberato.
+   */
+  'REGIONE MOLISE': {
+    atto: 'Art. 2 della L.R. Molise 9/2013 e art. 1 della L.R. Molise 15/12/2023 n. 5, con la maggiorazione automatica dell’art. 2 c. 86 della L. 191/2009',
+    riferimento: 'provvedimento pubblicato il 19/06/2026 — +0,30 punti automatici per il mancato raggiungimento degli obiettivi del piano di rientro nel 2025',
+    url: 'https://www1.finanze.gov.it/finanze2/dipartimentopolitichefiscali/fiscalitalocale/addregirpef/addregirpef.php?reg=12',
+    consultataIl: '2026-08-31',
+    provenienza: 'verificata',
+  },
 }
 
 // Dal JSON ai tipi del motore
@@ -514,6 +872,54 @@ function formaAliquotaRegionale(j: FormaAliquotaJson, dove: string): FormaAliquo
   }
 }
 
+/**
+ * La forma di una detrazione regionale, letta dal dato.
+ *
+ * ⚠️ Stessa disciplina di `formaAliquota`: il JSON tipizza `forma` come
+ * stringa, quindi il compilatore non restringe da solo e ogni campo va
+ * verificato invece che assunto. Un dato malformato deve fermarsi qui con il
+ * nome dell'ente, non arrivare al motore come `NaN`.
+ */
+interface FormulaDetrazioneJson {
+  readonly forma: string
+  readonly importo?: number
+  readonly base?: number
+  readonly quota?: number
+  readonly riferimento?: number
+  readonly ampiezza?: number
+  readonly massimo?: number | null
+  readonly espressione?: string
+}
+
+function formulaDetrazioneDa(j: FormulaDetrazioneJson, dove: string): FormulaDetrazione {
+  if (j.forma === 'costante') {
+    if (typeof j.importo !== 'number') throw new Error(`${dove}: detrazione «costante» senza importo`)
+    return { forma: 'costante', importo: euro(j.importo) }
+  }
+  if (j.forma === 'lineare-crescente') {
+    const { base, quota, riferimento, ampiezza, espressione } = j
+    if (
+      typeof base !== 'number' ||
+      typeof quota !== 'number' ||
+      typeof riferimento !== 'number' ||
+      typeof ampiezza !== 'number' ||
+      typeof espressione !== 'string'
+    ) {
+      throw new Error(`${dove}: detrazione «lineare-crescente» incompleta`)
+    }
+    return {
+      forma: 'lineare-crescente',
+      base: euro(base),
+      quota: euro(quota),
+      riferimento: euro(riferimento),
+      ampiezza: euro(ampiezza),
+      massimo: j.massimo === undefined || j.massimo === null ? null : euro(j.massimo),
+      espressione,
+    }
+  }
+  throw new Error(`${dove}: forma di detrazione sconosciuta «${j.forma}»`)
+}
+
 // Gli enti regionali
 
 const entiRegionali = new Map<string, EnteRisolto<ParametriRegionali>>(
@@ -535,7 +941,7 @@ const entiRegionali = new Map<string, EnteRisolto<ParametriRegionali>>(
       fonte: fontiRegionaliVerificate[e.nome] ?? {
         atto: `MEF, ${regionale2026.descrizione}`,
         riferimento: e.norme ?? `${e.nome} — provvedimento n. ${e.numeroProvvedimento} del ${e.dataPubblicazione}`,
-        url: 'https://www1.finanze.gov.it/finanze/index_addreg.php',
+        url: 'https://www1.finanze.gov.it/finanze2/dipartimentopolitichefiscali/fiscalitalocale/addregirpef/sceltaregione.htm',
         consultataIl: regionale2026.estrattoIl,
         provenienza: 'importata',
         estrattoIl: regionale2026.estrattoIl,
@@ -558,13 +964,19 @@ const entiRegionali = new Map<string, EnteRisolto<ParametriRegionali>>(
          */
         detrazioni: e.detrazioni.map(
           (d): DetrazioneLocale => ({
-            importo: euro(d.importo),
             redditoDa: euro(d.redditoDa),
             redditoA: d.redditoA === null ? null : euro(d.redditoA),
+            /*
+             * ⚠️ La forma arriva dal dato e non si normalizza qui: un ente può
+             * fissare un importo o una formula, e l'import le distingue già
+             * leggendole dal testo. Ricostruirle in questo punto rimetterebbe
+             * una regola in `app/`, che è dove non deve stare.
+             */
+            formula: formulaDetrazioneDa(d.formula, e.nome),
             fonte: {
               atto: e.norme ?? `MEF, ${regionale2026.descrizione}`,
               riferimento: `${e.nome} — detrazione dall'addizionale regionale`,
-              url: 'https://www1.finanze.gov.it/finanze/index_addreg.php',
+              url: 'https://www1.finanze.gov.it/finanze2/dipartimentopolitichefiscali/fiscalitalocale/addregirpef/sceltaregione.htm',
               consultataIl: regionale2026.estrattoIl,
               provenienza: 'importata',
               estrattoIl: regionale2026.estrattoIl,
@@ -589,7 +1001,7 @@ const entiRegionali = new Map<string, EnteRisolto<ParametriRegionali>>(
                 fonte: {
                   atto: e.norme ?? `MEF, ${regionale2026.descrizione}`,
                   riferimento: `${e.nome} — soglia di esenzione dall'addizionale regionale`,
-                  url: 'https://www1.finanze.gov.it/finanze/index_addreg.php',
+                  url: 'https://www1.finanze.gov.it/finanze2/dipartimentopolitichefiscali/fiscalitalocale/addregirpef/sceltaregione.htm',
                   consultataIl: regionale2026.estrattoIl,
                   provenienza: 'importata',
                   estrattoIl: regionale2026.estrattoIl,
@@ -615,7 +1027,7 @@ const entiRegionali = new Map<string, EnteRisolto<ParametriRegionali>>(
                 fonte: {
                   atto: e.norme ?? `MEF, ${regionale2026.descrizione}`,
                   riferimento: `${e.nome} — deduzione dalla base dell'addizionale regionale`,
-                  url: 'https://www1.finanze.gov.it/finanze/index_addreg.php',
+                  url: 'https://www1.finanze.gov.it/finanze2/dipartimentopolitichefiscali/fiscalitalocale/addregirpef/sceltaregione.htm',
                   consultataIl: regionale2026.estrattoIl,
                   provenienza: 'importata',
                   estrattoIl: regionale2026.estrattoIl,

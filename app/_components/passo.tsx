@@ -174,13 +174,24 @@ function Etichetta({ children }: { children: React.ReactNode }) {
  * nulla — è la grandezza: scrivere «+0,00 €» accanto al reddito complessivo
  * direbbe una cosa vera e priva di senso.
  */
-function Valore({ passo }: { passo: Passo }) {
+function Valore({ passo, apertura = false }: { passo: Passo; apertura?: boolean }) {
   const { t, lingua } = useTraduzione()
   const { inEuro, inEuroConSegno } = formato(lingua)
   const esito = passo.esito
 
   if (esito.stato === 'nonDovuto') {
     return <Etichetta>{t('passo.nonDovuto')}</Etichetta>
+  }
+
+  /*
+    La cifra che apre la catena: stessa misura delle voci sotto, così la
+    colonna di destra si legge dall'alto come una sequenza sola. Senza segno,
+    perché non è un effetto sul netto ma il valore da cui si parte.
+  */
+  if (apertura && esito.stato === 'applicato') {
+    return (
+      <span className="cifre text-xl font-semibold text-inchiostro">{inEuro(esito.esce)}</span>
+    )
   }
 
   if (esito.stato === 'verifica') {
@@ -239,19 +250,33 @@ function Valore({ passo }: { passo: Passo }) {
   )
 }
 
-/** La ragione, quando il passo ne ha una da dare. */
+/**
+ * La ragione, quando il passo ne ha una da dare.
+ *
+ * ⚠️ **Il riquadro verde è sparito, e diceva la cosa sbagliata nel modo più
+ * appariscente della pagina.**
+ *
+ * Un presupposto soddisfatto riempiva di `verde-velo` una fascia a tutta
+ * larghezza sotto la voce, alta due righe. Il verde di questo prodotto
+ * significa una cosa sola, *quello che resta al dipendente*, e qui stava
+ * annunciando l'esatto contrario: il presupposto soddisfatto è la condizione
+ * per cui **si pagano** le due addizionali. Chi scorre e legge i colori prima
+ * delle parole leggeva una buona notizia dove c'è un prelievo.
+ *
+ * E aveva un secondo difetto, indipendente dal significato: era il solo blocco
+ * pieno di tutta la sezione, quindi pesava più delle voci che portano una
+ * cifra, per dire una cosa che è un passaggio di verifica. Un fondo esteso è
+ * una promessa di importanza che il contenuto non manteneva.
+ *
+ * Ora la ragione è prosa come le spiegazioni delle altre voci, e a marcare
+ * l'esito è la pastiglia accanto all'etichetta, che quel lavoro lo faceva già.
+ */
 function Ragione({ passo }: { passo: Passo }) {
   const esito = passo.esito
   if (esito.stato === 'applicato') return null
 
   return (
-    <p
-      className={`mt-2 rounded-voce px-3 py-2 text-sm ${
-        esito.stato === 'verifica' && esito.superata
-          ? 'bg-verde-velo text-inchiostro'
-          : 'bg-fondo text-inchiostro'
-      }`}
-    >
+    <p className="mt-2 max-w-prose text-sm leading-relaxed text-inchiostro-tenue">
       {esito.ragione}
     </p>
   )
@@ -271,14 +296,38 @@ function Ragione({ passo }: { passo: Passo }) {
  * mancante senza spiegazione è la forma peggiore di errore, perché è plausibile
  * (D-033).
  */
-export function RigaPasso({ passo, annidato = false }: { passo: Passo; annidato?: boolean }) {
+export function RigaPasso({
+  passo,
+  annidato = false,
+  apertura = false,
+}: {
+  passo: Passo
+  annidato?: boolean
+  /**
+   * Il passo che apre la catena, cioè la RAL.
+   *
+   * ⚠️ **Non è un passaggio intermedio, ed è la ragione per cui esiste
+   * questa distinzione.** I passi neutri portano il proprio valore in piccolo
+   * sotto l'etichetta, e ha senso: *base contributiva* e *reddito
+   * complessivo* sono grandezze di servizio, incolonnarle a destra le
+   * farebbe leggere come addendi accanto ai `−2.757,00 €` dei contributi.
+   *
+   * La RAL non è una di quelle. È **la cifra da cui parte tutto**, l'unica che
+   * chi legge ha scritto di persona, e scriverla in corpo minore in fondo a
+   * sinistra la faceva sparire proprio in cima all'elenco che dovrebbe
+   * aprire. Va dove vanno le cifre che contano: a destra e grande, come le
+   * voci sotto. Resta in inchiostro e non in verde, perché non è una somma che
+   * si aggiunge: è il punto di partenza.
+   */
+  apertura?: boolean
+}) {
   const { t, lingua } = useTraduzione()
   const { inEuro } = formato(lingua)
   const esito = passo.esito
 
   const applicata = esito.stato === 'applicato' && esito.segno !== 'neutro'
   const spenta = esito.stato === 'nonDovuto'
-  const neutro = esito.stato === 'applicato' && esito.segno === 'neutro'
+  const neutro = esito.stato === 'applicato' && esito.segno === 'neutro' && !apertura
 
   /*
     ⚠️ **La barra è verde, e basta un colore.** Ci avevo messo la tinta della
@@ -333,7 +382,7 @@ export function RigaPasso({ passo, annidato = false }: { passo: Passo; annidato?
         >
           {passo.etichetta}
         </h4>
-        {neutro ? null : <Valore passo={passo} />}
+        {neutro ? null : <Valore passo={passo} apertura={apertura} />}
       </div>
 
       {neutro ? (

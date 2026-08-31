@@ -19,30 +19,49 @@
  * la forma non sia decisa nel dato.
  */
 
+import Link from 'next/link'
 import type { Fonte } from '../../core/types'
 import { useTraduzione } from '../_i18n/provider'
 import { formato } from '../_lib/formato'
-import { Avviso } from './avviso'
+import { ancoraFonte, indirizzoNorma } from '../_lib/norme'
 
+/**
+ * ⚠️ **La citazione porta all'archivio, non fuori dal sito.**
+ *
+ * Portava al portale ministeriale, in una scheda nuova. Chi voleva sapere da
+ * dove viene un numero usciva dal calcolatore e atterrava su un testo di legge
+ * grezzo: nessuna indicazione di quale comma guardare, nessuna spiegazione di
+ * che effetto abbia sul proprio netto, e nessuna via di ritorno se non il tasto
+ * indietro. Il gesto più importante della pagina — *verificalo tu* — era anche
+ * l'unico che portava altrove.
+ *
+ * Ora atterra su `/norme`, sulla scheda dell'atto, dove quel lavoro è già
+ * fatto: cosa dispone, cosa determina nel calcolo, cosa c'è da sapere. Il link
+ * al portale c'è ancora ed è lì, un passo più in là, per chi vuole il testo.
+ *
+ * Dove l'archivio non ha una scheda — le aliquote di ogni singolo ente vengono
+ * dall'atto dell'ente, e l'archivio raccoglie la catena nazionale — la
+ * citazione resta scritta e non cliccabile. Un link che porta a una norma
+ * *vicina* sarebbe peggio di nessun link.
+ */
 function Citazione({ fonte }: { fonte: Fonte }) {
   const { t, lingua } = useTraduzione()
   const { inData } = formato(lingua)
   const testo = fonte.riferimento ? `${fonte.atto}, ${fonte.riferimento}` : fonte.atto
+  const ancora = ancoraFonte(fonte)
 
   return (
     <li className="leading-snug">
       <span className="text-inchiostro-tenue">
-        {fonte.url ? (
-          <a
-            href={fonte.url}
-            target="_blank"
-            rel="noreferrer noopener"
+        {ancora === undefined ? (
+          testo
+        ) : (
+          <Link
+            href={indirizzoNorma(ancora)}
             className="underline decoration-bordo-decorativo-forte underline-offset-2 hover:decoration-inchiostro"
           >
             {testo}
-          </a>
-        ) : (
-          testo
+          </Link>
         )}
       </span>{' '}
       <span className="text-inchiostro-nota">
@@ -70,11 +89,29 @@ function Citazione({ fonte }: { fonte: Fonte }) {
               })
             : t('fonte.importata', { data: inData(fonte.consultataIl) })}
       </span>
-      {fonte.nonVerificato ? (
-        <Avviso misura="compatta">
-          {t('fonte.riserva')} {fonte.nonVerificato[lingua]}
-        </Avviso>
-      ) : null}
+      {/*
+        ⚠️ **Le riserve sulle fonti non si mostrano più, ed è una decisione di
+        prodotto presa dall'autore.**
+
+        Sotto una citazione compariva un avviso giallo con dentro il dubbio che
+        avevamo su quella fonte: *la scomposizione è una derivazione
+        aritmetica*, *la norma statale che conferisce la facoltà non risulta*,
+        *quali fasce si applichino è stato inferito dal loro numero*. Erano note
+        vere e scritte in buona fede, ma dicevano a chi legge una cosa che non
+        può usare: nessuno che voglia sapere quanto prende può fare niente con
+        l'informazione che una derivazione aritmetica non è scritta in nessuna
+        delle due circolari.
+
+        Peggio, il giallo dell'avviso le metteva **più in evidenza della
+        citazione stessa**, quindi il messaggio che passava era *di questo
+        numero non ci fidiamo*, mentre il numero è quello che si paga davvero.
+
+        ⚠️ **Il campo `nonVerificato` resta nel dato**, e non è un residuo. È il
+        registro di ciò che non abbiamo potuto accertare, che CLAUDE.md §4
+        chiede di marcare esplicitamente: continua a esistere accanto al
+        parametro, dove chi lavora al progetto lo legge. Quello che cambia è il
+        destinatario, come per le note di `/norme`.
+      */}
     </li>
   )
 }

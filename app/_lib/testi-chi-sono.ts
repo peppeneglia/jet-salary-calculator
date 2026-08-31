@@ -29,14 +29,21 @@ import type { Multilingua } from '../../core/types'
 
 export const CHI_SONO = {
   titolo: { it: 'Chi sono', en: 'About me' },
-  occhiello: {
-    it: 'Sviluppatore, con una laurea in informatica e una in corso in gestione d’impresa. Questo calcolatore l’ho scritto io: ecco da dove arrivo.',
-    en: 'A developer, with a degree in computer science and one in progress in business management. I wrote this calculator: here is where I come from.',
-  },
-
+  /*
+   * ⚠️ **L'occhiello sotto il titolo è stato tolto.**
+   *
+   * Diceva *«Sviluppatore, con una laurea in informatica e una in corso in
+   * gestione d'impresa. Questo calcolatore l'ho scritto io»*, e il riquadro
+   * subito sotto ripeteva le stesse tre cose per esteso. Presentarsi due volte
+   * a due righe di distanza, su una pagina che deve restare corta, fa cercare
+   * la differenza fra le due presentazioni: non ce n'era nessuna.
+   *
+   * Quello che l'occhiello faceva davvero — dire chi parla prima che cominci a
+   * parlare — lo fa ora la prima frase del riquadro, che si apre con il nome.
+   */
   introP1: {
-    it: 'Lavoro come sviluppatore in Deloitte, a Bari, su progetti enterprise. Ho una laurea in Informatica e Tecnologie per la Produzione del Software all’Università di Bari e sto finendo Gestione d’Impresa alla Mercatorum. Le ho scelte perché ognuna risponde a metà della domanda: la prima insegna come si costruisce una cosa, la seconda se valga la pena costruirla.',
-    en: 'I work as a developer at Deloitte, in Bari, on enterprise projects. I hold a degree in Computer Science and Software Production Technologies from the University of Bari, and I am finishing one in Business Management at Mercatorum. I chose them because each answers half the question: the first teaches how a thing is built, the second whether it is worth building.',
+    it: 'Sono Giuseppe Neglia e lavoro come sviluppatore in Deloitte, a Bari, su progetti enterprise. Ho una laurea in Informatica e Tecnologie per la Produzione del Software all’Università di Bari e sto finendo Gestione d’Impresa alla Mercatorum. Le ho scelte perché ognuna risponde a metà della domanda: la prima insegna come si costruisce una cosa, la seconda se valga la pena costruirla.',
+    en: 'I am Giuseppe Neglia, and I work as a developer at Deloitte, in Bari, on enterprise projects. I hold a degree in Computer Science and Software Production Technologies from the University of Bari, and I am finishing one in Business Management at Mercatorum. I chose them because each answers half the question: the first teaches how a thing is built, the second whether it is worth building.',
   },
   introP2: {
     it: 'Qualunque cosa faccia, dentro o fuori dal lavoro, finisce per assomigliare a tutte le altre: capire un problema fino in fondo, quasi sempre in un dominio che all’inizio non conosco, e costruire qualcosa che lo risolva davvero e non solo in superficie.',
@@ -45,16 +52,16 @@ export const CHI_SONO = {
 
   filoTitolo: { it: 'Come lavoro', en: 'How I work' },
   filoP1: {
-    it: 'Sui progetti enterprise la dinamica è sempre la stessa: si parte dai requisiti del cliente e si arriva al software. La parte difficile non è scrivere il codice, è capire che cosa il cliente stia davvero chiedendo — che quasi mai coincide con quello che ha scritto nel documento. Lì il problema arriva già definito, spesso male, e il lavoro vero è ridefinirlo.',
-    en: 'On enterprise projects the pattern never changes: you start from the client’s requirements and end up at software. The hard part is not writing the code, it is working out what the client is actually asking for — which almost never matches what they wrote in the document. There the problem arrives already defined, often badly, and the real work is redefining it.',
+    it: 'Sui progetti enterprise la dinamica è sempre la stessa: si parte dai requisiti del cliente e si arriva al software. La parte difficile non è scrivere il codice, è capire che cosa il cliente stia davvero chiedendo, che quasi mai coincide con quello che ha scritto nel documento. Lì il problema arriva già definito, spesso male, e il lavoro vero è ridefinirlo.',
+    en: 'On enterprise projects the pattern never changes: you start from the client’s requirements and end up at software. The hard part is not writing the code, it is working out what the client is actually asking for, which almost never matches what they wrote in the document. There the problem arrives already defined, often badly, and the real work is redefining it.',
   },
   filoP2: {
-    it: 'Uso gli strumenti di intelligenza artificiale in modo intensivo, ma con una divisione netta: le decisioni di architettura e di prodotto sono mie e le scrivo prima che venga scritta una riga di codice; l’esecuzione di dettaglio la delego. La parte più utile del mio lavoro è dire di no a quello che l’AI propone, e la conoscenza teorica serve esattamente a questo — riconoscere quando una soluzione che funziona è comunque quella sbagliata.',
-    en: 'I use AI tools heavily, but with a sharp division of labour: the architecture and product decisions are mine and I write them down before a line of code exists; the detailed execution I delegate. The most useful part of my job is saying no to what the AI proposes, and theory is what makes that possible — recognising when a solution that works is still the wrong one.',
+    it: 'Uso gli strumenti di intelligenza artificiale in modo intensivo, ma con una divisione netta: le decisioni di architettura e di prodotto sono mie e le scrivo prima che venga scritta una riga di codice; l’esecuzione di dettaglio la delego. La parte più utile del mio lavoro è dire di no a quello che l’AI propone, e la conoscenza teorica serve esattamente a questo: riconoscere quando una soluzione che funziona è comunque quella sbagliata.',
+    en: 'I use AI tools heavily, but with a sharp division of labour: the architecture and product decisions are mine and I write them down before a line of code exists; the detailed execution I delegate. The most useful part of my job is saying no to what the AI proposes, and theory is what makes that possible: recognising when a solution that works is still the wrong one.',
   },
   filoP3: {
-    it: 'Un esempio, e la soluzione sbagliata era la mia. Su Prevyber — una piattaforma che intercetta phishing e ingegneria sociale mentre l’attacco è in corso — avevo costruito un motore di rilevamento a regole e soglie. Provato su un vero SMS che imitava Poste, ha fallito in tutti e due i modi: non ha visto la truffa e si è insospettito di messaggi legittimi. Non era una questione di taratura, era l’impianto: un punteggio su parole non può giudicare un’intenzione. L’ho demolito e riprogettato attorno a un modello linguistico.',
-    en: 'One example, and the wrong solution was mine. On Prevyber — a platform that intercepts phishing and social engineering while the attack is happening — I had built a detection engine based on rules and thresholds. Tested against a real scam text impersonating the postal service, it failed in both directions: it missed the fraud and grew suspicious of legitimate messages. It was not a matter of tuning, it was the design: a score over words cannot judge an intention. I tore it down and rebuilt it around a language model.',
+    it: 'Un esempio, e la soluzione sbagliata era la mia. Su Prevyber, una piattaforma che intercetta phishing e ingegneria sociale mentre l’attacco è in corso, avevo costruito un motore di rilevamento a regole e soglie. Provato su un vero SMS che imitava Poste, ha fallito in tutti e due i modi: non ha visto la truffa e si è insospettito di messaggi legittimi. Non era una questione di taratura, era l’impianto: un punteggio su parole non può giudicare un’intenzione. L’ho demolito e riprogettato attorno a un modello linguistico.',
+    en: 'One example, and the wrong solution was mine. On Prevyber, a platform that intercepts phishing and social engineering while the attack is happening, I had built a detection engine based on rules and thresholds. Tested against a real scam text impersonating the postal service, it failed in both directions: it missed the fraud and grew suspicious of legitimate messages. It was not a matter of tuning, it was the design: a score over words cannot judge an intention. I tore it down and rebuilt it around a language model.',
   },
 
   esperienzaTitolo: { it: 'Esperienza', en: 'Experience' },
@@ -99,7 +106,7 @@ export interface Voce {
 export const ESPERIENZA: readonly Voce[] = [
   {
     ruolo: { it: 'Developer', en: 'Developer' },
-    luogo: { it: 'Deloitte — Bari', en: 'Deloitte — Bari' },
+    luogo: { it: 'Deloitte · Bari', en: 'Deloitte · Bari' },
     periodo: { it: 'giu 2025 – oggi', en: 'Jun 2025 – present' },
     nota: {
       it: 'Progetti enterprise: dai requisiti del cliente al software, come analyst e come sviluppatore.',
@@ -117,10 +124,10 @@ export const ESPERIENZA: readonly Voce[] = [
   },
   {
     ruolo: {
-      it: 'Tirocinio — tracciabilità e certificazione dei capi d’abbigliamento',
-      en: 'Internship — traceability and certification for clothing',
+      it: 'Tirocinio · tracciabilità e certificazione dei capi d’abbigliamento',
+      en: 'Internship · traceability and certification for clothing',
     },
-    luogo: { it: 'I.co.man 2000 (BerWich) — Martina Franca', en: 'I.co.man 2000 (BerWich) — Martina Franca' },
+    luogo: { it: 'I.co.man 2000 (BerWich) · Martina Franca', en: 'I.co.man 2000 (BerWich) · Martina Franca' },
     periodo: { it: 'gen – mar 2025', en: 'Jan – Mar 2025' },
     nota: {
       it: 'Tesi e tirocinio: smart contract per i dati immutabili, IPFS per i documenti, un modello di riconoscimento dei tessuti e una pagina prodotto raggiungibile da QR code.',
@@ -147,13 +154,13 @@ export const FORMAZIONE: readonly Voce[] = [
     luogo: { it: 'Università degli Studi di Bari', en: 'University of Bari' },
     periodo: { it: 'set 2021 – giu 2025', en: 'Sep 2021 – Jun 2025' },
     nota: {
-      it: 'Laurea triennale, con la tesi sul sistema di tracciabilità qui sopra.',
-      en: 'Bachelor’s degree, with the thesis on the traceability system above.',
+      it: 'Laurea triennale, con una tesi su un sistema di tracciabilità della filiera tessile: dal filato al capo finito, con la certificazione di origine a ogni passaggio.',
+      en: 'Bachelor’s degree, with a thesis on a traceability system for the textile supply chain: from yarn to finished garment, with certification of origin at every step.',
     },
   },
   {
     ruolo: { it: 'Informatica e Telecomunicazioni', en: 'Computing and Telecommunications' },
-    luogo: { it: 'IISS «E. Majorana» — Martina Franca', en: 'IISS «E. Majorana» — Martina Franca' },
+    luogo: { it: 'IISS «E. Majorana» · Martina Franca', en: 'IISS «E. Majorana» · Martina Franca' },
     periodo: { it: 'set 2016 – lug 2021', en: 'Sep 2016 – Jul 2021' },
     nota: {
       it: 'Diploma di istituto tecnico.',

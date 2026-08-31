@@ -117,17 +117,55 @@ export function TabellaNumeri({
                         ? inPercentuale(parametro.valore.aliquota)
                         : VUOTO
 
+            /*
+              ⚠️ **Una riga che muove il netto e una che non lo muove non
+              possono avere lo stesso aspetto, ed era il difetto della
+              tabella.**
+
+              Cinque colonne piene di cifre, tutte incolonnate nello stesso
+              modo: *Base contributiva 30.000,00* e *Contributi −2.757,00*
+              stavano sulla stessa scala, e per capire quale delle due entrava
+              davvero nel conto bisognava già sapere la risposta. Su una
+              tabella che esiste per **rifare il conto**, non distinguere gli
+              addendi dalle grandezze di servizio è il difetto che la rende
+              inutile a chi la userebbe.
+
+              Ora ci sono due specie di riga, e si vedono senza leggere:
+
+              - **le voci** — quelle che spostano il netto. Carta piena,
+                etichetta in inchiostro pieno, la cifra dell'effetto in
+                grassetto con il proprio segno, e il netto progressivo che
+                avanza. Le voci che **aggiungono** portano il `+` e il verde,
+                che qui significa quello che significa ovunque nel prodotto:
+                soldi che restano a chi legge.
+              - **i passaggi** — RAL, base contributiva, reddito complessivo,
+                il presupposto. Fondo tenue, etichetta smorzata, e nella
+                colonna dell'effetto **un trattino, non una cifra**: prima ci
+                finiva il valore in uscita, che è esattamente ciò che li faceva
+                sembrare addendi. Il loro numero resta, ma nella colonna
+                *Calcolata su*, dove si legge come ciò che è.
+
+              Restano tutte in tabella, ed è la scelta: toglierle
+              renderebbe la tabella più bella e impossibile da verificare,
+              perché sparirebbero le basi su cui le voci si calcolano.
+            */
+            const passaggio = !muove
+
             return (
               <tr
                 key={passo.id}
                 className={`border-b border-bordo-decorativo last:border-b-0 ${
-                  primoLivello ? 'bg-carta' : 'bg-fondo'
+                  passaggio ? 'bg-fondo' : primoLivello ? 'bg-carta' : 'bg-carta/60'
                 }`}
               >
                 <th
                   scope="row"
-                  className={`px-3 py-2 text-left font-normal ${
-                    primoLivello ? 'text-inchiostro' : 'text-inchiostro-tenue'
+                  className={`px-3 py-2 text-left ${
+                    passaggio
+                      ? 'font-normal text-inchiostro-tenue'
+                      : primoLivello
+                        ? 'font-medium text-inchiostro'
+                        : 'font-normal text-inchiostro'
                   }`}
                   /* Il rientro dice l'annidamento senza aggiungere una colonna. */
                   style={livello > 0 ? { paddingLeft: `${0.75 + livello * 1}rem` } : undefined}
@@ -136,13 +174,11 @@ export function TabellaNumeri({
                 </th>
 
                 <td className="cifre px-3 py-2 text-right text-inchiostro-tenue">
-                  {esito.stato === 'applicato' && esito.segno !== 'neutro'
+                  {esito.stato === 'applicato'
                     ? inEuro(esito.entra)
-                    : esito.stato === 'applicato'
-                      ? inEuro(esito.entra)
-                      : esito.stato === 'verifica'
-                        ? inEuro(esito.grandezzaLetta)
-                        : VUOTO}
+                    : esito.stato === 'verifica'
+                      ? inEuro(esito.grandezzaLetta)
+                      : VUOTO}
                 </td>
 
                 <td className="cifre px-3 py-2 text-right text-inchiostro-tenue">{valore}</td>
@@ -158,9 +194,6 @@ export function TabellaNumeri({
                     </span>
                   ) : esito.stato === 'nonDovuto' ? (
                     <span className="text-inchiostro-nota">{t('passo.nonDovuto')}</span>
-                  ) : esito.stato === 'applicato' ? (
-                    /* Un passo neutro non muove il netto: espone la grandezza che produce. */
-                    <span className="text-inchiostro-tenue">{inEuro(esito.esce)}</span>
                   ) : (
                     VUOTO
                   )}

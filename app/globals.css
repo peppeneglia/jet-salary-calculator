@@ -159,10 +159,10 @@
    * calcolo del caso standard produce più di quattro voci in uscita — e il
    * quinto ricomincia dal primo.
    */
-  --color-grafico-1: #c3ccc5;
-  --color-grafico-2: #a2ada6;
-  --color-grafico-3: #808d86;
-  --color-grafico-4: #5f6d66;
+  --color-grafico-1: #3f4a44;
+  --color-grafico-2: #67736c;
+  --color-grafico-3: #8e9a93;
+  --color-grafico-4: #b6c0ba;
   --color-grafico-aggiunge: #a8d98c;
 
   /*
@@ -253,10 +253,10 @@
      * cima. È la stessa ragione per cui qui `verde-testo` coincide con il
      * verde pieno.
      */
-    --color-grafico-1: #3d453f;
-    --color-grafico-2: #525c55;
-    --color-grafico-3: #6a756d;
-    --color-grafico-4: #838f86;
+    --color-grafico-1: #cfd8d2;
+    --color-grafico-2: #a6b0aa;
+    --color-grafico-3: #7d8781;
+    --color-grafico-4: #555f59;
     --color-grafico-aggiunge: #4f7d38;
 
     --color-avviso: #241c0e;
@@ -285,10 +285,10 @@
   --color-verde-bordo: #33512a;
 
   /* La stessa scala invertita — vedi la nota nel blocco @media. */
-  --color-grafico-1: #3d453f;
-  --color-grafico-2: #525c55;
-  --color-grafico-3: #6a756d;
-  --color-grafico-4: #838f86;
+  --color-grafico-1: #cfd8d2;
+  --color-grafico-2: #a6b0aa;
+  --color-grafico-3: #7d8781;
+  --color-grafico-4: #555f59;
   --color-grafico-aggiunge: #4f7d38;
 
   --color-avviso: #241c0e;

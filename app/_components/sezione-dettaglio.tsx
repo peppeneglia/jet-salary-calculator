@@ -58,8 +58,20 @@ export function SezioneDettaglio({ risultato }: { risultato: Risultato }) {
   const dati = ripartizione(risultato)
 
   return (
-    <Sezione numero="3" titolo={t('dettaglio.titolo')} occhiello={t('dettaglio.occhiello')}>
+    <Sezione numero="3" titolo={t('dettaglio.titolo')}>
       <div className="space-y-8">
+        {/*
+          ⚠️ La riga che apre la sezione è **testo del corpo**, non un occhiello
+          sotto il titolo. È la stessa forma della sezione 2, dove il riepilogo
+          di ciò che si è chiesto sta nel corpo: un occhiello in corpo minore
+          attaccato al titolo si legge come una didascalia dell'intestazione,
+          mentre questa frase dice che cosa si troverà scorrendo, cioè è la
+          prima cosa da leggere e non una nota sul titolo.
+        */}
+        <p className="max-w-prose leading-relaxed text-inchiostro-tenue">
+          {t('dettaglio.occhiello')}
+        </p>
+
         {/*
           ⚠️ **Tre letture dello stesso calcolo, in ordine di impegno
           crescente**, e l'ordine è la decisione.
@@ -129,7 +141,13 @@ export function SezioneDettaglio({ risultato }: { risultato: Risultato }) {
                 si mostra anche quando si apre, altrimenti apparirebbe solo per
                 dare cattive notizie.
               */
-              return <RigaPasso key={blocco.passo.id} passo={blocco.passo} />
+              /*
+                `apertura` sul primo blocco: è la RAL, e la sua cifra va nella
+                colonna di destra come quelle delle voci sotto. Il flag arriva
+                dalla posizione e non dall'id, così questo file non deve sapere
+                come il motore chiama il proprio primo passo.
+              */
+              return <RigaPasso key={blocco.passo.id} passo={blocco.passo} apertura={i === 0} />
             }
 
             const natura = etichettaNatura(blocco.natura, t)

@@ -63,7 +63,7 @@ const it: TestiTraccia = {
   'base-contributiva.regola':
     'Le somme si assumono al lordo di qualsiasi contributo e trattenuta: la base è la retribuzione lorda.',
   'base-contributiva.spiegazione':
-    'Coincide con la RAL, e non per approssimazione: le voci che la legge escluderebbe — TFR, previdenza complementare, premi — restano fuori da questo calcolo.',
+    'Coincide con la RAL, e non per approssimazione: le voci che la legge escluderebbe (TFR, previdenza complementare, premi) restano fuori da questo calcolo.',
 
   // Quota aggiuntiva 1%
   'quota.etichetta': 'Quota aggiuntiva 1%',
@@ -123,8 +123,8 @@ const it: TestiTraccia = {
     'Qui sotto c’è il conto per intero: prima l’imposta piena, poi ogni detrazione che la abbassa, poi quello che resta da pagare.',
 
   // Gli scaglioni descrivono se stessi
-  'scaglione.etichetta': 'Da {da} a {a} — {aliquota}',
-  'scaglione.etichetta.ultimo': 'Oltre {da} — {aliquota}',
+  'scaglione.etichetta': 'Da {da} a {a} · {aliquota}',
+  'scaglione.etichetta.ultimo': 'Oltre {da} · {aliquota}',
   'scaglione.regola': 'Applicabile a scaglione di reddito da euro {da} fino a euro {a}.',
   'scaglione.regola.ultimo': 'Applicabile a scaglione di reddito da euro {da}.',
   'scaglione.spiegazione':
@@ -146,7 +146,7 @@ const it: TestiTraccia = {
     'L’IRPEF netta è zero, quindi il presupposto delle addizionali non è soddisfatto.',
 
   // Addizionale regionale
-  'regionale.etichetta': 'Addizionale regionale — {ente}',
+  'regionale.etichetta': 'Addizionale regionale · {ente}',
   'regionale.regola.non-istituita': 'L’addizionale è dovuta all’ente impositore che l’ha istituita.',
   'regionale.spiegazione.non-istituita':
     'Non è un’aliquota pari a zero: il tributo non esiste per questo ente.',
@@ -173,7 +173,7 @@ const it: TestiTraccia = {
   'detrazioni-regionali.molte': '{n} detrazioni proprie',
 
   // Addizionale comunale
-  'comunale.etichetta': 'Addizionale comunale — {ente}',
+  'comunale.etichetta': 'Addizionale comunale · {ente}',
   'comunale.regola.non-istituita': 'L’addizionale è dovuta al comune che l’ha istituita.',
   'comunale.spiegazione.non-istituita':
     'Non è un’aliquota pari a zero: il tributo non esiste in questo comune. Sono due modi diversi di non pagare nulla.',
@@ -207,7 +207,7 @@ const it: TestiTraccia = {
   'deduzione-regionale.regola':
     'Deduzione dalla base imponibile dell’addizionale regionale, spettante ai contribuenti con reddito imponibile non superiore alla soglia deliberata dall’ente impositore. La norma statale che l’autorizza non è stata reperita: la base è il provvedimento dell’ente.',
   'deduzione-regionale.spiegazione':
-    'Una deduzione abbassa il reddito su cui l’imposta si calcola, non l’imposta già calcolata: è la stessa differenza che c’è fra deduzione e detrazione sull’IRPEF. E non è un’esenzione, anche se qui il risultato è lo stesso — il diritto sparisce di colpo sopra la soglia, ma quello che toglie è un importo.',
+    'Una deduzione abbassa il reddito su cui l’imposta si calcola, non l’imposta già calcolata: è la stessa differenza che c’è fra deduzione e detrazione sull’IRPEF. E non è un’esenzione, anche se qui il risultato è lo stesso: il diritto sparisce di colpo sopra la soglia, ma quello che toglie è un importo.',
   'deduzione-regionale.spiegazione.non-spetta':
     'La deduzione non decresce e non si riduce in proporzione: sopra la soglia non spetta affatto, e l’addizionale si calcola sull’intero reddito.',
   'deduzione-regionale.ragione.non-spetta':
@@ -281,7 +281,7 @@ const en: TestiTraccia = {
   'base-contributiva.regola':
     'Sums are taken gross of any contribution or withholding: the base is gross pay.',
   'base-contributiva.spiegazione':
-    'It matches the RAL, and not by approximation: the items the law would exclude — severance accrual, supplementary pension, bonuses — are outside this calculation to begin with.',
+    'It matches the RAL, and not by approximation: the items the law would exclude (severance accrual, supplementary pension, bonuses) are outside this calculation to begin with.',
 
   // Quota aggiuntiva 1%
   'quota.etichetta': 'Additional 1% contribution',
@@ -339,8 +339,8 @@ const en: TestiTraccia = {
     'The full working is below: first the tax in full, then each credit that brings it down, then what is left to pay.',
 
   // Gli scaglioni descrivono se stessi
-  'scaglione.etichetta': 'From {da} to {a} — {aliquota}',
-  'scaglione.etichetta.ultimo': 'Above {da} — {aliquota}',
+  'scaglione.etichetta': 'From {da} to {a} · {aliquota}',
+  'scaglione.etichetta.ultimo': 'Above {da} · {aliquota}',
   'scaglione.regola': 'Applies to the income bracket from {da} up to {a}.',
   'scaglione.regola.ultimo': 'Applies to the income bracket from {da} upwards.',
   'scaglione.spiegazione':
@@ -362,7 +362,7 @@ const en: TestiTraccia = {
     'Net IRPEF is zero, so the condition for the addizionali is not met.',
 
   // Addizionale regionale
-  'regionale.etichetta': 'Addizionale regionale — {ente}',
+  'regionale.etichetta': 'Addizionale regionale · {ente}',
   'regionale.regola.non-istituita':
     'The addizionale is owed to the authority that introduced it.',
   'regionale.spiegazione.non-istituita':
@@ -391,7 +391,7 @@ const en: TestiTraccia = {
   'detrazioni-regionali.molte': '{n} credits of its own',
 
   // Addizionale comunale
-  'comunale.etichetta': 'Addizionale comunale — {ente}',
+  'comunale.etichetta': 'Addizionale comunale · {ente}',
   'comunale.regola.non-istituita':
     'The addizionale is owed to the municipality that introduced it.',
   'comunale.spiegazione.non-istituita':
@@ -426,7 +426,7 @@ const en: TestiTraccia = {
   'deduzione-regionale.regola':
     'Deduction from the taxable base of the addizionale regionale, due to taxpayers whose taxable income does not exceed the threshold set by the levying authority. The national provision authorising it has not been traced: the basis is the authority’s own act.',
   'deduzione-regionale.spiegazione':
-    'A deduction lowers the income the tax is worked out on, not the tax already computed: it is the same difference as between a deduction and a tax credit on IRPEF. And it is not an exemption, even though the result here is the same — the entitlement vanishes at once above the threshold, but what it removes is an amount.',
+    'A deduction lowers the income the tax is worked out on, not the tax already computed: it is the same difference as between a deduction and a tax credit on IRPEF. And it is not an exemption, even though the result here is the same: the entitlement vanishes at once above the threshold, but what it removes is an amount.',
   'deduzione-regionale.spiegazione.non-spetta':
     'The deduction does not taper off and is not scaled down: above the threshold it is not due at all, and the addizionale is worked out on the whole income.',
   'deduzione-regionale.ragione.non-spetta':

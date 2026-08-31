@@ -130,6 +130,48 @@ export function MappaEnti({
 
   return (
     <div>
+      {/*
+        ⚠️ **I bottoni stanno sopra la mappa, e prima stavano sotto.**
+
+        Sotto erano il ripiego per chi non può cliccare una sagoma: la mappa
+        veniva prima e li trattava come una scala di servizio. Ma il gesto che
+        questa sezione chiede è *trova il tuo ente*, e su una mappa dell'Italia
+        trovare la propria regione a colpo d'occhio è facile solo per chi la
+        conosce già disegnata — mentre leggere ventun nomi in ordine è facile
+        per tutti. Chi la sagoma la sa riconoscere non perde niente: la mappa
+        è due centimetri più in basso.
+      */}
+      <div role="group" aria-label={etichette.scegli} className="mb-5 flex flex-wrap gap-1.5">
+        {enti.map((e) => {
+          const attivo = e.nome === scelto
+          return (
+            <button
+              key={e.nome}
+              type="button"
+              aria-pressed={attivo}
+              onClick={() => setScelto(e.nome)}
+              onPointerEnter={() => setSotto(e.nome)}
+              onPointerLeave={() => setSotto((v) => (v === e.nome ? undefined : v))}
+              className={`flex min-h-9 items-center gap-2 rounded-voce border px-2.5 py-1 text-xs font-medium transition-colors ${
+                attivo
+                  ? 'border-inchiostro bg-inchiostro text-carta'
+                  : 'border-bordo-controllo bg-carta text-inchiostro-tenue hover:border-bordo-controllo-forte hover:text-inchiostro'
+              }`}
+            >
+              {/* Il quadratino ripete il tono della sagoma: è ciò che lega il
+                  bottone alla forma sulla mappa senza scriverci sopra un nome. */}
+              <span
+                aria-hidden
+                className={`h-2.5 w-2.5 rounded-[2px] ${attivo ? 'bg-carta' : 'bg-inchiostro'}`}
+                style={{ opacity: attivo ? 1 : e.tono }}
+              />
+              {e.nome}
+              <span className="cifre opacity-70">{e.aliquotaMassima}</span>
+            </button>
+          )
+        })}
+      </div>
+
       <div className="grid gap-5 sm:gap-6 md:grid-cols-[minmax(0,7fr)_minmax(0,9fr)]">
         <div>
           {geo === null ? null : (
@@ -139,6 +181,23 @@ export function MappaEnti({
                 aria-hidden
                 className="mx-auto h-auto w-full max-w-xs text-inchiostro md:max-w-none"
               >
+                {/*
+                  ⚠️ **La sagoma scelta è verde piena, non un contorno verde.**
+
+                  Prima l'ente selezionato restava inchiostro come gli altri
+                  venti e prendeva solo un bordo verde più spesso. Su una mappa
+                  dell'Italia, dove le sagome piccole sono metà del disegno, un
+                  contorno di sei unità intorno alla Valle d'Aosta è quasi tutta
+                  la Valle d'Aosta: la selezione si vedeva sulle regioni grandi e
+                  spariva proprio su quelle in cui serve di più.
+
+                  Il verde qui non dice *quello che resta al dipendente* e
+                  neanche *questa costa poco*: dice **sei tu questa**, come
+                  l'anello di fuoco dice *sei qui*. È lo stesso ruolo che il
+                  verde ha già in `mappa-regione.tsx`, ed è la ragione per cui
+                  l'intensità dell'inchiostro resta libera di codificare
+                  l'aliquota su tutte le altre venti.
+                */}
                 {geo.enti.map((e) => {
                   const attivo = e.nome === scelto
                   const puntato = e.nome === sotto
@@ -147,12 +206,10 @@ export function MappaEnti({
                     <path
                       key={e.nome}
                       d={e.path}
-                      fill="currentColor"
-                      fillOpacity={
-                        attivo ? Math.min(1, tono + 0.28) : puntato ? Math.min(1, tono + 0.14) : tono
-                      }
-                      className={`cursore-mano ${attivo ? 'stroke-verde-testo' : 'stroke-carta'}`}
-                      strokeWidth={attivo ? 6 : 2}
+                      fill={attivo ? 'var(--color-verde)' : 'currentColor'}
+                      fillOpacity={attivo ? 1 : puntato ? Math.min(1, tono + 0.14) : tono}
+                      className="cursore-mano stroke-carta"
+                      strokeWidth={2}
                       strokeLinejoin="round"
                       vectorEffect="non-scaling-stroke"
                       onClick={() => setScelto(e.nome)}
@@ -189,30 +246,46 @@ export function MappaEnti({
         >
           <h4 className="text-lg font-semibold tracking-tight text-inchiostro">{corrente.nome}</h4>
 
-          <p className="mt-1 text-xs font-medium text-inchiostro-nota">
-            {etichette.aliquotaMassima}
-          </p>
-          <p className="cifre text-2xl font-semibold tracking-tight text-inchiostro sm:text-3xl">
-            {corrente.aliquotaMassima}
-            {corrente.sopraIlTetto ? (
-              <span className="ml-2 align-middle text-xs font-medium text-avviso-testo">
-                {etichette.sopraIlTetto}
-              </span>
-            ) : null}
-          </p>
+          {/*
+            ⚠️ **L'aliquota massima non è più il numerone in cima.**
 
-          <p className="mt-4 text-xs font-medium text-inchiostro-nota">{etichette.bande}</p>
-          <ul className="mt-1.5 space-y-1">
+            Stava sopra le fasce in corpo 30, con la sua etichetta, e le fasce
+            sotto in corpo piccolo. Ma l'aliquota massima **non è l'aliquota che
+            paghi**: è quella dell'ultimo scaglione, cioè quella che riguarda
+            meno persone di tutte. Dare a lei il rilievo, e alle fasce vere il
+            corpo di una nota, rispondeva alla domanda sbagliata nel modo più
+            evidente del pannello.
+
+            Ora le fasce sono tutte della stessa misura, più grandi di prima, e
+            nessuna ha più risalto delle altre: chi cerca la propria la trova
+            leggendo, invece di trovare per prima quella che non lo riguarda.
+            L'aliquota massima continua a decidere il colore della sagoma sulla
+            mappa, che è il posto in cui serve — lì confronta ventun enti fra
+            loro, e per un confronto un numero solo per ente è quello giusto.
+          */}
+          <p className="mt-3 text-xs font-medium text-inchiostro-nota">{etichette.bande}</p>
+          <ul className="mt-2 space-y-1.5">
             {corrente.bande.map((b) => (
               <li
                 key={b.fascia}
-                className="flex flex-wrap items-baseline justify-between gap-x-4 border-b border-bordo-decorativo pb-1 text-sm last:border-0"
+                className="flex flex-wrap items-baseline justify-between gap-x-4 border-b border-bordo-decorativo pb-1.5 last:border-0"
               >
-                <span className="text-inchiostro-tenue">{b.fascia}</span>
-                <span
-                  className={`cifre font-semibold ${b.sopraIlTetto ? 'text-avviso-testo' : 'text-inchiostro'}`}
-                >
+                <span className="text-sm text-inchiostro-tenue">{b.fascia}</span>
+                <span className="cifre text-lg font-semibold text-inchiostro">
                   {b.aliquota}
+                  {/*
+                    ⚠️ *Sopra il tetto* senza il giallo dell'avvertenza. È
+                    un'informazione sulla norma, non un pericolo per chi legge:
+                    dice che quell'aliquota supera il limite che il decreto
+                    fissa, e il calcolatore applica comunque quella deliberata
+                    perché è quella che si paga. In inchiostro tenue, in corpo
+                    piccolo, accanto alla cifra che qualifica.
+                  */}
+                  {b.sopraIlTetto ? (
+                    <span className="ml-1.5 text-xs font-normal text-inchiostro-nota">
+                      {etichette.sopraIlTetto}
+                    </span>
+                  ) : null}
                 </span>
               </li>
             ))}
@@ -247,36 +320,6 @@ export function MappaEnti({
         </div>
       </div>
 
-      <div role="group" aria-label={etichette.scegli} className="mt-5 flex flex-wrap gap-1.5">
-        {enti.map((e) => {
-          const attivo = e.nome === scelto
-          return (
-            <button
-              key={e.nome}
-              type="button"
-              aria-pressed={attivo}
-              onClick={() => setScelto(e.nome)}
-              onPointerEnter={() => setSotto(e.nome)}
-              onPointerLeave={() => setSotto((v) => (v === e.nome ? undefined : v))}
-              className={`flex min-h-9 items-center gap-2 rounded-voce border px-2.5 py-1 text-xs font-medium transition-colors ${
-                attivo
-                  ? 'border-inchiostro bg-inchiostro text-carta'
-                  : 'border-bordo-controllo bg-carta text-inchiostro-tenue hover:border-bordo-controllo-forte hover:text-inchiostro'
-              }`}
-            >
-              {/* Il quadratino ripete il tono della sagoma: è ciò che lega il
-                  bottone alla forma sulla mappa senza scriverci sopra un nome. */}
-              <span
-                aria-hidden
-                className={`h-2.5 w-2.5 rounded-[2px] ${attivo ? 'bg-carta' : 'bg-inchiostro'}`}
-                style={{ opacity: attivo ? 1 : e.tono }}
-              />
-              {e.nome}
-              <span className="cifre opacity-70">{e.aliquotaMassima}</span>
-            </button>
-          )
-        })}
-      </div>
     </div>
   )
 }

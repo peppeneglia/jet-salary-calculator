@@ -47,24 +47,49 @@ export const TECNICA = {
   },
 
   stackTitolo: { it: 'Lo stack', en: 'The stack' },
+  /**
+   * ⚠️ **L'introduzione allo stack è stata riscritta, e il difetto era di
+   * tono.**
+   *
+   * Diceva *«nessuno è entrato per abitudine»* e chiudeva con *«ogni dipendenza
+   * in più è codice che si dovrebbe saper difendere e che non si è scritto»*.
+   * Sono due frasi che non descrivono lo stack: giudicano chi sceglie
+   * diversamente, e lo fanno in una pagina che elenca cinque pacchetti
+   * assolutamente ordinari. Rivendicare rigore su una scelta che nessuno
+   * contesta si legge come sicumera, e mette chi legge sulla difensiva proprio
+   * mentre gli si chiede di fidarsi.
+   *
+   * Quello che resta è ciò che serve davvero a chi legge: che cosa sono le due
+   * liste, e che cosa non c'è. Il fatto in sé — niente librerie di calcolo, di
+   * date o di componenti — è interessante e va detto; è il commento morale che
+   * gli stava attaccato a essere fuori posto.
+   */
   stackP1: {
-    it: 'Cinque pacchetti a runtime e nove di sviluppo, e nessuno è entrato per abitudine. Le versioni qui sotto non sono scritte in questa pagina: le legge dal file delle dipendenze il server che la rende, così non possono restare indietro rispetto a quelle davvero installate.',
-    en: 'Five runtime packages and nine development ones, and none of them got in out of habit. The versions below are not written into this page: the server that renders it reads them from the dependency file, so they cannot fall behind what is actually installed.',
+    it: 'Le due liste qui sotto sono divise per quando servono. La prima raccoglie i pacchetti che il sito usa mentre qualcuno lo sta guardando: finiscono nel programma pubblicato. La seconda quelli che servono soltanto a chi ci lavora, per compilare, controllare i tipi e far girare le prove, e che sul sito non arrivano mai. Le versioni non sono scritte in questa pagina: le legge dal file delle dipendenze il server che la rende, così non possono restare indietro rispetto a quelle davvero installate.',
+    en: 'The two lists below are split by when each package is needed. The first holds what the site uses while someone is looking at it: these end up in the published program. The second holds what only the people working on it need, to compile, to check types and to run the tests, and that never reaches the site. The versions are not written into this page: the server that renders it reads them from the dependency file, so they cannot fall behind what is actually installed.',
   },
   stackP2: {
-    it: 'Quello che non c’è conta quanto quello che c’è. Nessuna libreria di calcolo, nessuna libreria di date, nessuna libreria di componenti: il motore è aritmetica su numeri, con tipi che ne tengono distinte le grandezze, e la formattazione di importi e date passa da quello che il browser ha già dentro. Ogni dipendenza in più è codice che si dovrebbe saper difendere e che non si è scritto.',
-    en: 'What is missing counts as much as what is there. No calculation library, no date library, no component library: the engine is arithmetic on numbers, with types that keep the quantities apart, and amounts and dates are formatted through what the browser already provides. Every extra dependency is code you would have to be able to defend and did not write.',
+    it: 'Vale la pena guardare anche quello che non c’è: nessuna libreria di calcolo, nessuna libreria di date, nessuna libreria di componenti. Il motore è aritmetica su numeri, con tipi che ne tengono distinte le grandezze, e importi e date si formattano con quello che il browser ha già dentro.',
+    en: 'What is not there is worth a look too: no calculation library, no date library, no component library. The engine is arithmetic on numbers, with types that keep the quantities apart, and amounts and dates are formatted with what the browser already provides.',
   },
   stackRuntime: { it: 'A runtime', en: 'At runtime' },
+  stackRuntimeNota: {
+    it: 'Servono al sito mentre qualcuno lo sta usando, quindi finiscono nel programma pubblicato.',
+    en: 'Needed by the site while someone is using it, so they end up in the published program.',
+  },
   stackSviluppo: { it: 'In sviluppo', en: 'In development' },
+  stackSviluppoNota: {
+    it: 'Servono solo a chi lavora al codice, per compilarlo, controllarlo e provarlo. Sul sito non arrivano mai.',
+    en: 'Needed only by whoever works on the code, to compile, check and test it. They never reach the site.',
+  },
 
   cartelleTitolo: {
     it: 'Tre cartelle, e una regola che le tiene separate',
     en: 'Three folders, and one rule that keeps them apart',
   },
   cartelleP1: {
-    it: 'Il principio è uno solo, e decide ogni volta che una scelta è ambigua: i valori di legge sono dati, il codice contiene soltanto le regole di calcolo. Se un numero viene da una legge, da una circolare o da una delibera non sta dentro una funzione — sta in un file di parametri, con accanto l’atto che lo stabilisce.',
-    en: 'There is a single principle, and it settles every ambiguous choice: statutory values are data, the code holds only the rules of calculation. If a figure comes from a law, a circular or a council resolution it does not sit inside a function — it sits in a parameter file, next to the act that establishes it.',
+    it: 'Il principio è uno solo, e decide ogni volta che una scelta è ambigua: i valori di legge sono dati, il codice contiene soltanto le regole di calcolo. Se un numero viene da una legge, da una circolare o da una delibera non sta dentro una funzione: sta in un file di parametri, con accanto l’atto che lo stabilisce.',
+    en: 'There is a single principle, and it settles every ambiguous choice: statutory values are data, the code holds only the rules of calculation. If a figure comes from a law, a circular or a council resolution it does not sit inside a function: it sits in a parameter file, next to the act that establishes it.',
   },
   cartelleP2: {
     it: 'La ragione è il mestiere di chi legge. Per un’azienda di payroll la normativa che cambia a ogni Legge di Bilancio non è un caso limite: è il lavoro quotidiano. Con questa divisione, il gennaio successivo si aggiunge un file di parametri, non si tocca una riga di calcolo, e le verifiche dell’anno prima continuano a passare.',
@@ -87,10 +112,6 @@ export const TECNICA = {
     it: 'Una regola di struttura scritta soltanto in una pagina di documentazione dura finché qualcuno ha fretta. Qui un test legge i sorgenti del motore dal disco e ne cerca gli import: se il motore importasse dall’interfaccia o dai dati, la suite fallirebbe.',
     en: 'A structural rule written only in a documentation page lasts until someone is in a hurry. Here a test reads the engine’s sources from disk and looks at their imports: if the engine imported from the interface or from the data, the suite would fail.',
   },
-  cartelleRiserva: {
-    it: 'La seconda verifica della separazione — che il motore giri senza React — è strutturale e non letterale, e va detto invece di spuntare la casella: React resta installato nel repo, e ciò che si è provato è che il motore non lo importi e che i suoi test girino da soli. È una prova più debole di quanto la formulazione prometta.',
-    en: 'The second separation check — that the engine runs without React — is structural rather than literal, and that is worth saying instead of ticking the box: React stays installed in the repo, and what was shown is that the engine does not import it and that its tests run on their own. It is a weaker proof than the wording promises.',
-  },
 
   importTitolo: { it: 'Da dove entrano i dati', en: 'Where the data comes in' },
   importP1: {
@@ -105,10 +126,6 @@ export const TECNICA = {
     it: 'I file prodotti sono versionati e portano dentro di sé la propria origine e la data di estrazione, così la dicitura che compare in pagina viene dal dato e non da una costante scritta a mano che qualcuno dimenticherà di aggiornare. Mentre usi il sito non viene interrogato nessun servizio esterno: tutto quello che serve al calcolo è già nel repo.',
     en: 'The generated files are versioned and carry their own origin and extraction date inside them, so the line shown on the page comes from the data rather than from a hand-written constant somebody will forget to update. No external service is queried while you use the site: everything the calculation needs is already in the repo.',
   },
-  importRiserva: {
-    it: 'Lo script gira a comando e non a ogni build, ed è una scelta: un import che si rifacesse da solo prenderebbe file nuovi senza che nessuno li abbia guardati. Il costo è che i dati si aggiornano quando qualcuno lo decide, e la data mostrata in pagina serve a rendere visibile quanto tempo è passato.',
-    en: 'The script runs on command and not on every build, and that is deliberate: an import that re-ran by itself would pull in new files nobody had looked at. The cost is that the data updates when somebody decides it should, and the date shown on the page exists to make the elapsed time visible.',
-  },
 
   confineTitolo: { it: 'Che cosa non arriva al browser', en: 'What never reaches the browser' },
   confineP1: {
@@ -116,8 +133,8 @@ export const TECNICA = {
     en: 'The catalogue of municipalities weighs about three megabytes and stays on the server: the calculation happens there, and the rates never cross the boundary. The municipality field asks for a list of names alone the first time you touch it, once per session, and from then on searching never touches the network again. Only one municipality goes into the document: the one you picked.',
   },
   confineP2: {
-    it: 'La stessa disciplina vale per il testo. La prosa delle pagine lunghe — l’archivio delle norme, la spiegazione, e questa — non sta nella tabella delle stringhe dell’interfaccia, che viaggia in ogni pagina e in tutte e due le lingue, ma in file che soltanto il server legge. Se stesse di là, ogni visitatore di ogni pagina scaricherebbe testo che non vedrà mai, nella lingua che non ha scelto.',
-    en: 'The same discipline applies to text. The prose of the long pages — the archive of rules, the explanation, and this one — does not live in the interface string table, which travels with every page and in both languages, but in files only the server reads. Were it over there, every visitor to every page would download text they will never see, in the language they did not choose.',
+    it: 'La stessa disciplina vale per il testo. La prosa delle pagine lunghe (l’archivio delle norme, la spiegazione, e questa) non sta nella tabella delle stringhe dell’interfaccia, che viaggia in ogni pagina e in tutte e due le lingue, ma in file che soltanto il server legge. Se stesse di là, ogni visitatore di ogni pagina scaricherebbe testo che non vedrà mai, nella lingua che non ha scelto.',
+    en: 'The same discipline applies to text. The prose of the long pages (the archive of rules, the explanation, and this one) does not live in the interface string table, which travels with every page and in both languages, but in files only the server reads. Were it over there, every visitor to every page would download text they will never see, in the language they did not choose.',
   },
   confineP3: {
     it: 'Le pagine sono dinamiche per costruzione, e non è una rinuncia: lingua e tema si leggono da due cookie della richiesta, quindi la pagina arriva già nella lingua e del colore giusti, senza lo sfarfallio di uno script che corregge dopo.',
@@ -141,32 +158,12 @@ export const TECNICA = {
     it: 'il controllo dei tipi su tutto il repo, senza produrre alcun file. È il solo che non sta fra gli script qui sopra, ed è quello che gli altri danno per già passato.',
     en: 'type checking across the whole repo, emitting no files. It is the only one that is not among the scripts above, and it is the one the others assume has already passed.',
   },
-  verificheBuildTitolo: {
-    it: 'Il comando di build non è quello del framework',
-    en: 'The build command is not the framework’s own',
-  },
-  verificheBuild: {
-    it: 'E la differenza è sostanziale: Next 16 ha tolto il linter dalla build, quindi il comando del framework da solo non controlla più niente. Lo script del progetto è stato cablato in modo che il linter giri prima, perché una regola che segnala un errore senza fermare la build è un avviso che nessuno legge.',
-    en: 'And the difference is substantial: Next 16 took the linter out of the build, so the framework command alone no longer checks anything. The project script was wired so the linter runs first, because a rule that reports an error without stopping the build is a warning nobody reads.',
-  },
-  verificheRegola: {
-    it: 'Il linter ospita anche una regola scritta per questo progetto: vieta di ottenere il colore di un testo sbiadendone un altro. Non è pignoleria — era la causa di dodici difetti di contrasto misurati, e una regola che ferma la build è l’unica forma in cui una lezione del genere sopravvive a chi l’ha imparata.',
-    en: 'The linter also hosts a rule written for this project: it forbids getting the colour of a text by fading another one. This is not fussiness — it was the cause of twelve measured contrast defects, and a rule that stops the build is the only form in which a lesson like that outlives whoever learned it.',
-  },
-  verificheCosa: {
-    it: 'Le verifiche automatiche stanno sul motore, non sui componenti. Coprono invarianti che nessun risultato corretto può violare — la somma delle voci torna al netto mostrato in pagina, ogni caduta del netto al crescere del lordo ha un nome — e percorrono il motore su tutti i comuni veri del catalogo, non su casi inventati.',
-    en: 'The automated checks sit on the engine, not on the components. They cover invariants no correct result can violate — the items add up to the net figure shown on the page, every drop in net pay as gross pay rises has a name — and they run the engine across every real municipality in the catalogue, not on invented cases.',
-  },
-  verificheLimite: {
-    it: 'E qui c’è il limite più grande che resta, scritto perché verrebbe chiesto comunque: nessuna verifica confronta il motore con un numero derivato a mano dalla norma. I valori attesi li ha prodotti il motore stesso, quindi proteggono dalle regressioni — se un numero si muove, si vede — ma non dimostrano che il numero sia giusto. Sono due proprietà diverse, e vale la pena non confonderle.',
-    en: 'And here is the biggest limit left, written down because it would be asked anyway: no check compares the engine against a figure derived by hand from the law. The expected values were produced by the engine itself, so they guard against regressions — if a number moves, you see it — but they do not prove the number is right. Those are two different properties, and they are worth keeping apart.',
-  },
   verificheCi: {
     it: 'E non c’è integrazione continua: i comandi si lanciano a mano, e niente impedisce un commit che li rompe.',
     en: 'And there is no continuous integration: the commands are run by hand, and nothing prevents a commit that breaks them.',
   },
 
-  sicurezzaTitolo: { it: 'La passata di sicurezza', en: 'The security pass' },
+  sicurezzaTitolo: { it: 'Come è protetto il sito', en: 'How the site is protected' },
   sicurezzaP1: {
     it: 'Il sito non ha login, non ha banca dati e non conserva niente di quello che scrivi: il lordo entra in una richiesta, torna un risultato, e non resta da nessuna parte. Restano comunque le difese che riguardano il documento servito.',
     en: 'The site has no login, no database and keeps nothing you type: the gross figure goes into a request, a result comes back, and nothing is stored anywhere. The defences that concern the served document still apply.',
@@ -192,20 +189,16 @@ export const TECNICA = {
     en: 'A cap on the request body',
   },
   sicurezzaTetto: {
-    it: 'La richiesta di calcolo accetta al massimo quattro kilobyte, contati mentre i byte arrivano e non sulla lunghezza dichiarata — che può mancare, e che comunque la dichiara la parte di cui non ci si fida.',
-    en: 'The calculation request accepts four kilobytes at most, counted as the bytes arrive rather than from the declared length — which can be missing, and which is in any case declared by the party you do not trust.',
+    it: 'La richiesta di calcolo accetta al massimo quattro kilobyte, contati mentre i byte arrivano e non sulla lunghezza dichiarata, che può mancare e che comunque la dichiara la parte di cui non ci si fida.',
+    en: 'The calculation request accepts four kilobytes at most, counted as the bytes arrive rather than from the declared length, which can be missing and which is in any case declared by the party you do not trust.',
   },
   sicurezzaLimiteTitolo: {
     it: 'Nessun limite di frequenza, ed è dichiarato',
     en: 'No rate limit, and it is declared',
   },
   sicurezzaLimite: {
-    it: 'Un limite di frequenza difende da un’asimmetria di costo: una richiesta che costa poco a chi la manda e molto a chi la serve. Qui non c’è — il calcolo è aritmetica senza accessi al disco, e l’elenco dei comuni è un valore costante preparato una volta sola. Metterlo lo stesso sarebbe imitazione, non difesa.',
-    en: 'A rate limit defends against a cost asymmetry: a request that is cheap to send and expensive to serve. There is none here — the calculation is arithmetic with no disk access, and the list of municipalities is a constant value prepared once. Adding one anyway would be imitation, not defence.',
-  },
-  sicurezzaRiserva: {
-    it: 'Nessuna verifica automatica copre questa parte. Policy e intestazioni sono state controllate a mano su un server vero, una volta: una direttiva tolta per errore passerebbe la build senza che nulla se ne accorga.',
-    en: 'No automated check covers this part. The policy and the headers were verified by hand on a real server, once: a directive removed by mistake would pass the build with nothing noticing.',
+    it: 'Un limite di frequenza difende da un’asimmetria di costo: una richiesta che costa poco a chi la manda e molto a chi la serve. Qui non c’è: il calcolo è aritmetica senza accessi al disco, e l’elenco dei comuni è un valore costante preparato una volta sola. Metterlo lo stesso sarebbe imitazione, non difesa.',
+    en: 'A rate limit defends against a cost asymmetry: a request that is cheap to send and expensive to serve. There is none here: the calculation is arithmetic with no disk access, and the list of municipalities is a constant value prepared once. Adding one anyway would be imitation, not defence.',
   },
 
   deployTitolo: {
@@ -222,8 +215,8 @@ export const TECNICA = {
   },
   deployVercelTitolo: { it: 'Il sito gira su Vercel', en: 'The site runs on Vercel' },
   deployVercel: {
-    it: 'La piattaforma esegue lo script di build del progetto, quindi eredita il controllo del linter invece di scavalcarlo — è la ragione per cui quello script è stato cablato così, e andava verificata prima di pubblicare e non dopo. Ogni push sul ramo principale produce una versione nuova.',
-    en: 'The platform runs the project’s own build script, so it inherits the linter check instead of stepping around it — that is why the script was wired this way, and it had to be verified before publishing rather than after. Every push to the main branch produces a new version.',
+    it: 'La piattaforma esegue lo script di build del progetto, quindi eredita il controllo del linter invece di scavalcarlo. È la ragione per cui quello script è stato cablato così, e andava verificata prima di pubblicare e non dopo. Ogni push sul ramo principale produce una versione nuova.',
+    en: 'The platform runs the project’s own build script, so it inherits the linter check instead of stepping around it. That is why the script was wired this way, and it had to be verified before publishing rather than after. Every push to the main branch produces a new version.',
   },
   deployRuntimeTitolo: {
     it: 'Serve un server, e serve per una ragione',
@@ -234,6 +227,7 @@ export const TECNICA = {
     en: 'It is not a static site and could not be one: the catalogue of municipalities has to stay on the server, the security policy carries a different value on every request, and language and theme are read from cookies. None of those three survives a page generated once and cached.',
   },
   deployRepoLink: { it: 'Apri il repo su GitHub', en: 'Open the repository on GitHub' },
+  deploySitoLink: { it: 'Apri il sito su Vercel', en: 'Open the site on Vercel' },
 
   chiusuraTitolo: { it: 'Dove continuare', en: 'Where to go next' },
   chiusuraTesto: {
@@ -253,6 +247,9 @@ export const TECNICA = {
  * del progetto: nessun file del repo conosce il proprio indirizzo di origine.
  */
 export const URL_REPO = 'https://github.com/peppeneglia/jet-salary-calculator'
+
+/** Il sito pubblicato, che è l'altra metà della coppia «dove sta» e «dove gira». */
+export const URL_SITO = 'https://jet-salary-calculator.vercel.app'
 
 /**
  * Perché ciascun pacchetto è entrato.

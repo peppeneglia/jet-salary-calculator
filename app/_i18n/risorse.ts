@@ -27,22 +27,22 @@ const it = {
     titolo: 'Jet Salary Calculator',
     descrizione:
       'Quanto resta davvero di uno stipendio lordo: netto annuo e mensile, con il dettaglio di ogni voce e la norma che la determina. Progetto indipendente, non un prodotto Jet HR.',
-    titoloNonCopre: 'Cosa non copre questo calcolatore — Jet Salary Calculator',
+    titoloNonCopre: 'Cosa non copre questo calcolatore · Jet Salary Calculator',
     descrizioneNonCopre:
       'I confini dichiarati del calcolo: cosa resta fuori, perché, e da che parte si sposta il conto.',
-    titoloNorme: 'Norme sul calcolo dello stipendio — Jet Salary Calculator',
+    titoloNorme: 'Norme sul calcolo dello stipendio · Jet Salary Calculator',
     descrizioneNorme:
       'Archivio delle norme che determinano la retribuzione netta in Italia: cosa dispone ciascuna, cosa determina nel calcolo o perché resta fuori, con vigenza e fonte istituzionale.',
-    titoloSpiegazione: 'Come si passa dal lordo al netto — Jet Salary Calculator',
+    titoloSpiegazione: 'Come si passa dal lordo al netto · Jet Salary Calculator',
     descrizioneSpiegazione:
       'La catena intera con le cifre che la governano: contributi, IRPEF a scaglioni, detrazioni, cuneo fiscale, le addizionali di tutti e ventuno gli enti regionali su una mappa, e le somme che invece si aggiungono.',
     titoloProgetto: 'Che progetto è Jet Salary Calculator',
     descrizioneProgetto:
       'Da dove nasce questo calcolatore, come è costruito, e che cosa c’entra Jet HR. Progetto indipendente, non un prodotto dell’azienda.',
-    titoloChiSono: 'Chi sono — Jet Salary Calculator',
+    titoloChiSono: 'Chi sono · Jet Salary Calculator',
     descrizioneChiSono:
       'Giuseppe Neglia: sviluppatore in Deloitte, laureato in informatica e studente di gestione d’impresa. Chi ha scritto questo calcolatore, e perché proprio questo.',
-    titoloTecnica: 'Come è fatta tecnicamente l’app — Jet Salary Calculator',
+    titoloTecnica: 'Come è fatta tecnicamente l’app · Jet Salary Calculator',
     descrizioneTecnica:
       'Lo stack, la divisione del codice fra motore, parametri e interfaccia, l’import dei dati del MEF, che cosa non arriva al browser, come si verifica, e dove sta pubblicato.',
   },
@@ -131,7 +131,7 @@ const it = {
     notaMensilitaTitolo: 'La mensilità non determina quanto guadagni in un anno.',
     notaMensilitaCorpo:
       'Determina in quante parti quel totale viene diviso: è sempre lo stesso stipendio, e chi ha quattordici mensilità non guadagna meno di chi ne ha dodici.',
-    assunzioniTitolo: 'Cosa vuol dire esattamente questa cifra',
+    assunzioniTitolo: 'Cosa vuol dire esattamente questa cifra?',
     assunzioniOcchiello: 'Come va letta questa cifra, per il calcolo che hai appena fatto.',
   },
 
@@ -188,7 +188,6 @@ const it = {
     verificata: '· verificata il {{data}}',
     importataConEstrazione: '· importata, estratta il {{estratta}}, consultata il {{data}}',
     importata: '· importata, consultata il {{data}}',
-    riserva: 'Riserva sulla fonte:',
     titolo: 'Fonte',
   },
 
@@ -253,6 +252,7 @@ const it = {
       'Questo strumento parte dallo stipendio lordo annuo e arriva al netto. Alcune cose che cambiano la busta paga da quel numero non si possono ricavare: dipendono dalla tua famiglia, dal contratto che ti applicano, o da scelte che hai fatto tu.',
     paragrafo2: 'Le trovi qui sotto, ognuna con l’effetto che avrebbe sul risultato se la includessimo.',
     quandoRalSupera: 'Riguarda solo chi ha una RAL sopra {{soglia}}.',
+    quandoRalSotto: 'Riguarda solo chi ha una RAL sotto {{soglia}}.',
     quandoContrattoDiverso: 'Riguarda chi non ha dichiarato un contratto di {{contratto}}.',
     percheTitolo: 'Perché non le abbiamo nascoste',
     percheTesto:
@@ -272,11 +272,12 @@ const it = {
     cosaDetermina: 'Cosa determina nel netto',
     inVigore: 'In vigore',
     ultimaModifica: 'Ultima modifica',
-    ambiguita: 'Ambiguità e cose da sapere',
+    ambiguita: 'Cose da sapere',
+    cercaEtichetta: 'Cerca fra le norme',
+    cercaSegnaposto: 'Cerca una parola, un atto, un articolo',
+    cercaBottone: 'Cerca',
+    cercaEsito: '{{n}} schede per «{{ricerca}}».',
     lettaIl: 'Letta il {{data}}',
-    vuotoTitolo: 'Dove un campo è vuoto, è vuoto apposta',
-    vuotoTesto:
-      'Alcune schede non hanno la data di vigenza, e per alcune manca il link al portale istituzionale. Non è una dimenticanza: significa che quella verifica non è stata fatta, o che il documento è stato letto su un portale che non espone un indirizzo stabile. Su una pagina di norme un dato ricostruito a memoria vale meno di un campo lasciato in bianco, perché il primo sembra affidabile e non lo è.',
   },
 } as const
 
@@ -294,22 +295,22 @@ const en: Risorse = {
     titolo: 'Jet Salary Calculator',
     descrizione:
       'What is actually left of a gross Italian salary: annual and monthly net pay, every item broken down, and the rule behind each one. An independent project, not a Jet HR product.',
-    titoloNonCopre: 'What this calculator does not cover — Jet Salary Calculator',
+    titoloNonCopre: 'What this calculator does not cover · Jet Salary Calculator',
     descrizioneNonCopre:
       'The declared limits of the calculation: what is left out, why, and which way it moves the figure.',
-    titoloNorme: 'The law behind Italian net pay — Jet Salary Calculator',
+    titoloNorme: 'The law behind Italian net pay · Jet Salary Calculator',
     descrizioneNorme:
       'An archive of the rules that determine net pay in Italy: what each one provides, what it determines in the calculation or why it stays out, with dates in force and the institutional source.',
-    titoloSpiegazione: 'How gross pay becomes take-home pay — Jet Salary Calculator',
+    titoloSpiegazione: 'How gross pay becomes take-home pay · Jet Salary Calculator',
     descrizioneSpiegazione:
       'The whole chain with the figures that govern it: contributions, IRPEF brackets, tax credits, the wedge cut, the surcharges of all twenty-one regional authorities on a map, and the sums that are added back instead.',
     titoloProgetto: 'What Jet Salary Calculator is',
     descrizioneProgetto:
       'Where this calculator comes from, how it is built, and what Jet HR has to do with it. An independent project, not a product of the company.',
-    titoloChiSono: 'About me — Jet Salary Calculator',
+    titoloChiSono: 'About me · Jet Salary Calculator',
     descrizioneChiSono:
       'Giuseppe Neglia: developer at Deloitte, computer science graduate and business management student. Who wrote this calculator, and why this one.',
-    titoloTecnica: 'How the app is built, technically — Jet Salary Calculator',
+    titoloTecnica: 'How the app is built, technically · Jet Salary Calculator',
     descrizioneTecnica:
       'The stack, how the code is split between engine, parameters and interface, the import of the ministry data, what never reaches the browser, how it is checked, and where it is published.',
   },
@@ -398,7 +399,7 @@ const en: Risorse = {
     notaMensilitaTitolo: 'How many instalments does not determine what you earn in a year.',
     notaMensilitaCorpo:
       'It determines how many parts that total is split into: it is the same salary either way, and someone paid over fourteen instalments does not earn less than someone paid over twelve.',
-    assunzioniTitolo: 'What this figure means, exactly',
+    assunzioniTitolo: 'What does this figure mean, exactly?',
     assunzioniOcchiello: 'How to read this figure, for the calculation you have just run.',
   },
 
@@ -455,7 +456,6 @@ const en: Risorse = {
     verificata: '· checked on {{data}}',
     importataConEstrazione: '· imported, extracted on {{estratta}}, consulted on {{data}}',
     importata: '· imported, consulted on {{data}}',
-    riserva: 'A caveat on this source:',
     titolo: 'Source',
   },
 
@@ -514,6 +514,7 @@ const en: Risorse = {
       'This tool starts from your gross annual salary and works out your net pay. Some of the things that change a payslip cannot be derived from that number: they depend on your family, on the collective agreement applied to you, or on choices you have made.',
     paragrafo2: 'They are listed below, each with the effect it would have on the result if we included it.',
     quandoRalSupera: 'Applies only to a RAL above {{soglia}}.',
+    quandoRalSotto: 'Applies only to a RAL below {{soglia}}.',
     quandoContrattoDiverso: 'Applies to anyone whose declared contract is not {{contratto}}.',
     percheTitolo: 'Why we have not hidden them',
     percheTesto:
@@ -533,11 +534,12 @@ const en: Risorse = {
     cosaDetermina: 'What it determines in your net pay',
     inVigore: 'In force',
     ultimaModifica: 'Last amended',
-    ambiguita: 'Ambiguities and things worth knowing',
+    ambiguita: 'Things worth knowing',
+    cercaEtichetta: 'Search the rules',
+    cercaSegnaposto: 'Search a word, an act, an article',
+    cercaBottone: 'Search',
+    cercaEsito: '{{n}} entries for “{{ricerca}}”.',
     lettaIl: 'Read on {{data}}',
-    vuotoTitolo: 'Where a field is empty, it is empty on purpose',
-    vuotoTesto:
-      'Some entries have no date in force, and for some the link to the institutional portal is missing. That is not an oversight: it means the check was not carried out, or the document was read on a portal that exposes no stable address. On a page about the law, a figure reconstructed from memory is worth less than a field left blank, because the first one looks reliable and is not.',
   },
 
 

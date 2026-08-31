@@ -18,6 +18,7 @@ import type { Mensilita, Risultato } from '../../core/types'
 import { useTraduzione } from '../_i18n/provider'
 import { formato } from '../_lib/formato'
 import { etichettaContratto } from '../_lib/testi'
+import { Apribile } from './apribile'
 import { BloccoAssunzioni } from './assunzioni'
 import { GraficoLordoNetto } from './grafico-lordo-netto'
 import { Sezione } from './sezione'
@@ -149,25 +150,38 @@ export function SezioneRisultato({ risultato }: { risultato: Risultato }) {
           l'ipotesi meno probabile. È il motore a decidere quali si applicano,
           non questa pagina.
         */}
+        {/*
+          ⚠️ **Due domande, due blocchi apribili, e prima erano uno dentro
+          l'altro.**
+
+          *Il tipo di contratto cambia quello che prendo?* stava dentro *Cosa
+          vuol dire esattamente questa cifra?*, come voce in coda all'elenco
+          delle assunzioni. Ma non è un'assunzione: è una domanda, con la sua
+          risposta, ed era l'unica voce di quell'elenco a esserlo. Chi cercava
+          quella risposta doveva aprire un blocco che promette tutt'altro e
+          scorrere fino in fondo.
+
+          Sono la stessa forma perché sono la stessa specie di contenuto:
+          domande che qualcuno può farsi dopo aver letto la cifra, con la
+          risposta a richiesta. Averle sullo stesso piano è ciò che le rende
+          trovabili, perché il riassunto di ciascuna dice cosa c'è sotto.
+        */}
         <BloccoAssunzioni
           assunzioni={risultato.assunzioni}
           collocazione="accanto-al-numero"
           titolo={t('risultato.assunzioniTitolo')}
           occhiello={t('risultato.assunzioniOcchiello')}
-          extra={
-            <li className="rounded-blocco border border-bordo-decorativo bg-carta px-5 py-4">
-              <p className="text-sm font-medium text-inchiostro">
-                {t('risultato.notaContrattoDomanda')}
-              </p>
-              <p className="mt-1 text-sm leading-relaxed text-inchiostro-tenue">
-                <strong className="font-medium text-inchiostro">
-                  {t('risultato.notaContrattoTitolo')}
-                </strong>{' '}
-                {t('risultato.notaContrattoCorpo')}
-              </p>
-            </li>
-          }
         />
+
+        <div className="mt-3" />
+        <Apribile titolo={t('risultato.notaContrattoDomanda')}>
+          <p className="max-w-prose text-sm leading-relaxed text-inchiostro-tenue">
+            <strong className="font-medium text-inchiostro">
+              {t('risultato.notaContrattoTitolo')}
+            </strong>{' '}
+            {t('risultato.notaContrattoCorpo')}
+          </p>
+        </Apribile>
       </div>
     </Sezione>
   )

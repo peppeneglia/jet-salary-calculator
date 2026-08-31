@@ -122,9 +122,25 @@ export function Scaglioni({
   const L = 1000
   const H = 300
   const bassa = H - 34
+
+  /**
+   * Lo spazio sopra il gradino più alto, e serve per la sua etichetta.
+   *
+   * ⚠️ **Era 30, e a 30 il numero usciva dal disegno.** L'etichetta si scrive
+   * dieci unità sopra il gradino, in corpo 30: sul gradino più alto la linea di
+   * base finiva a `30 − 10 = 20` e le cifre salivano fin sopra lo zero del
+   * `viewBox`. Il risultato era che l'aliquota massima — cioè il 43%, l'unica
+   * che qualcuno cerchi in quel grafico — si vedeva tagliata a metà in cima.
+   *
+   * Il valore non è scelto a occhio: 46 è l'altezza del carattere più il suo
+   * stacco dal gradino, quindi resta giusto anche se cambia l'aliquota massima,
+   * che è ciò che il grafico disegna più in alto.
+   */
+  const ALTO = 46
+
   const massimo = Math.max(...blocchi.map((b) => b.aliquota))
   const x = (v: number) => (Math.min(v, xMax) / xMax) * L
-  const altezza = (a: number) => (a / massimo) * (bassa - 30)
+  const altezza = (a: number) => (a / massimo) * (bassa - ALTO)
 
   return (
     <svg
@@ -289,7 +305,30 @@ export function Spezzata({
         <line x1="0" y1={bassa} x2={L} y2={bassa} stroke="currentColor" strokeWidth="1.5" />
       </g>
 
-      {curve.map(({ curva, etichetta, aggiunge }) => {
+      {/*
+        ⚠️ **Le curve che aggiungono si disegnano per ultime, e non è una
+        preferenza estetica: prima una di loro spariva.**
+        *
+        Nel grafico del cuneo la somma finisce a 20.000 e la detrazione comincia
+        lì: le due spezzate hanno un vertice **alla stessa ascissa**, verificato
+        sul disegno reso — la somma scende da 960 a zero a x=363,6, la
+        detrazione risale da zero a 1.000 alla stessa x, sulla soglia
+        tratteggiata. La geometria era quindi già esatta.
+        *
+        A ingannare era l'ordine di pittura. Le due verticali stanno una sopra
+        l'altra, e quella scura della detrazione, disegnata dopo, copriva per
+        intero quella verde della somma: il tratto verde spariva sotto tre pixel
+        d'inchiostro e la somma sembrava fermarsi **prima** di toccare la
+        soglia, cioè lasciare un buco dove non c'è.
+        *
+        Invertendo l'ordine il tratto verde resta visibile e il passaggio di
+        consegne si vede per quello che è: una curva che finisce esattamente
+        dove l'altra comincia. Il verde sopra è anche il verso giusto della
+        gerarchia — è la voce che porta soldi a chi legge.
+      */}
+      {[...curve]
+        .sort((a, b) => Number(a.aggiunge ?? false) - Number(b.aggiunge ?? false))
+        .map(({ curva, etichetta, aggiunge }) => {
         const punti = curva.punti.map((p) => `${x(p.x).toFixed(1)},${y(p.y).toFixed(1)}`).join(' ')
         return (
           <g key={etichetta} className={aggiunge ? 'text-verde-testo' : 'text-inchiostro'}>

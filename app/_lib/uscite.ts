@@ -62,11 +62,40 @@ export interface Ripartizione {
  * I valori stanno in `globals.css` (D-046): qui ci sono solo i nomi, e stanno
  * qui perché li usano in tre — barra, legenda, Sankey.
  */
-const GRADINI = 4
+/**
+ * ⚠️ **Le classi sono scritte per intero, e prima erano composte. Composte
+ * non esistevano.**
+ *
+ * Questa funzione restituiva `` `bg-grafico-${n}` ``, e la barra della sezione
+ * 3 usciva **senza colori**: quattro segmenti trasparenti su fondo chiaro, cioè
+ * una barra che sembrava vuota. Non era un problema di tinta, era che la classe
+ * non c'era.
+ *
+ * Tailwind genera il foglio di stile **leggendo i sorgenti come testo**: cerca
+ * le classi che vi compaiono scritte, non quelle che il programma comporrà
+ * mentre gira. `bg-grafico-1` non appariva in nessun file, quindi nessuna
+ * regola veniva prodotta, quindi l'attributo non applicava niente. Verificato
+ * sul CSS servito: `bg-verde` c'è, `bg-grafico-*` non c'era.
+ *
+ * Il Sankey non ne ha sofferto ed è la prova della diagnosi: quello non usa una
+ * classe, usa `var(--color-grafico-N)` come `fill` dell'SVG, e una variabile
+ * CSS si risolve nel browser senza che Tailwind debba averla vista.
+ *
+ * Da qui la tabella scritta a mano: quattro nomi interi, che il generatore
+ * trova leggendo questa riga. Il costo è che aggiungere un gradino significa
+ * scriverlo anche qui; il guadagno è che se un giorno manca **si vede subito**,
+ * invece di produrre una barra invisibile.
+ */
+const CLASSI = ['bg-grafico-1', 'bg-grafico-2', 'bg-grafico-3', 'bg-grafico-4'] as const
 
-export const tintaUscita = (indice: number): string =>
-  `bg-grafico-${(indice % GRADINI) + 1}`
+const GRADINI = CLASSI.length
 
+export const tintaUscita = (indice: number): string => CLASSI[indice % GRADINI]!
+
+/*
+ * Il riempimento SVG resta composto, e può: è una variabile CSS, non una
+ * classe, quindi non passa dal generatore.
+ */
 export const riempimentoUscita = (indice: number): string =>
   `var(--color-grafico-${(indice % GRADINI) + 1})`
 

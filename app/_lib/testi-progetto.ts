@@ -34,8 +34,8 @@ export const PROGETTO = {
 
   nasceTitolo: { it: 'Da dove nasce', en: 'Where it comes from' },
   nasceP1: {
-    it: 'Questo strumento è la prova pratica di una candidatura: la prima selezione per il ruolo di AI Product Builder in Jet HR. La consegna era breve — una pagina con un campo per lo stipendio lordo, un bottone, e in risposta il netto annuo, il netto mensile e il dettaglio delle trattenute.',
-    en: 'This tool is the practical exercise of a job application: the first stage of selection for the role of AI Product Builder at Jet HR. The brief was short — a page with a field for the gross salary, a button, and in return the annual net pay, the monthly net pay and a breakdown of the deductions.',
+    it: 'Questo strumento è la prova pratica di una candidatura: la prima selezione per il ruolo di AI Product Builder in Jet HR. La consegna era breve: una pagina con un campo per lo stipendio lordo, un bottone, e in risposta il netto annuo, il netto mensile e il dettaglio delle trattenute.',
+    en: 'This tool is the practical exercise of a job application: the first stage of selection for the role of AI Product Builder at Jet HR. The brief was short: a page with a field for the gross salary, a button, and in return the annual net pay, the monthly net pay and a breakdown of the deductions.',
   },
   nasceP2: {
     it: 'Quello che veniva valutato, però, non era il bottone. Nell’ordine: la capacità di cercare le informazioni alle fonti giuste, quella di dargli una struttura, e solo per terza quella di costruire qualcosa che funzioni. La consegna diceva anche che lo scopo non era vedere quanto si è bravi con gli strumenti che generano applicazioni da soli, ma verificare di aver costruito qualcosa di cui si capiscono le logiche.',
@@ -52,8 +52,8 @@ export const PROGETTO = {
     en: 'Jet HR is an Italian scaleup that handles payroll and HR administration for small and medium-sized companies: payslips, contributions, statutory filings. They are the company that set the exercise, and the recipient of this work.',
   },
   jetP2: {
-    it: 'Il legame con il modo in cui il calcolatore è costruito è più stretto di così. Per un’azienda di payroll la normativa che cambia a ogni Legge di Bilancio non è un caso limite: è il lavoro di tutti i giorni. Per questo qui i valori di legge non stanno dentro il calcolo ma in file separati, ognuno con la propria citazione — quando cambiano le aliquote si aggiorna un file, non si riscrive il calcolo, e le verifiche dell’anno prima continuano a valere.',
-    en: 'The connection with how the calculator is built runs deeper than that. For a payroll company, legislation that changes with every budget law is not an edge case: it is the daily job. So the statutory values here do not live inside the calculation but in separate files, each with its own citation — when rates change you update a file rather than rewriting the calculation, and last year’s checks still hold.',
+    it: 'Il legame con il modo in cui il calcolatore è costruito è più stretto di così. Per un’azienda di payroll la normativa che cambia a ogni Legge di Bilancio non è un caso limite: è il lavoro di tutti i giorni. Per questo qui i valori di legge non stanno dentro il calcolo ma in file separati, ognuno con la propria citazione. Quando cambiano le aliquote si aggiorna un file, non si riscrive il calcolo, e le verifiche dell’anno prima continuano a valere.',
+    en: 'The connection with how the calculator is built runs deeper than that. For a payroll company, legislation that changes with every budget law is not an edge case: it is the daily job. So the statutory values here do not live inside the calculation but in separate files, each with its own citation. When rates change you update a file rather than rewriting the calculation, and last year’s checks still hold.',
   },
   jetP3: {
     it: 'Jet HR ha anche un proprio calcolatore pubblico, ed è stato usato come termine di confronto, non come oracolo: dove i due numeri divergono, la differenza è stata spiegata trovando quale ipotesi diversa la produce, mai fatta sparire ritoccando il codice finché i due coincidevano.',
@@ -73,6 +73,17 @@ export const PROGETTO = {
   coperturaP1: {
     it: 'La consegna suggeriva di fermarsi al caso semplice: un impiegato a tempo indeterminato, residente a Milano, senza agevolazioni particolari. La copertura qui è tutta l’Italia.',
     en: 'The brief suggested stopping at the simple case: an office worker on a permanent contract, resident in Milan, with no particular reliefs. The coverage here is the whole of Italy.',
+  },
+  /**
+   * La risposta al «perché» che il titolo promette.
+   *
+   * ⚠️ Prima non c'era, e il titolo prometteva una cosa che la sezione non
+   * diceva: dava i numeri della copertura e lasciava dedurre la ragione da un
+   * paragrafo in fondo.
+   */
+  coperturaP2: {
+    it: 'La ragione non è la voglia di fare di più. Il collo di bottiglia di un lavoro come questo non è quanto codice si scrive: è quanti valori di legge si riescono a reperire alla fonte, capire e poi difendere uno per uno. Fermarsi a Milano avrebbe lasciato quel limite non misurato, mentre coprire tutti i comuni lo mette alla prova: ogni ente in più è una delibera da leggere e una forma di aliquota da modellare, e sono proprio quelle forme a far emergere i casi che il caso semplice nasconde.',
+    en: 'The reason is not an appetite for doing more. The bottleneck in work like this is not how much code gets written: it is how many statutory values can be tracked down at source, understood, and then defended one by one. Stopping at Milan would have left that limit untested, whereas covering every municipality puts it under strain: each further authority is another act to read and another shape of rate to model, and it is precisely those shapes that surface the cases the simple case hides.',
   },
   coperturaComuni: { it: 'comuni in elenco', en: 'municipalities listed' },
   coperturaEnti: {
@@ -140,8 +151,8 @@ export const PROGETTO = {
 
   chiusuraTitolo: { it: 'Dove continuare', en: 'Where to go next' },
   chiusuraTesto: {
-    it: 'Il meccanismo generale sta nella spiegazione; le norme una per una nell’archivio; i confini del calcolo nella pagina dei limiti. E se quello che interessa è come è costruita la macchina — stack, divisione del codice, import dei dati, verifiche — c’è una pagina apposta.',
-    en: 'The general mechanism is on the explanation page; the rules one by one are in the archive; the limits of the calculation are on the limits page. And if what you are after is how the machine is built — stack, code layout, data import, checks — there is a page for that.',
+    it: 'Il meccanismo generale sta nella spiegazione; le norme una per una nell’archivio; i confini del calcolo nella pagina dei limiti. E se quello che interessa è come è costruita la macchina (stack, divisione del codice, import dei dati, verifiche), c’è una pagina apposta.',
+    en: 'The general mechanism is on the explanation page; the rules one by one are in the archive; the limits of the calculation are on the limits page. And if what you are after is how the machine is built (stack, code layout, data import, checks), there is a page for that.',
   },
   linkTecnica: { it: 'Come è fatta tecnicamente →', en: 'How it is built, technically →' },
   linkSpiegazione: { it: 'Come si calcola il netto →', en: 'How net pay is worked out →' },
@@ -164,9 +175,4 @@ export const PROGETTO = {
 export const coperturaComuniNota = (n: string): Multilingua => ({
   it: `di cui ${n} con un netto calcolabile`,
   en: `of which ${n} with net pay that can be computed`,
-})
-
-export const coperturaEstrazione = (data: string): Multilingua => ({
-  it: `I dati degli enti vengono dagli elenchi del Ministero dell’Economia e delle Finanze, estratti il ${data} e convertiti una volta sola: mentre usi il sito non viene interrogato nessun servizio esterno.`,
-  en: `The figures for each authority come from the lists published by the Italian Ministry of Economy and Finance, extracted on ${data} and converted once: no external service is queried while you use the site.`,
 })
