@@ -48,8 +48,18 @@ function Citazione({ fonte }: { fonte: Fonte }) {
       <span className="text-inchiostro-nota">
         {/*
           Le due provenienze non sono un dettaglio di import: sono una
-          decisione di prodotto (D-005). Milano e Lombardia sono verificate
-          sulle delibere, il resto arriverà importato a una data dichiarata.
+          decisione di prodotto (D-005).
+
+          ⚠️ Ma non sono una scala di affidabilità, e questo commento diceva
+          il contrario. *Verificata* significa che è stato letto l'atto, quindi
+          la citazione porta articolo e comma; *importata* che il valore viene
+          da un elenco ufficiale, quindi la citazione porta l'elenco e la data
+          di estrazione — che serve perché quegli elenchi si aggiornano di
+          continuo e non hanno un numero di versione. Cambia che cosa si può
+          citare, non quanto il numero valga.
+
+          La riserva vera è un'altra cosa e ha un campo suo: `nonVerificato`,
+          reso qui sotto come avviso.
         */}
         {fonte.provenienza === 'verificata'
           ? t('fonte.verificata', { data: inData(fonte.consultataIl) })
@@ -69,13 +79,38 @@ function Citazione({ fonte }: { fonte: Fonte }) {
   )
 }
 
-export function Fonti({ fonti, titolo }: { fonti: readonly Fonte[]; titolo: string }) {
+/**
+ * ⚠️ **`accanto` mette titolo e citazione sulla stessa riga**, ed è la forma
+ * predefinita per le citazioni brevi.
+ *
+ * *Regola applicata* seguito a capo da *L. 30/12/2024 n. 207, art. 1 c. 6*
+ * occupava due righe per dire una cosa sola, e l'etichetta senza due punti si
+ * leggeva come un titolo di sezione: una gerarchia annunciata che il contenuto
+ * — mezza riga di testo — non giustificava. Con i due punti e l'affiancamento
+ * torna a essere quello che è, cioè una didascalia.
+ *
+ * Resta impilato quando le citazioni sono più d'una — il gate delle
+ * addizionali ne ha due, una per tributo — perché lì l'elenco è la sostanza:
+ * affiancarle a un'etichetta le farebbe leggere come una citazione sola spezzata
+ * in due.
+ */
+export function Fonti({
+  fonti,
+  titolo,
+  accanto = false,
+}: {
+  fonti: readonly Fonte[]
+  titolo: string
+  accanto?: boolean
+}) {
   if (fonti.length === 0) return null
 
+  const inLinea = accanto && fonti.length === 1
+
   return (
-    <div className="text-xs">
-      <p className="font-medium text-inchiostro-nota">{titolo}</p>
-      <ul className="mt-1 space-y-1">
+    <div className={`text-xs ${inLinea ? 'flex flex-wrap items-baseline gap-x-1.5' : ''}`}>
+      <p className="font-medium text-inchiostro-nota select-none">{titolo}</p>
+      <ul className={inLinea ? 'min-w-0' : 'mt-1 space-y-1'}>
         {fonti.map((f, i) => (
           <Citazione key={`${f.atto}-${f.riferimento ?? ''}-${i}`} fonte={f} />
         ))}

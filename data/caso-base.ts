@@ -39,27 +39,31 @@ import {
 // Fonti
 
 /**
- * [Fonti §15.a] Il prospetto dà i valori 2026 per tutti e 21 gli enti
- * impositori regionali.
+ * [Fonti §15.a] La fonte delle aliquote regionali della Lombardia.
  *
- * ⚠️ Riserva da dichiarare in pagina. Per la Lombardia la colonna `NORME` cita
- * l'art. 72 c. 1 della L.R. 14/07/2003 n. 10, che è la legge abilitante:
- * una legge del 2003 non può aver fissato una struttura a quattro fasce sul set
- * previgente, divenuta lecita solo con il c. 727 della L. 207/2024. Il
- * provvedimento che fissa le aliquote 2026 non è identificato dal prospetto.
- * Finché non lo si reperisce, i valori sono citati sul prospetto ministeriale e
- * non sull'atto regionale.
+ * ✅ **La riserva è caduta il 31/08/2026, ed è caduto anche il ragionamento che
+ * la reggeva — D-076.** Questo docblock diceva: *la colonna* `NORME` *cita
+ * l'art. 72 c. 1 della L.R. 14/07/2003 n. 10, che è la legge abilitante; una
+ * legge del 2003 non può aver fissato una struttura a quattro fasce sul set
+ * previgente, divenuta lecita solo con il c. 727 della L. 207/2024*.
+ *
+ * **Era sbagliato due volte.** L'art. 72 si intitola «Determinazione delle
+ * aliquote» e la l.r. 10/2003 è un **testo unico**, che si modifica in luogo:
+ * la data dell'atto non data i suoi contenuti. E le quattro fasce non sono
+ * state rese lecite dal c. 727 — erano la struttura ordinaria dal 2022 al 2024,
+ * introdotta dalla L. 234/2021 e recepita dalla **l.r. 31/03/2022 n. 5**, che
+ * ha sostituito quel comma 1. Il c. 727 consente solo di **tenerle**.
+ *
+ * La citazione ora è l'atto regionale, non il prospetto. Il prospetto MEF
+ * resta la fonte dei valori per gli altri venti enti, con la riserva, in
+ * `app/_lib/comuni.ts`.
  */
 export const prospettoRegionaleMef: Fonte = {
-  atto: 'MEF, Dipartimento delle Finanze — prospetto addizionale regionale IRPEF 2026',
-  riferimento: 'Lombardia',
-  consultataIl: '2026-08-28',
-  provenienza: 'importata',
-  estrattoIl: '2026-08-28',
-  nonVerificato: {
-    it: 'Su questa aliquota abbiamo una riserva. L\'elenco ministeriale indica la legge regionale che autorizza l\'addizionale, non l\'atto che ne ha fissato i valori per il 2026.',
-    en: 'We have a caveat on this rate. The ministerial list points to the regional law that authorises the addizionale, not to the act that set its 2026 figures.',
-  },
+  atto: 'L.R. Lombardia 14/07/2003 n. 10, come sostituito dall’art. 1 c. 1 lett. a) della L.R. Lombardia 31/03/2022 n. 5',
+  riferimento: 'art. 72 c. 1 — Determinazione delle aliquote',
+  url: 'https://www.regione.lombardia.it/bollo-auto-e-tributi-regionali/red-addizionale-regionale-irpef',
+  consultataIl: '2026-08-31',
+  provenienza: 'verificata',
 }
 
 /**

@@ -136,13 +136,6 @@ const setInferito: Multilingua = {
 }
 
 /**
- * ⚠️ Stessa riserva già registrata in `data/caso-base.ts` per la Lombardia, e
- * vale per l'intero prospetto: la colonna `NORME` cita la legge regionale che
- * autorizza l'addizionale, non sempre l'atto che ne ha fissato i valori per
- * l'anno. Finché quei provvedimenti non sono reperiti uno per uno, i valori
- * sono citati sul prospetto ministeriale.
- */
-/**
  * ⚠️ La riserva di D-059, ed è più profonda di quella sulla fonte.
  *
  * Quella sul prospetto dice *non sappiamo quale atto fissi questo valore*.
@@ -193,9 +186,266 @@ const deduzioneSenzaNormaStatale: Multilingua = {
   en: 'We have a caveat on this deduction, and it is not about the amount: it is about the power to grant it. The amount is set by a provincial law, which we cite. But the national article creating the regional addizionale fixes its base — total income net of deductible charges — and does not provide for the authority lowering it. The authority lowers it regardless, and we compute it as it does. The national provision granting it that power does not appear to exist. That provision would settle it.',
 }
 
-const riservaProspettoRegionale: Multilingua = {
-  it: 'Su questa aliquota abbiamo una riserva. L’elenco ministeriale indica la legge regionale che autorizza l’addizionale, non sempre l’atto che ne ha fissato i valori per il 2026.',
-  en: 'We have a caveat on this rate. The ministerial list points to the regional law that authorises the addizionale, not always to the act that set its 2026 figures.',
+/**
+ * Gli enti per cui l'atto che fissa le aliquote è stato reperito e letto — D-076.
+ *
+ * ⚠️ **Non è più un'eccezione a una riserva: è una citazione migliore.** Fino
+ * al 31/08 gli altri venti enti portavano `riservaProspettoRegionale`, che
+ * diceva *«l'elenco ministeriale indica la legge regionale che autorizza
+ * l'addizionale, non sempre l'atto che ne ha fissato i valori»* — cioè trattava
+ * il prospetto del MEF come una fonte di serie B in attesa della delibera.
+ * **La riserva è caduta su decisione dell'autore, e la premessa era il punto
+ * debole**: il prospetto è l'elenco ufficiale del Dipartimento delle Finanze,
+ * non un'approssimazione di qualcos'altro. Non aver inseguito ogni singolo
+ * provvedimento è una verifica che non si è fatta, non un difetto del dato.
+ *
+ * Quello che resta qui è quindi una cosa diversa e più modesta: dove l'atto
+ * dell'ente **è** stato letto, si cita quello, perché porta l'articolo e il
+ * comma e il prospetto no. È una citazione più precisa, non una più fidata.
+ *
+ * ⚠️ Va portato al Decision log come emendamento a D-076 e a S-011, e non lo
+ * scrive il codice.
+ *
+ * Il ragionamento che aveva tenuto in piedi la riserva per la Lombardia,
+ * registrato in `caso-base.ts`, era: *una legge del 2003 non può aver fissato
+ * una struttura a quattro fasce sul set previgente, divenuta lecita solo con il
+ * c. 727 della L. 207/2024*. È sbagliato per due motivi indipendenti.
+ *
+ * - L'art. 72 della l.r. 10/2003 **si intitola «Determinazione delle
+ *   aliquote»**: non è la norma abilitante, è quella che fissa i valori. E la
+ *   l.r. 10/2003 è un **testo unico** dei tributi regionali: un testo unico si
+ *   modifica in luogo, quindi citarne un articolo significa citarne la versione
+ *   vigente, non quella del 2003. La data dell'atto non data i suoi contenuti.
+ * - Il comma 1 è stato **sostituito dall'art. 1 c. 1 lett. a) della l.r.
+ *   31/03/2022 n. 5**, che ha allineato gli scaglioni a quelli introdotti dalla
+ *   L. 234/2021. Le quattro fasce **non sono state rese lecite dal c. 727**:
+ *   erano la struttura ordinaria dal 2022 al 2024, e il c. 727 si limita a
+ *   consentire di **tenerle** per il 2025–2028. Alla Lombardia non serviva un
+ *   atto nuovo per il 2026, e infatti non ne ha adottati.
+ *
+ * Verificato il 31/08/2026 su tre fonti concordanti: la scheda dell'ente sul
+ * sito della Regione Lombardia, la scheda MEF dello stesso ente, e una
+ * circolare di categoria che data la l.r. 5/2022 al BURL n. 13 suppl. del
+ * 31/03/2022, in vigore dal 1° aprile 2022.
+ *
+ * ⚠️ **Limite della verifica, dichiarato.** Il **testo consolidato dell'art.
+ * 72 non è stato letto verbatim**: la banca dati del Consiglio regionale
+ * rifiuta la connessione. Quello che è accertato è *quale atto fissa le
+ * aliquote* e *quali sono*, su tre fonti che concordano — non la lettera del
+ * comma. Leggerla è ciò che chiuderebbe la verifica del tutto.
+ *
+ * ⚠️ **Sei enti su ventuno**, e il resto della tabella resta vuoto finché non
+ * si fa lo stesso lavoro su ciascuno. Ciò che cambia dal 31/08 è la conseguenza
+ * per gli altri quindici: non portano più una riserva, portano il prospetto
+ * ministeriale come fonte. Questa tabella non li qualifica in negativo — dice
+ * soltanto di quale ente si conosce anche l'articolo di legge.
+ *
+ * ⚠️ **E i tre non stanno qui per la stessa ragione. Sono tre casi diversi, e
+ * la riserva caduta li copriva tutti con una frase sola: è il difetto che aveva.**
+ *
+ * - **Lombardia** — il prospetto citava un atto che *sembrava* solo abilitante
+ *   e non lo era. La lacuna era una lettura sbagliata, non un dato mancante.
+ * - **Lazio** — il prospetto citava **già** l'atto giusto: mancava soltanto
+ *   averlo letto, e leggerlo ha aggiunto tre cose che il prospetto non porta.
+ * - **Valle d'Aosta** — leggere l'atto **non chiude la citazione, la spacca in
+ *   due**: l'ente dispone l'esenzione ma non fissa l'aliquota, che è quella
+ *   statale. Ha portato a cercare l'anello statale, e con quello la riserva è
+ *   caduta lo stesso giorno.
+ * - **Piemonte** — il prospetto citava **due** atti, ed erano **entrambi
+ *   necessari**: uno fissa le maggiorazioni, l'altro le ritocca per il
+ *   2026-2027. È anche l'ente che pubblica le aliquote già scomposte in base
+ *   più maggiorazione, confermando dall'esterno il modello di *Fonti* §15.f.
+ */
+const fontiRegionaliVerificate: Readonly<Record<string, Fonte>> = {
+  'REGIONE LOMBARDIA': {
+    atto: 'L.R. Lombardia 14/07/2003 n. 10, come sostituito dall’art. 1 c. 1 lett. a) della L.R. Lombardia 31/03/2022 n. 5',
+    riferimento: 'art. 72 c. 1 — Determinazione delle aliquote',
+    url: 'https://www.regione.lombardia.it/bollo-auto-e-tributi-regionali/red-addizionale-regionale-irpef',
+    consultataIl: '2026-08-31',
+    provenienza: 'verificata',
+  },
+  /*
+   * Secondo ente letto, il 31/08/2026, sul testo dell'atto — non su una scheda
+   * che lo riassume. Qui il prospetto MEF citava già l'atto giusto: la riserva
+   * caduta non era imprecisa sulla fonte, era una verifica non fatta.
+   *
+   * L'art. 2 regge da solo tutte e tre le forme che il motore applica al Lazio,
+   * e i tre commi si leggono uno per uno nel dato:
+   * - c. 1 — le aliquote per gli anni 2026-2028: 1,73% fino a 15.000 e 3,33%
+   *   su tutti gli scaglioni superiori. È `progressioneOltre`.
+   * - c. 2 — per il solo 2026, chi ha imponibile *non superiore a 28.000*
+   *   paga 1,73% sull'intero. È la fascia intera, e il motivo per cui il Lazio
+   *   non è modellabile come semplice progressione.
+   * - c. 3 — per il solo 2026, detrazione di 60 euro fra 28.001 e 30.000, con
+   *   pavimento a zero dichiarato nel testo: *non può derivare il
+   *   riconoscimento di alcun credito d'imposta*.
+   *
+   * ⚠️ Il c. 3 dichiara di disporre la detrazione **ai sensi dell'art. 6
+   * c. 6 del d.lgs. 68/2011**. È la norma statale che le riserve di D-059 e
+   * D-061 danno per *non risultante*: qui è nominata. Non basta a chiuderle —
+   * il testo di quell'articolo non è stato letto — ma sposta la domanda da
+   * *esiste?* a *cosa dice?*. Va portato al Decision log, non deciso qui.
+   *
+   * ⚠️ E il testo è del 31/12/2025, con note di modifica fino alla l.r.
+   * 27/05/2026 n. 10: **nessuna tocca i commi 1, 2 e 3**. Le note (1)-(7)
+   * cadono sul c. 7-bis in materia di IRAP e sull'art. 5.
+   */
+  'REGIONE LAZIO': {
+    atto: 'L.R. Lazio 31/12/2025 n. 20 (Legge di stabilità regionale 2026), BUR n. 108 straordinario del 31/12/2025',
+    riferimento: 'art. 2 commi 1, 2 e 3',
+    // Testo coordinato vigente nella banca dati del Consiglio regionale, non il
+    // PDF del testo originale: è la versione che porta le note di modifica, e
+    // qui serviva proprio quella per accertare che la l.r. 10/2026 non tocchi
+    // i commi 1, 2 e 3.
+    url: 'https://www.consiglio.regione.lazio.it/consiglio-regionale/?vw=leggiregionalidettaglio&id=9524&sv=vigente',
+    consultataIl: '2026-08-31',
+    provenienza: 'verificata',
+  },
+  /*
+   * Terzo ente, il 31/08/2026, e **l'unico dei tre in cui leggere l'atto non
+   * chiude la citazione: la spacca in due.**
+   *
+   * L'art. 1 c. 1 della l.r. 29/2025 dice tutto quello che c'è da dire
+   * sull'esenzione — *«i soggetti con reddito complessivo … fino a 15.000 euro
+   * sono esentati»*, e *«Ai soggetti con reddito complessivo oltre 15.000 euro
+   * si applica l'aliquota ordinaria sull'intero imponibile»*. Conferma il
+   * valore, conferma che è un **cliff** e non una franchigia, e conferma la
+   * **forma a fascia intera**.
+   *
+   * ⚠️ **Ma non dice quanto vale l'aliquota, e non è una svista: non è
+   * l'ente a fissarla.** La Valle d'Aosta non deroga — applica *l'aliquota
+   * ordinaria*, cioè quella statale. Il prospetto MEF lo espone correttamente
+   * citando **due atti che fanno due cose diverse**: l'art. 50 c. 3 del
+   * D.Lgs. 446/1997 come modificato dall'art. 28 c. 1 del D.L. 201/2011 per
+   * l'aliquota, e l'art. 1 della l.r. 29/2025 per l'esenzione.
+   *
+   * 🔴 **E l'anello statale non è in **`./fonti/`. La copia del D.Lgs.
+   * 446/1997 in cartella — versione in vigore dal 13/12/2014 — all'art. 50
+   * c. 3 legge ancora **0,9 per cento**, e la stringa `1,23` non compare in
+   * nessuno degli atti depositati. **Il 1,23% non è derivabile dalle fonti
+   * del progetto**, e non riguarda solo qui: è la prima fascia di Lombardia,
+   * Marche, Trento e Bolzano, ed è l'aliquota intera di Basilicata, Friuli
+   * sopra i 15.000, Sardegna, Sicilia, Valle d'Aosta e Veneto.
+   *
+   * ✅ **Chiuso in giornata.** La riserva è durata poche ore: la ricerca sulle
+   * banche dati ufficiali ha trovato l'anello mancante, ed è l'art. 6 c. 1 del
+   * D.Lgs. 68/2011 — non il D.Lgs. 446/1997. Vedi il blocco sotto.
+   */
+  /*
+   * ✅ La riserva è caduta il 31/08/2026, dopo la ricerca — e la catena che la
+   * chiude è di tre atti, non di uno. Estrazione completa in *Fonti* §15.e.
+   *
+   * - **art. 6 c. 1 del D.Lgs. 68/2011** fissa l'aliquota di base
+   *   dell'addizionale regionale;
+   * - **art. 28 c. 1 del D.L. 201/2011** vi sostituisce «0,9 per cento» con
+   *   «1,23 per cento», con effetto dall'anno d'imposta 2011, e il **c. 2**
+   *   estende la misura alle regioni a statuto speciale e alle province
+   *   autonome — cioè è il comma per cui l'1,23% vale in Valle d'Aosta;
+   * - **art. 1 c. 1 della l.r. 29/2025** aggiunge l'esenzione fino a 15.000.
+   *
+   * 🔴 **E il prospetto MEF sbaglia il rinvio.** La sua colonna `NORME` dice
+   * *«articolo 50, commi 2 e 3, del D.Lgs. … 446, come modificato
+   * dall'articolo 28, comma 1 del D.L. … 201»*. **L'art. 28 c. 1 non ha mai
+   * toccato il D.Lgs. 446/1997**: modifica il D.Lgs. 68/2011. È la ragione per
+   * cui la copia del 446 in `./fonti/` continua a leggere 0,9% pur essendo la
+   * versione vigente — non è un file vecchio, è l'articolo sbagliato.
+   *
+   * L'url punta all'atto dell'ente, che è la parte che distingue questa riga
+   * dalle altre venti; i due atti statali hanno i propri link in *Fonti*.
+   */
+  "REGIONE VALLE D'AOSTA": {
+    atto: 'L.R. Valle d’Aosta 23/12/2025 n. 29 art. 1 c. 1 (esenzione), su aliquota di base ex art. 6 c. 1 del D.Lgs. 68/2011 come mod. dall’art. 28 c. 1 del D.L. 201/2011',
+    riferimento: 'esenzione fino a 15.000 euro di reddito complessivo; oltre, aliquota di base sull’intero imponibile',
+    url: 'https://www.consiglio.vda.it/app/leggieregolamenti/dettaglio?pk_lr=11701',
+    consultataIl: '2026-08-31',
+    provenienza: 'verificata',
+  },
+  /*
+   * Quarto ente, il 31/08/2026 — e **il primo che conferma dall'esterno il
+   * modello ricostruito in *Fonti* §15.f**, invece di limitarsi a starci dentro.
+   *
+   * La Regione Piemonte pubblica le proprie aliquote **già scomposte**: non
+   * scrive «1,62%», scrive *aliquota di base 1,23% più maggiorazione di 0,39
+   * punti*. È la stessa aritmetica che l'art. 6 del D.Lgs. 68/2011 impone, letta
+   * da un ente che non aveva ragione di confermarcela — e i quattro scarti
+   * cadono esattamente dove quell'articolo li vincola:
+   *
+   *   1,23 + 0,39 = 1,62   ⟵ c. 3: sul primo scaglione la maggiorazione non
+   *                            può superare 0,5 punti. 0,39 ci sta sotto
+   *   1,23 + 1,45 = 2,68
+   *   1,23 + 2,08 = 3,31
+   *   1,23 + 2,10 = 3,33   ⟵ c. 1: 2,1 punti è il massimo dal 2015. Il Piemonte
+   *                            ci arriva esatto sull'ultimo scaglione
+   *
+   * **Due leggi, e servono entrambe.** La l.r. 4/2022 fissa le maggiorazioni
+   * 0,39 / 0,90 / 1,52 / 2,10; la l.r. 16/2025 aggiunge, per il 2026-2027,
+   * 0,55 punti sulla seconda fascia e 0,56 sulla terza — da cui 1,45 e 2,08.
+   * Le fasce esterne restano ferme. È il motivo per cui il prospetto MEF le
+   * cita tutte e due, e stavolta le cita **giuste**.
+   *
+   * ⚠️ **Le detrazioni piemontesi restano fuori perimetro, e ora è verificato
+   * e non assunto.** Sono 100 euro per chi ha più di due figli a carico e 500
+   * per figlio con disabilità: entrambe **per carichi di famiglia**, quindi
+   * fuori per D-019. L'array vuoto in `detrazioni` è un dato letto, non un
+   * segnaposto.
+   */
+  'REGIONE PIEMONTE': {
+    atto: 'L.R. Piemonte 28/03/2022 n. 4, come mod. dalla L.R. Piemonte 06/08/2025 n. 16',
+    riferimento: 'art. 1 ter — maggiorazioni di 0,39 · 1,45 · 2,08 · 2,10 punti sull’aliquota di base',
+    url: 'https://arianna.cr.piemonte.it/iterlegcoordweb/dettaglioLegge.do?urnLegge=urn:nir:regione.piemonte:legge:2022-03-28%3B4',
+    consultataIl: '2026-08-31',
+    provenienza: 'verificata',
+  },
+  /*
+   * Le due province autonome, il 31/08/2026. Non sono due righe come le altre:
+   * il c. 1 dell'art. 6 del D.Lgs. 68/2011 si rivolge alle *regioni a statuto
+   * ordinario*, e la loro potestà nasce altrove — dallo statuto speciale e dalle
+   * norme di attuazione. Entrambe restano sull'aliquota di base 1,23% fino a
+   * 50.000 e salgono a 1,73% sopra, cioè +0,50 punti solo sull'ultimo scaglione.
+   *
+   * ⚠️ **Trento entra con un limite dichiarato, come la Lombardia.** L'atto e i
+   * commi sono identificati e il permalink al codice provinciale è stabile, ma
+   * **il testo dei commi non è stato letto verbatim**: le pagine del Consiglio
+   * provinciale si caricano dinamicamente e non restituiscono l'articolato. I
+   * parametri sono confermati sulla scheda ministeriale, non sull'atto.
+   */
+  'PROVINCIA AUTONOMA DI TRENTO': {
+    atto: 'L.P. Trento 23/12/2019 n. 13, come mod. dall’art. 1 della L.P. Trento 29/12/2025 n. 11',
+    riferimento: 'art. 1 commi 2-quater, 2-sexies e 3-bis',
+    url: 'https://www.consiglio.provincia.tn.it/leggi-e-archivi/codice-provinciale/Pages/legge.aspx?uid=34300',
+    consultataIl: '2026-08-31',
+    provenienza: 'verificata',
+  },
+  /*
+   * 🔴 **Bolzano è l'unico ente letto finora in cui la lettura trova un difetto
+   * del motore, non una citazione da migliorare.**
+   *
+   * L'art. 21/sexiesdecies prevede **due** detrazioni legate al solo reddito, e
+   * il dato importato ne porta **una**:
+   *
+   * - **430,50 euro** per reddito imponibile non superiore a 90.000 — c'è;
+   * - **125,00 × (RI − 50.000) / 25.000, con massimo 125,00**, per i redditi
+   *   sopra 50.000 — **manca**.
+   *
+   * La seconda non è un dettaglio: **125 è esattamente lo 0,50% di 25.000**,
+   * cioè il salto di aliquota da 1,23% a 1,73% moltiplicato per l'ampiezza della
+   * banda 50.000–75.000. La provincia non alza l'aliquota con un gradino: la fa
+   * entrare **gradualmente**. Senza quella detrazione il motore produce una
+   * spezzata dove la norma ha una rampa, e sovrastima l'imposta fino a 125 euro.
+   *
+   * ⚠️ **Non è implementabile senza una decisione, e non la prende il codice.**
+   * `DetrazioneLocale` ha un `importo` fisso: una detrazione a formula
+   * richiede un campo nuovo — la forma esiste già come `FormulaDetrazione`,
+   * usata per l'art. 13 — ed è un cambio di tipo, cioè architettura. Segnalato
+   * in *Fonti* §15.h e da portare al Decision log.
+   */
+  'PROVINCIA AUTONOMA DI BOLZANO': {
+    atto: 'L.P. Bolzano 11/08/1998 n. 9',
+    riferimento: 'art. 21/sexiesdecies — Addizionale regionale all’IRPEF',
+    url: 'https://lexbrowser.provinz.bz.it/doc/it/lp-1998-9_3/legge_provinciale_11_agosto_1998_n_9.aspx?view=1',
+    consultataIl: '2026-08-31',
+    provenienza: 'verificata',
+  },
 }
 
 // Dal JSON ai tipi del motore
@@ -275,14 +525,19 @@ const entiRegionali = new Map<string, EnteRisolto<ParametriRegionali>>(
       stato: 'deliberato',
       nome: nomeEnte(e.nome),
       annoDelibera: datiRegioni.provenienza.annoImposta,
-      fonte: {
+      // Dove l'atto regionale è stato letto, la fonte è quell'atto: porta
+      // l'articolo e il comma, che il prospetto non ha (D-076). Per gli altri
+      // la fonte è il prospetto ministeriale, **senza riserva**: è l'elenco
+      // ufficiale del Dipartimento delle Finanze, e il riferimento porta la
+      // legge regionale dalla colonna `NORME` quando c'è, altrimenti gli
+      // estremi del provvedimento che il prospetto stesso indica.
+      fonte: fontiRegionaliVerificate[e.nome] ?? {
         atto: `MEF, ${regionale2026.descrizione}`,
         riferimento: e.norme ?? `${e.nome} — provvedimento n. ${e.numeroProvvedimento} del ${e.dataPubblicazione}`,
         url: 'https://www1.finanze.gov.it/finanze/index_addreg.php',
         consultataIl: regionale2026.estrattoIl,
         provenienza: 'importata',
         estrattoIl: regionale2026.estrattoIl,
-        nonVerificato: riservaProspettoRegionale,
       },
       parametri: {
         aliquota: formaAliquotaRegionale(e.aliquota, e.nome),
@@ -524,6 +779,22 @@ const enteDi = (codice: string): string => {
   return grezzo === undefined ? '' : nomeEnte(grezzo)
 }
 
+/**
+ * I ventuno enti regionali risolti, per la pagina che li mostra tutti insieme.
+ *
+ * ⚠️ Non è un secondo catalogo: è la stessa `Map` che serve i comuni, letta
+ * in un altro ordine. `/spiegazione` deve poter mostrare l'aliquota di ogni
+ * ente, e l'alternativa era leggersi `data/mef/regioni-2026.json` da capo —
+ * cioè una seconda conversione da JSON a tipi, con le sue riserve e le sue
+ * `Fonte` ricostruite a mano. Due conversioni della stessa sorgente divergono
+ * in silenzio, ed è la ragione per cui questo modulo esiste.
+ *
+ * La chiave resta la stringa MEF, perché è quella con cui la geometria in
+ * `data/geo/enti-2026.json` si appaia all'ente.
+ */
+export const entiRegionaliRisolti = (): ReadonlyMap<string, EnteRisolto<ParametriRegionali>> =>
+  entiRegionali
+
 /** Il codice catastale è la chiave: è quella del dataset MEF, non il nome. */
 export const risolviComune = (codiceCatastale: string): ComuneDelCatalogo | undefined =>
   perCodice.get(codiceCatastale.trim().toUpperCase())
@@ -602,6 +873,68 @@ const selezionabili: readonly ComuneSelezionabile[] = [...catalogo]
 export const comuniSelezionabili = (): readonly ComuneSelezionabile[] => selezionabili
 
 /**
+ * Le città da mostrare nel pannello prima che si scriva qualcosa.
+ *
+ * ⚠️ Perché esiste. Il campo si apre senza selezione, e senza questo elenco
+ * il pannello mostrerebbe i 7.897 comuni in ordine alfabetico, cioè *Abano
+ * Terme* e altri quattro paesi di cui nessuno sta cercando il netto. Un
+ * elenco ordinato non è un elenco utile: la prima schermata di un campo di
+ * ricerca è una scorciatoia, non un indice.
+ *
+ * ⚠️ **Non è un ordine di merito ed è dichiaratamente parziale**, e va detto
+ * perché è l'unico punto del progetto in cui un comune conta più di un altro.
+ * Il criterio è la popolazione residente, e la conseguenza è che i comuni
+ * piccoli si raggiungono scrivendo. Non cambia nulla nel calcolo: qualunque
+ * comune, suggerito o no, passa esattamente dalla stessa risoluzione.
+ * Milano è in testa perché è il caso base del progetto.
+ *
+ * ⚠️ **I codici catastali non sono scritti qui, ed è la ragione per cui
+ * questa lista è coppie e non codici.** `F205` scritto a mano è un dato
+ * normativo riscritto a valle del dataset — lo stesso difetto che la
+ * cancellazione di `caso-base.ts` ha appena chiuso. Qui si dichiara *quale
+ * città*, e il codice lo dice il catalogo.
+ */
+const CITTA_PRINCIPALI: readonly (readonly [nome: string, provincia: string])[] = [
+  ['Milano', 'MI'],
+  ['Roma', 'RM'],
+  ['Napoli', 'NA'],
+  ['Torino', 'TO'],
+  ['Palermo', 'PA'],
+  ['Genova', 'GE'],
+  ['Bologna', 'BO'],
+  ['Firenze', 'FI'],
+  ['Bari', 'BA'],
+  ['Catania', 'CT'],
+  ['Verona', 'VR'],
+  ['Venezia', 'VE'],
+  ['Messina', 'ME'],
+  ['Padova', 'PD'],
+  ['Trieste', 'TS'],
+]
+
+/**
+ * I codici delle città suggerite, risolti sul catalogo all'avvio.
+ *
+ * ⚠️ Fallisce rumorosamente, come `comuneIniziale()`. Una città che non si
+ * risolve sparirebbe in silenzio dal pannello, e il campo continuerebbe a
+ * funzionare: è esattamente la classe di difetto che nessuno nota finché non
+ * la cerca. Meglio non partire.
+ */
+const codiciCitta: readonly string[] = CITTA_PRINCIPALI.map(([nome, provincia]) => {
+  const trovati = selezionabili.filter(
+    (c) => c.nome.toLowerCase() === nome.toLowerCase() && c.provincia === provincia,
+  )
+  if (trovati.length !== 1) {
+    throw new Error(
+      `Città principale «${nome} (${provincia})»: ${trovati.length} corrispondenze nel catalogo, ne serve una`,
+    )
+  }
+  return trovati[0]!.codiceCatastale
+})
+
+export const codiciCittaPrincipali = (): readonly string[] => codiciCitta
+
+/**
  * L'unica voce dell'elenco che entra nel documento — D-058.
  *
  * ⚠️ È la condizione perché il caricamento differito non sia un
@@ -638,3 +971,65 @@ export const coperturaComuni = {
   entiRegionali: datiRegioni.enti.length,
   estrattoIl: datiComuni.provenienza.estrattoIl,
 } as const
+
+/**
+ * Come sono fatte le addizionali comunali dei 7.897 comuni, contate.
+ *
+ * ⚠️ **La popolazione è quella dei parametri applicabili, e va detto quale
+ * è.** *Fonti* §15 misura tre cose diverse con nomi simili: il giornaliero
+ * 2026 copre i soli 3.072 comuni che hanno deliberato, l'annuale 2025 ne copre
+ * 7.896 riportando ciò che si applicava l'anno prima, e nessuna delle due è la
+ * popolazione su cui lavora il motore. **Questa lo è**: delibera 2026 dove
+ * c'è, eredità del c. 752 dove manca, ed è l'unione delle due dopo il
+ * fallback. Un numero preso da una delle altre due sarebbe vero e fuori luogo.
+ *
+ * ⚠️ **`sopraIlTetto` non è un errore di import.** L'art. 1 c. 3 del D.Lgs.
+ * 360/1998 fissa il tetto a 0,8 punti, e dodici comuni lo superano — fino
+ * all'1,2%. Il presupposto della deroga **non è stato reperito** [Fonti §15]:
+ * la regola di import è *nessun clamp, mai*, quindi il numero esce dai dati
+ * così com'è. Mostrarlo è il modo di non nascondere una domanda aperta.
+ */
+export const distribuzioneComunale = (() => {
+  /** Il tetto viene da `data/` con la sua citazione, non da una costante scritta qui. */
+  const tetto: number = tettiAddizionali.comunale.valore
+
+  const aliquoteDi = (p: { aliquota: FormaAliquotaJson }): readonly number[] =>
+    p.aliquota.forma === 'unica'
+      ? [p.aliquota.aliquota ?? 0]
+      : (p.aliquota.scaglioni ?? []).map((s) => s.aliquota)
+
+  let conAddizionale = 0
+  let aliquotaUnica = 0
+  let aScaglioni = 0
+  let conSogliaEsenzione = 0
+  let sopraIlTetto = 0
+  let alTetto = 0
+  let massima = 0
+
+  for (const c of datiComuni.comuni) {
+    if (!c.parametri) continue
+    conAddizionale += 1
+    if (c.parametri.aliquota.forma === 'unica') aliquotaUnica += 1
+    else aScaglioni += 1
+    if (c.parametri.sogliaEsenzione !== null && c.parametri.sogliaEsenzione !== undefined) {
+      conSogliaEsenzione += 1
+    }
+    const punta = Math.max(...aliquoteDi(c.parametri))
+    if (punta > tetto) sopraIlTetto += 1
+    if (punta === tetto) alTetto += 1
+    if (punta > massima) massima = punta
+  }
+
+  return {
+    totale: catalogo.length,
+    conAddizionale,
+    senzaAddizionale: datiComuni.conteggi.nonIstituito,
+    aliquotaUnica,
+    aScaglioni,
+    conSogliaEsenzione,
+    tetto,
+    alTetto,
+    sopraIlTetto,
+    massima,
+  } as const
+})()

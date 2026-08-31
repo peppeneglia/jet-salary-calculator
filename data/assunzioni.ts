@@ -37,11 +37,28 @@
 
 import { euro, type AssunzioneDichiarata, type Fonte } from '../core/types'
 
-const semplificazioni: Fonte = {
-  atto: 'Jet Salary Calculator — Semplificazioni',
-  consultataIl: '2026-08-28',
-  provenienza: 'verificata',
-}
+/*
+ * ⚠️ **Qui c'era una `Fonte` che citava questo stesso progetto**, e undici
+ * assunzioni la portavano:
+ *
+ *     atto: 'Jet Salary Calculator — Semplificazioni'
+ *
+ * In pagina usciva sotto l'intestazione *Riferimento*, accanto a citazioni
+ * come *L. 30/12/2024 n. 207, art. 1 c. 6*. È una categoria diversa messa
+ * nella stessa casella: una norma è verificabile da chiunque, una nostra
+ * pagina di appunti no, e affiancarle suggerisce che la seconda abbia lo
+ * stesso peso della prima. Peggio: dichiarava `provenienza: 'verificata'`,
+ * cioè si autocertificava.
+ *
+ * Le assunzioni che non poggiano su un atto **non portano più alcuna fonte**.
+ * Il campo è facoltativo proprio per questo, e un campo vuoto dice la verità —
+ * *questa è una nostra scelta di perimetro* — meglio di una citazione
+ * circolare. Restano citate le tre che una norma ce l'hanno davvero: S-002
+ * sul massimale, S-013 sulle imposte sostitutive, S-014 sull'apprendistato.
+ *
+ * Il legame con la pagina *Semplificazioni* non si perde: è l'`id`, ed è per
+ * quello che l'`id` esiste (D-039).
+ */
 
 /** [S-002] Il massimale, che il perimetro esclude ma la cui soglia serve come condizione. */
 const massimaleContributivo: Fonte = {
@@ -109,7 +126,6 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
       },
       direzione: 'netto-reale-piu-alto',
       collocazione: 'blocco-semplificazioni',
-      fonte: semplificazioni,
     },
   },
   {
@@ -138,7 +154,6 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
       },
       direzione: 'nessuna',
       collocazione: 'blocco-semplificazioni',
-      fonte: semplificazioni,
     },
   },
   {
@@ -154,7 +169,6 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
       },
       direzione: 'nessuna',
       collocazione: 'accanto-al-numero',
-      fonte: semplificazioni,
     },
   },
   {
@@ -167,7 +181,6 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
       },
       direzione: 'netto-reale-piu-basso',
       collocazione: 'blocco-semplificazioni',
-      fonte: semplificazioni,
     },
   },
   {
@@ -180,7 +193,6 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
       },
       direzione: 'nessuna',
       collocazione: 'blocco-semplificazioni',
-      fonte: semplificazioni,
     },
   },
   {
@@ -193,7 +205,6 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
       },
       direzione: 'netto-reale-piu-basso',
       collocazione: 'blocco-semplificazioni',
-      fonte: semplificazioni,
     },
   },
   {
@@ -206,7 +217,6 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
       },
       direzione: 'netto-reale-piu-basso',
       collocazione: 'blocco-semplificazioni',
-      fonte: semplificazioni,
     },
   },
   {
@@ -219,7 +229,6 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
       },
       direzione: 'netto-reale-piu-basso',
       collocazione: 'blocco-semplificazioni',
-      fonte: semplificazioni,
     },
   },
   {
@@ -232,7 +241,6 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
       },
       direzione: 'nessuna',
       collocazione: 'blocco-semplificazioni',
-      fonte: semplificazioni,
     },
   },
   {
@@ -245,20 +253,43 @@ export const assunzioni: readonly AssunzioneDichiarata[] = [
       },
       direzione: 'netto-reale-piu-alto',
       collocazione: 'blocco-semplificazioni',
-      fonte: semplificazioni,
     },
   },
   {
     condizione: { tipo: 'sempre' },
     assunzione: {
       id: 'S-011',
+      /*
+       * ⚠️ **Questa voce diceva un'altra cosa, e la diceva male.** Recitava
+       * *«Milano e Lombardia le abbiamo controllate una per una; per gli altri
+       * comuni ci fidiamo dell'elenco»*, e aveva due difetti indipendenti.
+       *
+       * Il primo è di fatto: **Milano non è stata controllata una per una.**
+       * Dal 30/08 arriva dall'import come gli altri 7.896, e già prima le due
+       * `Fonte` scritte a mano portavano `provenienza: 'importata'`. La frase
+       * rivendicava una verifica che non era stata fatta.
+       *
+       * Il secondo è di sostanza, ed è quello che ha portato alla riscrittura:
+       * *ci fidiamo dell'elenco* presentava l'elenco del Dipartimento delle
+       * Finanze come un ripiego. **È l'elenco ufficiale**, quello su cui i
+       * sostituti d'imposta calcolano le ritenute: non aver confrontato ogni
+       * riga con la delibera del singolo comune è una verifica in più che non
+       * si è fatta, non un'incertezza sul dato.
+       *
+       * ⚠️ Quello che resta è la sola limitazione vera, ed è di tempo: gli
+       * elenchi generali del MEF si aggiornano di giorno in giorno e non
+       * portano un numero di versione, quindi l'unico riferimento è la data di
+       * estrazione — che è anche la ragione per cui quella data vive dentro il
+       * dato (D-005). La voce resta `S-xxx` perché quella limitazione c'è.
+       *
+       * ⚠️ L'emendamento a S-011 e a D-005 lo scrive l'autore, non il codice.
+       */
       testo: {
-        it: 'Le aliquote di Regione e Comune vengono dagli elenchi del Ministero dell\'Economia, alla data indicata in fondo alla pagina. Milano e Lombardia le abbiamo controllate una per una; per gli altri comuni ci fidiamo dell\'elenco.',
-        en: 'The regional and municipal rates come from the Ministry of Economy and Finance lists, as at the date shown at the foot of the page. We checked Milano and Lombardia one by one; for other municipalities we rely on the list.',
+        it: 'Le aliquote di Regione e Comune vengono dagli elenchi ufficiali del Ministero dell\'Economia e delle Finanze, alla data di estrazione indicata in pagina. Sono gli stessi elenchi su cui si calcolano le ritenute in busta paga. Se un ente ha deliberato dopo quella data, il tuo numero può essere cambiato.',
+        en: 'The regional and municipal rates come from the official lists published by the Italian Ministry of Economy and Finance, as at the extraction date shown on the page. They are the same lists payroll withholding is computed on. If an authority has passed a new rate since that date, your figure may have moved.',
       },
       direzione: 'nessuna',
       collocazione: 'blocco-semplificazioni',
-      fonte: semplificazioni,
     },
   },
   {
