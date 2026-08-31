@@ -91,7 +91,7 @@ export const elencoComunaleAnnuale2025: Fonte = {
 const fallbackAnnoPrecedente: Fonte = {
   atto: 'L. 30/12/2024 n. 207, come mod. dall\'art. 1 c. 650 della L. 30/12/2025 n. 199',
   riferimento: 'art. 1 c. 752',
-  url: 'https://def.finanze.it',
+  url: 'https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:legge:2024-12-30;207~art1!vig=',
   consultataIl: '2026-08-27',
   provenienza: 'verificata',
 }
