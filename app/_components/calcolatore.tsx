@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { Risultato } from '../../core/types'
+import type { Mensilita, Risultato, TipoContratto } from '../../core/types'
 import { useTraduzione } from '../_i18n/provider'
 import {
   eErrore,
@@ -9,7 +9,6 @@ import {
   type RichiestaCalcolo,
   type RispostaCalcolo,
 } from '../_lib/api'
-import type { ComuneSelezionabile } from '../_lib/comuni'
 import { perLaPagina } from '../_lib/arrotonda'
 import { messaggioErrore } from '../_lib/errori'
 import { Avviso } from './avviso'
@@ -51,29 +50,32 @@ async function interroga(richiesta: RichiestaCalcolo): Promise<RispostaCalcolo |
  * calcolo sta dietro `/api/calcola`, ed è lì che si innesterà il dataset MEF
  * senza che questo file cambi di una riga (D-004).
  *
- * Il caso di partenza arriva già calcolato dal server (D-036), ma le
- * sezioni 2 e 3 restano chiuse finché non si preme il bottone: la prima
- * schermata è una domanda, non una risposta a una domanda che nessuno ha
- * fatto. Averlo già in mano serve a farle aprire subito, senza attesa.
+ * ⚠️ **Il caso di partenza non arriva più calcolato dal server, e D-036 va
+ * emendata.** Fino a ieri la pagina rendeva server-side il netto di RAL 30.000
+ * a Milano, e le sezioni 2 e 3 si aprivano su quello senza attendere la rete.
+ * Ora i due campi partono vuoti con un segnaposto, quindi non esiste un caso da
+ * precalcolare: un risultato pronto per dei valori che nessuno ha inserito
+ * sarebbe il numero di qualcun altro, mostrato al primo click sotto le
+ * etichette dell'utente.
  *
- * Il vincolo che D-036 proteggeva — i confini del modello non devono dipendere
- * da un bottone premuto — regge lo stesso: «Cosa questo calcolatore non copre»
- * è una pagina raggiungibile dal footer, sempre, anche senza calcolare nulla.
+ * Quello che D-036 comprava — nessuna attesa alla prima apertura delle sezioni —
+ * si perde, e costa poco: il calcolo è una POST senza I/O su un handler locale.
+ * Quello che D-036 **proteggeva** — i confini del modello non devono dipendere
+ * da un bottone premuto — regge intatto: «Cosa non copre questo calcolatore» è
+ * una pagina raggiungibile dal piede, sempre, anche senza calcolare nulla.
  */
 export function Calcolatore({
-  comuneIniziale,
-  iniziale,
-  risultatoIniziale,
-  erroreIniziale,
+  codiciSuggeriti,
+  contrattoIniziale,
+  mensilitaIniziale,
 }: {
-  comuneIniziale: ComuneSelezionabile
-  iniziale: RichiestaCalcolo
-  risultatoIniziale: Risultato | null
-  erroreIniziale: Errore | null
+  codiciSuggeriti: readonly string[]
+  contrattoIniziale: TipoContratto
+  mensilitaIniziale: Mensilita
 }) {
   const { t, lingua } = useTraduzione()
 
-  const [risultato, setRisultato] = useState<Risultato | null>(risultatoIniziale)
+  const [risultato, setRisultato] = useState<Risultato | null>(null)
 
   /*
    * Il risultato come la pagina lo scrive: stessi passi, stesso ordine, importi
@@ -82,20 +84,28 @@ export function Calcolatore({
    * restituisce a chi chiama l'API.
    */
   const mostrabile = useMemo(() => (risultato === null ? null : perLaPagina(risultato)), [risultato])
-  const [errore, setErrore] = useState<Errore | null>(erroreIniziale)
+  const [errore, setErrore] = useState<Errore | null>(null)
   const [inCorso, setInCorso] = useState(false)
   const [mostrato, setMostrato] = useState(false)
 
   const esito = useRef<HTMLDivElement>(null)
 
   /**
-   * L'ultima cosa che è stata chiesta.
+   * L'ultima cosa che è stata chiesta, oppure `null` se non è stato chiesto
+   * ancora niente.
    *
    * In un `ref` e non in uno stato perché non si rende: serve solo a poter
    * rifare la stessa domanda quando cambia la lingua. Tenerlo in uno stato
    * aggiungerebbe un render a ogni calcolo senza cambiare un pixel.
+   *
+   * ⚠️ **`null` è lo stato iniziale, e prima non lo era.** Il ref partiva
+   * dalla richiesta d'esempio precalcolata dal server. Senza quella, seminarlo
+   * con una richiesta finta avrebbe un effetto preciso e sbagliato: chi cambia
+   * lingua prima di aver calcolato vedrebbe comparire il risultato di RAL
+   * 30.000 a Milano, che non ha chiesto. Il `null` è anche ciò che rende
+   * inutile la vecchia bandiera `primoGiro`.
    */
-  const ultimaRichiesta = useRef<RichiestaCalcolo>(iniziale)
+  const ultimaRichiesta = useRef<RichiestaCalcolo | null>(null)
 
   /**
    * Il numero d'ordine dell'ultima domanda fatta.
@@ -158,17 +168,51 @@ export function Calcolatore({
     async (richiesta: RichiestaCalcolo) => {
       ultimaRichiesta.current = richiesta
 
-      // Le sezioni si aprono subito, sul risultato che il server ha già
-      // preparato: chi preme non aspetta la rete per vedere qualcosa.
+      /*
+        ⚠️ Il risultato precedente si azzera qui, e senza questa riga la
+        sezione mostrerebbe il netto della domanda di prima sotto il riepilogo
+        della domanda nuova — per tutto il tempo della richiesta. Con il caso
+        d'esempio precalcolato non si notava, perché il primo calcolo trovava
+        già il posto occupato da un numero coerente; ora il primo calcolo parte
+        da vuoto e ogni calcolo successivo cambierebbe le etichette prima dei
+        numeri. È lo stesso difetto di D-024 — ciò che si vede deve essere
+        coerente con sé stesso — spostato nel tempo invece che nello spazio.
+      */
+      setRisultato(null)
+      setErrore(null)
+
       setMostrato(true)
       setInCorso(true)
 
-      esito.current?.scrollIntoView({
-        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
-        block: 'start',
-      })
-
       await chiediEApplica(richiesta)
+
+      /**
+       * ⚠️ **Lo scorrimento va dopo la risposta, e prima non funzionava.**
+       *
+       * Stava sopra, subito dopo `setMostrato(true)`, e chiedeva al browser di
+       * portare in cima un contenitore **ancora vuoto**: React non aveva
+       * ancora reso nulla, e le sezioni 2 e 3 non esistevano nel documento.
+       * Un browser non scorre oltre la fine della pagina — se sotto non c'è
+       * niente, non c'è dove andare — quindi la pagina restava dov'era, e
+       * quando poi il risultato compariva nessuno lo portava in vista. Da qui
+       * *«si vede ancora troppa sezione dei dati»*: non era il bersaglio
+       * sbagliato, era il momento sbagliato.
+       *
+       * Con il caso precalcolato il difetto era mascherato a metà, perché
+       * qualcosa da mostrare c'era già. Tolto quello, si vede sempre.
+       *
+       * `requestAnimationFrame` e non un `setTimeout` a caso: serve il primo
+       * fotogramma **dopo** che React ha scritto nel DOM, che è esattamente
+       * ciò che rAF garantisce. Un ritardo a tempo indovinerebbe.
+       */
+      requestAnimationFrame(() => {
+        esito.current?.scrollIntoView({
+          behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+            ? 'auto'
+            : 'smooth',
+          block: 'start',
+        })
+      })
     },
     [chiediEApplica],
   )
@@ -182,30 +226,35 @@ export function Calcolatore({
    * traccia — `regola`, `spiegazione`, `ragione` — che il motore ha scritto
    * nella lingua vecchia (D-041). L'unico modo di aggiornarla è richiederla.
    *
-   * Il primo giro si salta: quello che c'è arriva dal server ed è già giusto.
+   * ⚠️ **La condizione d'uscita è «non è stato chiesto niente», non «è il
+   * primo giro».** Erano la stessa cosa finché il server precalcolava un caso:
+   * al primo giro c'era già un risultato giusto da non rifare. Ora al primo
+   * giro non c'è nessun risultato, e la domanda da porsi è un'altra — *c'è
+   * qualcosa da ritradurre?* Una bandiera sul primo giro lascerebbe passare
+   * ogni cambio di lingua successivo anche a schermo vuoto, e ognuno
+   * calcolerebbe una richiesta che nessuno ha fatto.
+   *
    * Nessun `setState` sincrono nel corpo dell'effetto — solo dopo la risposta —
    * che è la ragione per cui questo non ricade nel difetto che aveva fatto
    * scartare `useEffect` in D-036.
    */
-  const primoGiro = useRef(true)
   useEffect(() => {
-    if (primoGiro.current) {
-      primoGiro.current = false
-      return
-    }
+    const precedente = ultimaRichiesta.current
+    if (precedente === null) return
 
     // ⚠️ La guardia allo smontaggio non serve più, e non è stata dimenticata:
     // `chiediEApplica` scarta ogni risposta sorpassata, e questa lo è per
     // definizione appena parte la richiesta successiva. Una seconda guardia
     // accanto direbbe la stessa cosa in un modo che vale solo per metà dei casi.
-    void chiediEApplica({ ...ultimaRichiesta.current, lingua })
+    void chiediEApplica({ ...precedente, lingua })
   }, [lingua, chiediEApplica])
 
   return (
     <div className="space-y-6">
       <SezioneInput
-        comuneIniziale={comuneIniziale}
-        iniziale={iniziale}
+        codiciSuggeriti={codiciSuggeriti}
+        contrattoIniziale={contrattoIniziale}
+        mensilitaIniziale={mensilitaIniziale}
         inCorso={inCorso}
         onCalcola={calcola}
       />

@@ -27,7 +27,7 @@ const it = {
     titolo: 'Jet Salary Calculator',
     descrizione:
       'Quanto resta davvero di uno stipendio lordo: netto annuo e mensile, con il dettaglio di ogni voce e la norma che la determina. Progetto indipendente, non un prodotto Jet HR.',
-    titoloNonCopre: 'Cosa questo calcolatore non copre — Jet Salary Calculator',
+    titoloNonCopre: 'Cosa non copre questo calcolatore — Jet Salary Calculator',
     descrizioneNonCopre:
       'I confini dichiarati del calcolo: cosa resta fuori, perché, e da che parte si sposta il conto.',
     titoloNorme: 'Norme sul calcolo dello stipendio — Jet Salary Calculator',
@@ -35,10 +35,16 @@ const it = {
       'Archivio delle norme che determinano la retribuzione netta in Italia: cosa dispone ciascuna, cosa determina nel calcolo o perché resta fuori, con vigenza e fonte istituzionale.',
     titoloSpiegazione: 'Come si passa dal lordo al netto — Jet Salary Calculator',
     descrizioneSpiegazione:
-      'La catena intera, spiegata senza numeri di un caso particolare: contributi, IRPEF a scaglioni, detrazioni, addizionali di Regione e Comune, e le somme che invece si aggiungono.',
-    titoloProgetto: 'Che progetto è questo — Jet Salary Calculator',
+      'La catena intera con le cifre che la governano: contributi, IRPEF a scaglioni, detrazioni, cuneo fiscale, le addizionali di tutti e ventuno gli enti regionali su una mappa, e le somme che invece si aggiungono.',
+    titoloProgetto: 'Che progetto è Jet Salary Calculator',
     descrizioneProgetto:
       'Da dove nasce questo calcolatore, come è costruito, e che cosa c’entra Jet HR. Progetto indipendente, non un prodotto dell’azienda.',
+    titoloChiSono: 'Chi sono — Jet Salary Calculator',
+    descrizioneChiSono:
+      'Giuseppe Neglia: sviluppatore in Deloitte, laureato in informatica e studente di gestione d’impresa. Chi ha scritto questo calcolatore, e perché proprio questo.',
+    titoloTecnica: 'Come è fatta tecnicamente l’app — Jet Salary Calculator',
+    descrizioneTecnica:
+      'Lo stack, la divisione del codice fra motore, parametri e interfaccia, l’import dei dati del MEF, che cosa non arriva al browser, come si verifica, e dove sta pubblicato.',
   },
 
   nav: {
@@ -51,10 +57,12 @@ const it = {
 
   piede: {
     notaAnnuale:
-      'Il risultato è il netto di un anno intero, per uno stipendio percepito tutto nell’anno. Non è l’importo di una singola busta paga: quella risponde a una domanda diversa, e il numero che ci leggi sarà un altro.',
-    linkNonCopre: 'Cosa questo calcolatore non copre',
-    linkProgetto: 'Che progetto è questo',
-    indipendente: 'Progetto indipendente. Non è un prodotto Jet HR e non è affiliato all’azienda.',
+      'Jet Salary Calculator permette di sapere quanto resta davvero di uno stipendio lordo, e soprattutto perché. Parte dalla retribuzione annua lorda e dal comune di residenza, applica i contributi previdenziali, l’IRPEF con le sue detrazioni e le addizionali di Regione e Comune, e mostra il netto annuo insieme alla sua divisione in 12, 13 o 14 mensilità. Ogni voce porta accanto la regola che la determina e la norma da cui viene il numero, così il risultato si può verificare invece di doverci credere. È il netto di un anno intero, non l’importo di una singola busta paga: quella risponde a una domanda diversa.',
+    linkNonCopre: 'Cosa non copre questo calcolatore',
+    linkProgetto: 'Che progetto è Jet Salary Calculator',
+    linkTecnica: 'Come è fatta tecnicamente l’app',
+    indipendenteApertura: 'Progetto indipendente di',
+    indipendenteChiusura: 'Task di hiring per la posizione di Product Builder in Jet HR.',
   },
 
   preferenze: {
@@ -68,19 +76,22 @@ const it = {
   home: {
     titolo: 'Dalla RAL al netto, voce per voce',
     occhiello:
-      'Quanto resta davvero di uno stipendio lordo, e dove finisce tutto il resto: contributi, IRPEF, addizionali di Regione e Comune, e le somme che invece si aggiungono. Per ogni voce trovi la regola che la determina e la norma da cui viene il numero.',
+      'Quanto resta davvero di uno stipendio lordo, e dove finisce tutto il resto: contributi. Per ogni voce trovi la regola che la determina e la norma da cui viene il numero.',
   },
 
   input: {
     titolo: 'I tuoi dati',
     ralEtichetta: 'Retribuzione annua lorda (RAL)',
     ralAiuto: 'È lo stipendio annuo scritto sul contratto, prima di ogni trattenuta.',
+    ralSegnaposto: 'Es: 30000',
     comuneEtichetta: 'Comune di residenza',
     comuneAiuto: 'Conta dove avevi il domicilio fiscale al 1° gennaio.',
     regioneEtichetta: 'Regione o Provincia autonoma',
-    regioneAiuto: 'Non la scegli tu: la determina il comune.',
     regioneAssente: 'Non disponibile',
-    comuneSegnaposto: 'Cerca un comune',
+    regioneSegnaposto: 'Es: Lombardia',
+    comuneSegnaposto: 'Es: Milano (MI)',
+    comuneSuggeriti: 'Le città più grandi',
+    comuneTutti: 'Tutti i comuni',
     comuneNessunRisultato: 'Nessun comune con questo nome, per ora.',
     comuneElencoInArrivo: 'Sto caricando l’elenco dei comuni…',
     comuneElencoPronto: 'Elenco pronto: {{n}} comuni, cerca pure.',
@@ -93,26 +104,33 @@ const it = {
     mensilitaEtichetta: 'In quante mensilità',
     mensilitaMarcatore: 'facoltativo',
     facoltativo: 'facoltativo',
-    calcola: 'Calcola il netto',
+    calcola: 'Calcola lo stipendio netto',
     inCorso: 'Calcolo in corso…',
   },
 
   risultato: {
     titolo: 'Il risultato',
-    occhiello: '{{contratto}}, {{comune}}, anno {{anno}}.',
-    annoPaese: 'Anno d’imposta {{anno}}',
     riepilogoTitolo: 'Calcolato su',
     riepilogoMensilita: '{{n}} mensilità',
+    riepilogoAnno: 'anno d’imposta {{anno}}',
+    graficoTitolo: 'Quanto del lordo ti resta',
+    graficoNetto: 'Ti resta',
+    graficoDifferenza: 'Non ti arriva',
+    graficoInPiu: 'In più del lordo',
+    graficoDescrizione:
+      'Di {{lordo}} lordi te ne restano {{netto}}, cioè il {{quota}}. La differenza, {{differenza}}, è spiegata voce per voce qui sotto.',
+    graficoDescrizioneInPiu:
+      'Di {{lordo}} lordi te ne restano {{netto}}, cioè il {{quota}}: più del lordo di partenza. A questo livello di reddito ti spettano somme che per legge non sono tassate e si sommano al netto, e valgono {{differenza}} più di tutto ciò che ti viene trattenuto. Le trovi voce per voce qui sotto.',
+    notaContrattoDomanda: 'Il tipo di contratto cambia quello che prendo?',
     notaContrattoTitolo: 'Determinato e indeterminato danno lo stesso netto.',
     notaContrattoCorpo:
       'Sui contratti a termine c’è un contributo in più, ma lo paga l’azienda e non passa dalla tua busta paga. L’apprendistato invece cambia: lì la legge riduce i contributi a carico tuo, e il netto sale.',
     nettoAnnuo: 'Netto annuo',
-    daUnaRal: 'da una RAL di {{importo}}',
     suMensilita: 'su {{n}} mensilità',
     mensilitaSelezionata: 'la mensilità selezionata',
-    notaMensilitaTitolo: 'È sempre lo stesso stipendio, diviso in modi diversi.',
+    notaMensilitaTitolo: 'La mensilità non determina quanto guadagni in un anno.',
     notaMensilitaCorpo:
-      'Il totale dell’anno non cambia: cambia quanto ti arriva ogni volta. Chi ha quattordici mensilità non guadagna meno di chi ne ha dodici.',
+      'Determina in quante parti quel totale viene diviso: è sempre lo stesso stipendio, e chi ha quattordici mensilità non guadagna meno di chi ne ha dodici.',
     assunzioniTitolo: 'Cosa vuol dire esattamente questa cifra',
     assunzioniOcchiello: 'Come va letta questa cifra, per il calcolo che hai appena fatto.',
   },
@@ -120,19 +138,38 @@ const it = {
   dettaglio: {
     titolo: 'Dove vanno i tuoi soldi',
     occhiello:
-      'Ogni voce con la regola che la determina e la norma da cui viene il numero. Ci sono anche i passaggi intermedi: servono a far tornare i conti.',
-    entiTitolo: 'Chi incassa le addizionali, e come sono state fissate',
-    entiOcchiello:
-      'Le addizionali dipendono da dove vivi, e non tutti gli enti le fissano allo stesso modo: alcuni deliberano ogni anno, altri lasciano in vigore quelle dell’anno prima.',
-    tributoRegionale: 'Addizionale regionale',
-    tributoComunale: 'Addizionale comunale',
-    enteNonIstituito:
-      'Qui questa addizionale non esiste proprio. È diverso da un’aliquota fissata a zero: in un caso il tributo non è mai stato introdotto, nell’altro è stato introdotto e poi azzerato. Per te il risultato è lo stesso, ma non sono la stessa cosa.',
-    enteDeliberato: 'Aliquote decise dall’ente per il {{anno}}.',
-    enteEreditato:
-      'Per quest’anno l’ente non ha deliberato nuove aliquote, quindi per legge restano quelle del {{anno}}. Non vuol dire che non si paga: si continua con le aliquote precedenti, ed è quello che succede alla maggior parte dei comuni.',
-    fontiAliquote: 'Da dove vengono le aliquote',
-    fontiFallback: 'La norma che lo prevede',
+      'Prima la ripartizione, poi i numeri in tabella, poi ogni voce spiegata con la regola che la determina e la norma da cui viene.',
+
+    graficoTitolo: 'Come si divide',
+    graficoResta: 'Ti resta',
+    graficoNotaAggiunte:
+      'La barra è lunga {{totale}} e non {{lordo}}: alcune somme non passano dallo stipendio lordo, non vengono tassate e si sommano al netto. Sono elencate più sotto.',
+
+    tabellaTitolo: 'Tutti i numeri del calcolo',
+    tabellaOcchiello:
+      'Gli stessi passaggi, senza spiegazioni: serve a rifare il conto, non a capirlo. Le righe rientrate scompongono la voce che le precede.',
+    tabellaVoce: 'Voce',
+    tabellaBase: 'Calcolata su',
+    tabellaValore: 'Valore applicato',
+    tabellaEffetto: 'Effetto sul netto',
+    tabellaProgressivo: 'Netto progressivo',
+    tabellaNetto: 'Netto annuo',
+
+    spiegazioneTitolo: 'Voce per voce',
+    spiegazioneOcchiello:
+      'Qui c’è il perché: cosa fa ogni voce, su cosa si calcola e quale norma la stabilisce. Ci sono anche i passaggi intermedi, che servono a far tornare i conti.',
+
+    sankeyTitolo: 'Il percorso, dal lordo al netto',
+    sankeyOcchiello:
+      'Lo stesso calcolo come flusso: a ogni passaggio qualcosa esce, e quello che resta prosegue.',
+    sankeyLordo: 'Lordo',
+    sankeyRedditoComplessivo: 'Reddito complessivo',
+    sankeyNetto: 'Netto',
+    sankeyDescrizione:
+      'Da {{lordo}} lordi escono prima i contributi, che lasciano {{rc}} di reddito complessivo. Su quello si calcolano le imposte, e alla fine restano {{netto}}.',
+
+    fallbackRegionale: 'Perché restano le aliquote dell’anno prima (Regione)',
+    fallbackComunale: 'Perché restano le aliquote dell’anno prima (Comune)',
   },
 
   passo: {
@@ -141,10 +178,10 @@ const it = {
     presuppostoAssente: 'Presupposto assente',
     calcolataSu: 'calcolata su',
     aliquoteAScaglioni: 'aliquote a scaglioni',
-    valoreApplicato: 'Il valore applicato',
-    daDoveVieneIlNumero: 'Da dove viene il numero',
-    regolaApplicata: 'La regola applicata',
-    regolaNormativa: 'La regola, in linguaggio normativo',
+    valoreApplicato: 'Valore applicato',
+    regolaNormativa: 'Regola',
+    scaglioneDaA: 'Da {{da}} a {{a}}',
+    scaglioneOltre: 'Oltre {{da}}',
   },
 
   fonte: {
@@ -152,7 +189,7 @@ const it = {
     importataConEstrazione: '· importata, estratta il {{estratta}}, consultata il {{data}}',
     importata: '· importata, consultata il {{data}}',
     riserva: 'Riserva sulla fonte:',
-    riferimento: 'Riferimento',
+    titolo: 'Fonte',
   },
 
   assunzioni: {
@@ -203,7 +240,7 @@ const it = {
       'Controlla la cifra: la leggiamo come {{importo}}, che per uno stipendio annuo è fuori scala. Scrivila in euro, non in centesimi: oltre {{soglia}} non facciamo il calcolo.',
     comuneMancante: 'Scegli il comune in cui avevi il domicilio fiscale al 1° gennaio.',
     comuneSconosciuto:
-      'Scegli un comune dall’elenco. Per ora il calcolatore copre i comuni che abbiamo verificato uno per uno: l’elenco completo dei comuni italiani arriverà più avanti.',
+      'Scegli un comune dall’elenco: ci sono tutti i comuni italiani, presi dagli elenchi del Ministero dell’Economia e delle Finanze.',
     contrattoNonValido: 'Scegli uno dei tre tipi di contratto.',
     mensilitaNonValida: 'Scegli 12, 13 o 14 mensilità.',
     rete:
@@ -211,8 +248,7 @@ const it = {
   },
 
   nonCopre: {
-    torna: '← Torna al calcolatore',
-    titolo: 'Cosa questo calcolatore non copre',
+    titolo: 'Cosa non copre questo calcolatore',
     paragrafo1:
       'Questo strumento parte dallo stipendio lordo annuo e arriva al netto. Alcune cose che cambiano la busta paga da quel numero non si possono ricavare: dipendono dalla tua famiglia, dal contratto che ti applicano, o da scelte che hai fatto tu.',
     paragrafo2: 'Le trovi qui sotto, ognuna con l’effetto che avrebbe sul risultato se la includessimo.',
@@ -266,10 +302,16 @@ const en: Risorse = {
       'An archive of the rules that determine net pay in Italy: what each one provides, what it determines in the calculation or why it stays out, with dates in force and the institutional source.',
     titoloSpiegazione: 'How gross pay becomes take-home pay — Jet Salary Calculator',
     descrizioneSpiegazione:
-      'The whole chain, explained without the figures of any one case: contributions, IRPEF brackets, tax credits, the regional and municipal surcharges, and the sums that are added back instead.',
-    titoloProgetto: 'What this project is — Jet Salary Calculator',
+      'The whole chain with the figures that govern it: contributions, IRPEF brackets, tax credits, the wedge cut, the surcharges of all twenty-one regional authorities on a map, and the sums that are added back instead.',
+    titoloProgetto: 'What Jet Salary Calculator is',
     descrizioneProgetto:
       'Where this calculator comes from, how it is built, and what Jet HR has to do with it. An independent project, not a product of the company.',
+    titoloChiSono: 'About me — Jet Salary Calculator',
+    descrizioneChiSono:
+      'Giuseppe Neglia: developer at Deloitte, computer science graduate and business management student. Who wrote this calculator, and why this one.',
+    titoloTecnica: 'How the app is built, technically — Jet Salary Calculator',
+    descrizioneTecnica:
+      'The stack, how the code is split between engine, parameters and interface, the import of the ministry data, what never reaches the browser, how it is checked, and where it is published.',
   },
 
   nav: {
@@ -282,10 +324,12 @@ const en: Risorse = {
 
   piede: {
     notaAnnuale:
-      'The figure is net pay for a full year, on a salary earned entirely within that year. It is not the amount of a single payslip: that answers a different question, and the number you read on it will be another one.',
+      'Jet Salary Calculator lets you find out what is actually left of a gross salary, and above all why. It starts from your gross annual salary and your municipality of residence, applies social security contributions, IRPEF with its detrazioni (tax credits) and the regional and municipal addizionali (local income tax surcharges), and shows net pay for the year alongside its division into 12, 13 or 14 instalments. Each item comes with the rule that determines it and the source the figure comes from, so the result can be checked instead of taken on trust. It is net pay for a full year, not the amount of a single payslip: that answers a different question.',
     linkNonCopre: 'What this calculator does not cover',
-    linkProgetto: 'What this project is',
-    indipendente: 'An independent project. Not a Jet HR product and not affiliated with the company.',
+    linkProgetto: 'What Jet Salary Calculator is',
+    linkTecnica: 'How the app is built, technically',
+    indipendenteApertura: 'An independent project by',
+    indipendenteChiusura: 'A hiring task for the Product Builder position at Jet HR.',
   },
 
   preferenze: {
@@ -299,19 +343,22 @@ const en: Risorse = {
   home: {
     titolo: 'From gross salary to take-home pay, item by item',
     occhiello:
-      'What is actually left of a gross salary, and where the rest goes: social security contributions, IRPEF (Italian personal income tax), the regional and municipal addizionali (local income tax surcharges), and the sums that are added back instead. Each item comes with the rule that determines it and the source the figure comes from.',
+      'What is actually left of a gross salary, and where the rest goes: social security contributions. Each item comes with the rule that determines it and the source the figure comes from.',
   },
 
   input: {
     titolo: 'Your details',
     ralEtichetta: 'Gross annual salary (RAL)',
     ralAiuto: 'The annual salary written in your contract, before any deduction.',
+    ralSegnaposto: 'E.g. 30000',
     comuneEtichetta: 'Municipality of residence',
     comuneAiuto: 'What counts is where you were tax-resident on 1 January.',
     regioneEtichetta: 'Region or autonomous Province',
-    regioneAiuto: 'You do not pick this one: the municipality settles it.',
     regioneAssente: 'Not available',
-    comuneSegnaposto: 'Search for a municipality',
+    regioneSegnaposto: 'E.g. Lombardia',
+    comuneSegnaposto: 'E.g. Milano (MI)',
+    comuneSuggeriti: 'The largest cities',
+    comuneTutti: 'All municipalities',
     comuneNessunRisultato: 'No municipality by that name, for now.',
     comuneElencoInArrivo: 'Loading the list of municipalities…',
     comuneElencoPronto: 'List ready: {{n}} municipalities, go ahead and search.',
@@ -324,26 +371,33 @@ const en: Risorse = {
     mensilitaEtichetta: 'Paid over how many instalments',
     mensilitaMarcatore: 'optional',
     facoltativo: 'optional',
-    calcola: 'Work out my net pay',
+    calcola: 'Work out my net salary',
     inCorso: 'Working it out…',
   },
 
   risultato: {
     titolo: 'The result',
-    occhiello: '{{contratto}}, {{comune}}, tax year {{anno}}.',
-    annoPaese: 'Tax year {{anno}}',
     riepilogoTitolo: 'Worked out from',
     riepilogoMensilita: '{{n}} instalments',
+    riepilogoAnno: 'tax year {{anno}}',
+    graficoTitolo: 'How much of the gross is left',
+    graficoNetto: 'You keep',
+    graficoDifferenza: 'Does not reach you',
+    graficoInPiu: 'On top of the gross',
+    graficoDescrizione:
+      'Out of {{lordo}} gross you keep {{netto}}, that is {{quota}}. The difference, {{differenza}}, is broken down item by item below.',
+    graficoDescrizioneInPiu:
+      'Out of {{lordo}} gross you keep {{netto}}, that is {{quota}}: more than the gross you started from. At this income level you are owed sums that by law are not taxed and are added to your net pay, and they come to {{differenza}} more than everything withheld from you. You will find them item by item below.',
+    notaContrattoDomanda: 'Does the type of contract change what I take home?',
     notaContrattoTitolo: 'Fixed-term and permanent give the same net pay.',
     notaContrattoCorpo:
       'Fixed-term contracts carry an extra contribution, but the employer pays it and it never passes through your payslip. Apprendistato (apprenticeship) does change things: there the law lowers the contributions you pay, and your net pay goes up.',
     nettoAnnuo: 'Net pay for the year',
-    daUnaRal: 'from a RAL of {{importo}}',
     suMensilita: 'over {{n}} instalments',
     mensilitaSelezionata: 'the selected number of instalments',
-    notaMensilitaTitolo: 'It is the same salary, split up in different ways.',
+    notaMensilitaTitolo: 'How many instalments does not determine what you earn in a year.',
     notaMensilitaCorpo:
-      'The yearly total does not change: what changes is how much reaches you each time. Someone paid over fourteen instalments does not earn less than someone paid over twelve.',
+      'It determines how many parts that total is split into: it is the same salary either way, and someone paid over fourteen instalments does not earn less than someone paid over twelve.',
     assunzioniTitolo: 'What this figure means, exactly',
     assunzioniOcchiello: 'How to read this figure, for the calculation you have just run.',
   },
@@ -351,19 +405,38 @@ const en: Risorse = {
   dettaglio: {
     titolo: 'Where your money goes',
     occhiello:
-      'Every item with the rule that determines it and the source the figure comes from. The intermediate steps are here too: they are what makes the arithmetic add up.',
-    entiTitolo: 'Who collects the addizionali, and how the rates were set',
-    entiOcchiello:
-      'The addizionali depend on where you live, and not every authority sets them the same way: some adopt new figures each year, others leave last year’s in force.',
-    tributoRegionale: 'Addizionale regionale',
-    tributoComunale: 'Addizionale comunale',
-    enteNonIstituito:
-      'This addizionale simply does not exist here. That is different from a rate set to zero: in one case the tax was never introduced, in the other it was introduced and then zeroed. For you the outcome is the same, but they are not the same thing.',
-    enteDeliberato: 'Rates adopted by the authority for {{anno}}.',
-    enteEreditato:
-      'The authority did not adopt new rates this year, so by law the {{anno}} ones stay in force. It does not mean there is nothing to pay: the previous rates carry on, and that is what happens to most municipalities.',
-    fontiAliquote: 'Where the rates come from',
-    fontiFallback: 'The rule that provides for it',
+      'First how it splits, then the numbers in a table, then every item explained with the rule behind it and the source it comes from.',
+
+    graficoTitolo: 'How it splits',
+    graficoResta: 'You keep',
+    graficoNotaAggiunte:
+      'The bar is {{totale}} long, not {{lordo}}: some sums do not come out of your gross salary, are not taxed, and are added to your net pay. They are listed below.',
+
+    tabellaTitolo: 'Every number in the calculation',
+    tabellaOcchiello:
+      'The same steps with no commentary: this is for redoing the arithmetic, not for understanding it. Indented rows break down the item above them.',
+    tabellaVoce: 'Item',
+    tabellaBase: 'Applied to',
+    tabellaValore: 'Value applied',
+    tabellaEffetto: 'Effect on net pay',
+    tabellaProgressivo: 'Running net',
+    tabellaNetto: 'Net pay for the year',
+
+    spiegazioneTitolo: 'Item by item',
+    spiegazioneOcchiello:
+      'This is the why: what each item does, what it is calculated on, and which rule sets it. The intermediate steps are here too, because they are what makes the arithmetic add up.',
+
+    sankeyTitolo: 'The path, from gross to net',
+    sankeyOcchiello:
+      'The same calculation as a flow: at each stage something leaves, and what is left carries on.',
+    sankeyLordo: 'Gross',
+    sankeyRedditoComplessivo: 'Total income',
+    sankeyNetto: 'Net',
+    sankeyDescrizione:
+      'Out of {{lordo}} gross, contributions come out first, leaving {{rc}} of total income. Taxes are worked out on that, and {{netto}} is what remains.',
+
+    fallbackRegionale: 'Why last year’s rates still apply (Region)',
+    fallbackComunale: 'Why last year’s rates still apply (Municipality)',
   },
 
   passo: {
@@ -372,10 +445,10 @@ const en: Risorse = {
     presuppostoAssente: 'Condition not met',
     calcolataSu: 'calculated on',
     aliquoteAScaglioni: 'rates by bracket',
-    valoreApplicato: 'The figure applied',
-    daDoveVieneIlNumero: 'Where the figure comes from',
-    regolaApplicata: 'The rule applied',
-    regolaNormativa: 'The rule, in statutory language',
+    valoreApplicato: 'Value applied',
+    regolaNormativa: 'Rule',
+    scaglioneDaA: 'From {{da}} to {{a}}',
+    scaglioneOltre: 'Above {{da}}',
   },
 
   fonte: {
@@ -383,7 +456,7 @@ const en: Risorse = {
     importataConEstrazione: '· imported, extracted on {{estratta}}, consulted on {{data}}',
     importata: '· imported, consulted on {{data}}',
     riserva: 'A caveat on this source:',
-    riferimento: 'Reference',
+    titolo: 'Source',
   },
 
   assunzioni: {
@@ -428,7 +501,7 @@ const en: Risorse = {
       'Check the figure: we read it as {{importo}}, which is off the scale for an annual salary. Write it in euros, not in cents: above {{soglia}} we do not run the calculation.',
     comuneMancante: 'Choose the municipality where you were tax-resident on 1 January.',
     comuneSconosciuto:
-      'Choose a municipality from the list. For now the calculator covers the ones we have checked one by one: the full list of Italian municipalities will come later.',
+      'Choose a municipality from the list: every Italian municipality is there, taken from the lists published by the Italian Ministry of Economy and Finance.',
     contrattoNonValido: 'Choose one of the three types of contract.',
     mensilitaNonValida: 'Choose 12, 13 or 14 instalments.',
     rete:
@@ -436,7 +509,6 @@ const en: Risorse = {
   },
 
   nonCopre: {
-    torna: '← Back to the calculator',
     titolo: 'What this calculator does not cover',
     paragrafo1:
       'This tool starts from your gross annual salary and works out your net pay. Some of the things that change a payslip cannot be derived from that number: they depend on your family, on the collective agreement applied to you, or on choices you have made.',

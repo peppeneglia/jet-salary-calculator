@@ -81,7 +81,7 @@ const normalizza = (s: string): string =>
 export function SceltaComune({
   id,
   comuneCorrente,
-  attenuato,
+  codiciSuggeriti,
   invalido,
   descrittoDa,
   campo,
@@ -89,20 +89,27 @@ export function SceltaComune({
 }: {
   id: string
   /**
-   * Il comune scelto, per intero e sempre disponibile.
+   * Il comune scelto, per intero — oppure `null`, che è lo stato iniziale.
    *
    * ⚠️ Non è un codice: è l'oggetto. Con il caricamento differito il campo
    * deve poter scrivere il proprio contenuto prima che l'elenco arrivi, e
    * un codice catastale da solo non si sa rendere — mostrerebbe `F205` invece
-   * di *Milano (MI)*, oppure un campo vuoto (D-058).
+   * di *Milano (MI)* (D-058).
+   *
+   * ⚠️ **`null` è ora possibile**, e prima non lo era: il campo si apre
+   * senza selezione, con un segnaposto al posto di un valore precompilato. Un
+   * comune scritto nel campo che l'utente non ha scelto è indistinguibile da
+   * uno che ha scelto lui, e il bottone calcolerebbe il caso di qualcun altro.
    */
-  comuneCorrente: ComuneSelezionabile
+  comuneCorrente: ComuneSelezionabile | null
   /**
-   * Il valore iniziale è reale, e va reso in secondo piano ma leggibile
-   * (D-063). L'attenuazione è di peso e non di colore: il contrasto resta
-   * quello misurato in D-046.
+   * I codici delle città da mostrare prima che si scriva qualcosa.
+   *
+   * Arrivano risolti dal server (`codiciCittaPrincipali`) e non risolti qui:
+   * il catalogo sta di là, e una città che non si risolve deve far fallire
+   * l'avvio invece di sparire dal pannello.
    */
-  attenuato: boolean
+  codiciSuggeriti: readonly string[]
   invalido: boolean
   descrittoDa: string
   /** Il riferimento all'input, perché chi invia il modulo possa portarci il fuoco. */
@@ -139,15 +146,18 @@ export function SceltaComune({
 
   const etichettaDi = (c: ComuneSelezionabile) => `${c.nome} (${c.provincia})`
   const scelto = comuneCorrente
-  const valore = comuneCorrente.codiceCatastale
+  const valore = comuneCorrente?.codiceCatastale ?? ''
 
   /**
-   * Finché l'elenco non c'è, l'unica voce che si sa mostrare è quella scelta:
-   * il pannello non è mai vuoto e la selezione corrente resta leggibile, che è
-   * la condizione che D-058 pone perché il differimento non sia un
-   * peggioramento.
+   * Finché l'elenco non c'è, l'unica voce che si sa mostrare è quella scelta —
+   * se c'è. Il pannello non diventa un vicolo cieco, che è la condizione posta
+   * da D-058 perché il differimento non sia un peggioramento; senza selezione
+   * resta la riga d'attesa, che dice cosa sta succedendo.
    */
-  const disponibili = useMemo(() => comuni ?? [comuneCorrente], [comuni, comuneCorrente])
+  const disponibili = useMemo(
+    () => comuni ?? (comuneCorrente ? [comuneCorrente] : []),
+    [comuni, comuneCorrente],
+  )
 
   /**
    * ⚠️ Vivo mentre il componente è montato, letto dalle due continuazioni
@@ -159,13 +169,31 @@ export function SceltaComune({
    * del progetto: 83 KiB compressi, con tutto il tempo perché la sezione si
    * ricomponga prima che risponda.
    */
+  /**
+   * ⚠️ **Il corpo dell'effetto rialza la bandiera, e non è ridondante: senza
+   * quella riga l'elenco non arrivava mai in sviluppo.**
+   *
+   * `useRef(true)` più la sola pulizia sembra corretto, e lo è in produzione.
+   * In sviluppo React esegue gli effetti due volte — monta, smonta, rimonta —
+   * proprio per scoprire chi non si rimette a posto. Alla finta smontatura la
+   * pulizia scriveva `false`; al rimontaggio l'effetto tornava a girare, ma il
+   * suo corpo non diceva niente, quindi `montato.current` **restava `false`
+   * per sempre**. Da lì la risposta dell'elenco arrivava e veniva scartata
+   * dalla guardia qui sotto: `setComuni` non veniva mai chiamata, e il campo
+   * mostrava per sempre la sola voce già selezionata.
+   *
+   * Il difetto era invisibile alla suite — nessun test copre i componenti
+   * (D-007) — e invisibile in produzione, dove il doppio giro non c'è. Si
+   * vedeva solo guardando la pagina in `next dev`, che è l'unico posto in cui
+   * nessuno l'aveva ancora guardata.
+   */
   const montato = useRef(true)
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    montato.current = true
+    return () => {
       montato.current = false
-    },
-    [],
-  )
+    }
+  }, [])
 
   const carica = useCallback(() => {
     if (comuni !== null) return
@@ -205,13 +233,44 @@ export function SceltaComune({
     [disponibili],
   )
 
+  /** Vero quando il campo non porta una ricerca: né digitata, né in corso. */
+  const senzaRicerca = bozza === null || bozza.trim() === ''
+
+  /**
+   * Le città grandi, risolte sull'elenco appena arriva.
+   *
+   * ⚠️ Non sostituiscono la ricerca, la precedono: qualunque comune si
+   * raggiunge scrivendo, e i 7.897 restano tutti selezionabili. È la prima
+   * schermata a cambiare, non il catalogo.
+   *
+   * La voce già scelta va in testa quando non è fra le suggerite, altrimenti
+   * riaprire il campo su un comune piccolo lo farebbe sparire dal pannello —
+   * cioè la selezione corrente diventerebbe invisibile proprio nel controllo
+   * che la governa.
+   */
+  const suggeriti = useMemo(() => {
+    if (comuni === null) return null
+    const perCodice = new Map(comuni.map((c) => [c.codiceCatastale, c]))
+    const citta = codiciSuggeriti
+      .map((codice) => perCodice.get(codice))
+      .filter((c): c is ComuneSelezionabile => c !== undefined)
+    const fuoriElenco =
+      comuneCorrente && !codiciSuggeriti.includes(comuneCorrente.codiceCatastale)
+        ? [comuneCorrente]
+        : []
+    return [...fuoriElenco, ...citta]
+  }, [comuni, codiciSuggeriti, comuneCorrente])
+
   const visibili = useMemo(() => {
-    if (bozza === null || bozza.trim() === '') return disponibili
-    const q = normalizza(bozza)
+    if (senzaRicerca) return suggeriti ?? disponibili
+    const q = normalizza(bozza ?? '')
     return indicizzati
       .filter((c) => c.nome.includes(q) || c.provincia.includes(q))
       .map((c) => c.comune)
-  }, [disponibili, indicizzati, bozza])
+  }, [senzaRicerca, suggeriti, disponibili, indicizzati, bozza])
+
+  /** L'intestazione si mostra solo quando le voci sotto sono davvero le suggerite. */
+  const mostraIntestazioneSuggeriti = senzaRicerca && suggeriti !== null && suggeriti.length > 0
 
   /* L'opzione evidenziata deve restare in vista quando ci si muove da tastiera. */
   useEffect(() => {
@@ -346,9 +405,16 @@ export function SceltaComune({
             `text-base` e non meno: sotto i 16px iOS ingrandisce la pagina al
             fuoco del campo e non la rimpicciolisce più.
           */
-          className={`fuoco-delegato min-h-11 w-full rounded-voce bg-transparent px-3 py-2.5 text-base outline-none sm:text-lg ${
-            attenuato && bozza === null ? 'font-normal' : 'font-semibold'
-          }`}
+          /*
+            ⚠️ Il segnaposto ha preso il posto dell'attenuazione di D-063.
+            Là il campo portava un valore vero reso in peso normale, e la nota
+            diceva *attenuato sì, segnaposto no*: un valore reale travestito da
+            segnaposto è indistinguibile da un campo vuoto. Ora il campo **è**
+            vuoto, quindi il segnaposto è la forma esatta — dice *qui va un
+            comune, per esempio questo* senza affermare che qualcuno l'abbia
+            scelto.
+          */
+          className="fuoco-delegato min-h-11 w-full rounded-voce bg-transparent px-3 py-2.5 text-base font-semibold outline-none placeholder:font-normal placeholder:text-inchiostro-tenue sm:text-lg"
         />
         <button
           type="button"
@@ -453,7 +519,25 @@ export function SceltaComune({
             </li>
           ) : null}
 
-          {visibili.length === 0 ? (
+          {/*
+            ⚠️ `role="presentation"` e `aria-hidden`: dentro un `listbox` ogni
+            figlio che non sia un'opzione va tolto dall'albero accessibile,
+            altrimenti chi ascolta conta una voce che non si può scegliere. Il
+            fatto che l'elenco sia una scorciatoia lo dice già
+            `comuneElencoPronto` nel riquadro di stato, che annuncia quanti
+            comuni si possono cercare.
+          */}
+          {mostraIntestazioneSuggeriti ? (
+            <li
+              role="presentation"
+              aria-hidden
+              className="px-3 pt-2 pb-1 text-xs font-medium text-inchiostro-tenue"
+            >
+              {t('input.comuneSuggeriti')}
+            </li>
+          ) : null}
+
+          {visibili.length === 0 && caricamento === 'fermo' ? (
             <li className="px-3 py-3 text-sm text-inchiostro-tenue">
               {t('input.comuneNessunRisultato')}
             </li>

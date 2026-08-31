@@ -12,43 +12,25 @@
  * citazioni degli enti restano server-side, ed è la ragione per cui il
  * progetto ha scelto Next (D-004).
  *
- * Il caso di partenza è calcolato qui, dalla stessa funzione che sta
- * dietro `/api/calcola` (D-036): una funzione, due chiamanti. E nella lingua
- * della richiesta, perché la traccia porta prosa (D-041).
+ * ⚠️ **Qui non si calcola più niente, e D-036 va emendata.** La pagina rendeva
+ * server-side il caso d'esempio — RAL 30.000 a Milano — dalla stessa funzione
+ * che sta dietro `/api/calcola`. Ora RAL e comune partono vuoti con un
+ * segnaposto: non c'è un caso da precalcolare, e tenerne uno significherebbe
+ * avere in pagina il netto di qualcun altro pronto a comparire al primo click.
+ * La proprietà *una funzione, due chiamanti* non si perde — resta vera fra
+ * l'handler e i test — semplicemente questa pagina non è più il secondo.
+ *
+ * Quello che attraversa il confine si è ridotto ancora: non più un comune
+ * intero, ma i soli codici delle città da suggerire.
  */
 
 import { Calcolatore } from './_components/calcolatore'
 import { traduzione } from './_i18n/server'
-import type { RichiestaCalcolo } from './_lib/api'
-import { MENSILITA_INIZIALE, eseguiCalcolo } from './_lib/calcolo'
-import { CODICE_COMUNE_INIZIALE, comuneIniziale } from './_lib/comuni'
+import { MENSILITA_INIZIALE } from './_lib/calcolo'
+import { codiciCittaPrincipali } from './_lib/comuni'
 
 export default async function Home() {
-  const { t, lingua } = await traduzione()
-
-  /**
-   * Il caso di partenza, derivato dal catalogo e non riscritto a mano.
-   *
-   * ⚠️ Il comune iniziale era «il primo calcolabile»: con tre voci in catalogo
-   * quello era Milano, con i 7.897 del dataset MEF ordinati per codice
-   * catastale sarebbe diventato Abano Terme. Il caso base — l'unico verificato
-   * a mano sulle delibere, e quello di cui si conosce il netto a quattro
-   * decimali — si sarebbe spostato senza che nessuno lo decidesse. Adesso è una
-   * costante del catalogo, e resta un codice che il catalogo garantisce.
-   *
-   * ⚠️ La RAL è un esempio, e l'etichetta accanto al campo lo dice: è la
-   * conseguenza da gestire di D-036, perché un netto che l'utente non ha
-   * chiesto non deve poter essere scambiato per il proprio.
-   */
-  const iniziale: RichiestaCalcolo = {
-    ral: 30_000,
-    codiceCatastale: CODICE_COMUNE_INIZIALE,
-    tipoContratto: 'indeterminato',
-    mensilita: MENSILITA_INIZIALE,
-    lingua,
-  }
-
-  const esito = eseguiCalcolo(iniziale)
+  const { t } = await traduzione()
 
   return (
     <div className="mx-auto w-full max-w-4xl px-3 py-8 sm:px-6 sm:py-14">
@@ -61,10 +43,9 @@ export default async function Home() {
 
       <main>
         <Calcolatore
-          comuneIniziale={comuneIniziale()}
-          iniziale={iniziale}
-          risultatoIniziale={esito.stato === 'ok' ? esito.risultato : null}
-          erroreIniziale={esito.stato === 'errore' ? esito.errore : null}
+          codiciSuggeriti={codiciCittaPrincipali()}
+          contrattoIniziale="indeterminato"
+          mensilitaIniziale={MENSILITA_INIZIALE}
         />
       </main>
     </div>

@@ -23,7 +23,22 @@ const MENSILITA: readonly Mensilita[] = [12, 13, 14]
  * primo ritocco — ed è la stessa ragione per cui i colori stanno in
  * `globals.css` e non nei componenti (D-046).
  */
-const CLASSI_ETICHETTA = 'flex flex-wrap items-baseline gap-2 text-sm font-medium text-inchiostro'
+/**
+ * ⚠️ `select-none` sulle etichette, e la regola è la stessa di testata e
+ * piede: si seleziona ciò che qualcuno può voler copiare, non la cornice che
+ * lo circonda. Chi trascina il puntatore sul modulo sta prendendo un numero o
+ * una frase; *Retribuzione annua lorda (RAL)* e *facoltativo* finiscono nella
+ * selezione solo per errore e sporcano quello che si incolla.
+ *
+ * Il divieto si ferma qui e sui segmenti. **Il contenuto dei due campi resta
+ * selezionabile**: è ciò che si è scritto, e impedire di prenderlo per
+ * copiarlo o correggerlo toglierebbe un gesto che serve — oltre a rendere
+ * diversamente in browser diversi, che sulle aree editabili trattano
+ * `user-select` ciascuno a modo proprio. Gli aiuti sotto i campi restano
+ * selezionabili per la stessa ragione: sono testo, non cornice.
+ */
+const CLASSI_ETICHETTA =
+  'flex flex-wrap items-baseline gap-2 text-sm font-medium text-inchiostro select-none'
 
 /**
  * L'involucro di un campo: etichetta, marcatore facoltativo, controllo.
@@ -107,18 +122,34 @@ function Campo({
  * La cornice è quella del campo comune — stesso raggio, stesso bordo, stessa
  * altezza — perché i due valori si leggono insieme. Cambia il fondo: `fondo`
  * invece di `carta` è il solo segnale che questo non si tocca.
+ *
+ * ⚠️ **Senza comune scelto qui c'è un esempio, non un valore.** Il riquadro
+ * non può restare vuoto — un rettangolo bianco accanto a un campo compilabile
+ * si legge come un secondo campo — e non può portare un ente vero, perché
+ * nessun comune lo ha ancora determinato. Porta quindi la stessa forma del
+ * segnaposto del campo accanto, nella stessa tinta tenue: dice *qui comparirà
+ * una regione*, non *la tua regione è la Lombardia*.
  */
-function Regione({ ente, etichetta, aiuto }: { ente: string; etichetta: string; aiuto: string }) {
+function Regione({
+  ente,
+  etichetta,
+  segnaposto,
+}: {
+  ente: string | null
+  etichetta: string
+  segnaposto: string
+}) {
   return (
-    <div>
-      <dl>
-        <dt className={CLASSI_ETICHETTA}>{etichetta}</dt>
-        <dd className="mt-2 flex min-h-11 items-center rounded-voce border border-bordo-controllo bg-fondo px-3 py-2.5 text-base text-inchiostro">
-          {ente}
-        </dd>
-      </dl>
-      <p className="mt-2 text-xs leading-relaxed text-inchiostro-tenue">{aiuto}</p>
-    </div>
+    <dl>
+      <dt className={CLASSI_ETICHETTA}>{etichetta}</dt>
+      <dd
+        className={`mt-2 flex min-h-11 items-center rounded-voce border border-bordo-controllo bg-fondo px-3 py-2.5 text-base ${
+          ente === null ? 'text-inchiostro-tenue' : 'text-inchiostro'
+        }`}
+      >
+        {ente ?? segnaposto}
+      </dd>
+    </dl>
   )
 }
 
@@ -165,9 +196,18 @@ function Segmenti<T extends string | number>({
 
             `min-h-11` sono i 44px delle linee guida touch; `py-2.5` ne dava 38.
           */
+          /*
+            ⚠️ `whitespace-nowrap` più `px-2.5`, e non è cosmesi: *Indeterminato*
+            e *Apprendistato* andavano a capo dentro il proprio segmento, e un
+            controllo alto due righe accanto a uno alto una riga fa leggere il
+            gruppo come tre bersagli diversi invece che come tre alternative
+            della stessa domanda. Il testo non si spezza; a decidere la
+            larghezza è la parola più lunga, ed è il contenitore che si allarga
+            per contenerla — vedi il campo *Tipo di contratto* più in basso.
+          */
           <label
             key={String(o)}
-            className={`fuoco-dentro flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-voce border px-3 py-2.5 text-center text-sm transition-colors active:scale-[0.98] ${
+            className={`fuoco-dentro flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-voce border px-2.5 py-2.5 text-center text-sm whitespace-nowrap transition-colors select-none active:scale-[0.98] ${
               scelto
                 ? 'border-inchiostro bg-inchiostro font-medium text-carta'
                 : 'border-bordo-controllo bg-carta text-inchiostro-tenue hover:border-bordo-controllo-forte hover:text-inchiostro'
@@ -190,19 +230,33 @@ function Segmenti<T extends string | number>({
 }
 
 export function SezioneInput({
-  comuneIniziale,
-  iniziale,
+  codiciSuggeriti,
+  contrattoIniziale,
+  mensilitaIniziale,
   inCorso,
   onCalcola,
 }: {
   /**
-   * ⚠️ Un comune, non l'elenco — D-058. L'elenco lo chiede il campo alla
-   * prima apertura; qui passa solo la voce da cui si parte, che deve essere
-   * leggibile prima che la rete risponda.
+   * ⚠️ Non l'elenco — D-058. L'elenco lo chiede il campo alla prima
+   * apertura; qui passano solo i codici delle città da mostrare per prime,
+   * risolti dal catalogo server-side.
    */
-  comuneIniziale: ComuneSelezionabile
-  /** Il caso di partenza, deciso da chi orchestra: qui non si duplica un default. */
-  iniziale: RichiestaCalcolo
+  codiciSuggeriti: readonly string[]
+  /**
+   * I due campi che restano preselezionati, e la ragione per cui non sono
+   * segnaposti come gli altri due.
+   *
+   * ⚠️ RAL e comune sono **domande**: nessuna risposta è più probabile di
+   * un'altra, e una preselezione sarebbe una risposta messa in bocca a chi
+   * legge. Contratto e mensilità sono **qualificatori** con un caso di gran
+   * lunga prevalente: un gruppo di segmenti non ammette lo stato *nessuno
+   * scelto* senza aggiungere una quarta opzione vuota, e costringere a
+   * dichiarare *indeterminato* prima di poter calcolare aggiunge un gesto
+   * senza aggiungere informazione. Sono due nature diverse di campo, e
+   * ricevono due trattamenti diversi.
+   */
+  contrattoIniziale: TipoContratto
+  mensilitaIniziale: Mensilita
   inCorso: boolean
   onCalcola: (richiesta: RichiestaCalcolo) => void
 }) {
@@ -220,7 +274,7 @@ export function SezioneInput({
   const campoRal = useRef<HTMLInputElement>(null)
   const campoComune = useRef<HTMLInputElement>(null)
 
-  const [ral, setRal] = useState(String(iniziale.ral))
+  const [ral, setRal] = useState('')
   /**
    * ⚠️ Il comune scelto si tiene per intero, non come codice (D-058).
    *
@@ -230,15 +284,15 @@ export function SezioneInput({
    * calcolabile. La selezione arriva completa da `SceltaComune`, che l'elenco
    * ce l'ha nel momento in cui si sceglie.
    */
-  const [comuneScelto, setComuneScelto] = useState<ComuneSelezionabile>(comuneIniziale)
-  const codiceCatastale = comuneScelto.codiceCatastale
-  const [tipoContratto, setTipoContratto] = useState<TipoContratto>(iniziale.tipoContratto)
+  const [comuneScelto, setComuneScelto] = useState<ComuneSelezionabile | null>(null)
+  const codiceCatastale = comuneScelto?.codiceCatastale ?? ''
+  const [tipoContratto, setTipoContratto] = useState<TipoContratto>(contrattoIniziale)
   /*
-    Nessun ripiego: `iniziale` porta sempre il campo (D-052), e il valore da cui
-    si parte lo decide `MENSILITA_INIZIALE` in `_lib/calcolo.ts`. Un `?? 12`
-    qui sarebbe la terza sede dello stesso numero.
+    Nessun ripiego: il valore da cui si parte lo decide `MENSILITA_INIZIALE` in
+    `_lib/calcolo.ts` e arriva come prop. Un `?? 12` qui sarebbe la terza sede
+    dello stesso numero (D-052).
   */
-  const [mensilita, setMensilita] = useState<Mensilita>(iniziale.mensilita)
+  const [mensilita, setMensilita] = useState<Mensilita>(mensilitaIniziale)
 
   /**
    * Gli errori del modulo, per campo — D-043.
@@ -255,26 +309,21 @@ export function SezioneInput({
   const [errori, setErrori] = useState<{ ral?: Errore; comune?: Errore }>({})
 
   /**
-   * ⚠️ Il presidio di D-036 si è spostato, non è caduto (D-063).
+   * ⚠️ **Il problema che D-036 e D-063 gestivano non c'è più: è stato tolto
+   * invece che segnalato.**
    *
-   * Il campo si apre con valori che l'utente non ha inserito. Prima glielo
-   * diceva un'etichetta accanto al campo; adesso lo dice il risultato, che
-   * si apre riscrivendo gli input da cui viene. È più forte, e vale anche
+   * D-036 calcolava un caso di esempio server-side, e da lì nasceva il rischio
+   * — *un netto che l'utente non ha chiesto non deve poter essere scambiato per
+   * il proprio*. D-063 lo presidiava due volte: attenuando i valori nel campo,
+   * e facendo riscrivere al risultato gli input da cui veniva.
+   *
+   * I campi ora partono vuoti, con un segnaposto che è dichiaratamente un
+   * esempio. Non c'è un valore da attenuare, non c'è un netto di partenza da
+   * confondere col proprio, e la sezione 1 è di nuovo una domanda. Il presidio
+   * del riepilogo nel risultato **resta** e non è ridondante: continua a dire
+   * su quali dati il numero è stato calcolato, che serve anche — e soprattutto —
    * quando i dati sono davvero i suoi.
-   *
-   * Qui resta solo l'attenuazione visiva, con la condizione che la rende
-   * sicura: attenuato sì, segnaposto no. Un valore reale reso come un
-   * segnaposto è indistinguibile da un campo vuoto, e chi preme il bottone non
-   * saprebbe se sta calcolando il proprio caso o l'esempio.
-   *
-   * ⚠️ L'attenuazione è di peso, non di colore. Il testo tenue e i
-   * modificatori alpha sono esclusi da D-046, e la regola eslint li blocca
-   * comunque. Il peso non tocca il contrasto: resta quello misurato.
    */
-  const ralIntatta = ral === String(iniziale.ral)
-  const comuneIntatto = comuneScelto.codiceCatastale === iniziale.codiceCatastale
-  const peso = (intatto: boolean) => (intatto ? 'font-normal' : 'font-semibold')
-
   const invia = (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -367,6 +416,7 @@ export function SezioneInput({
                 */
                 aria-labelledby={`${idEtichettaRal} ${idUnitaRal}`}
                 value={ral}
+                placeholder={t('input.ralSegnaposto')}
                 onChange={(e) => {
                   setRal(e.target.value)
                   // L'errore sparisce appena si mette mano al campo: tenerlo
@@ -376,7 +426,7 @@ export function SezioneInput({
                 }}
                 /* `text-base` come minimo: sotto i 16px iOS ingrandisce la
                    pagina al fuoco del campo e non la rimpicciolisce più. */
-                className={`cifre fuoco-delegato min-h-11 w-full rounded-voce bg-transparent px-3 py-2.5 text-base outline-none sm:text-lg ${peso(ralIntatta)}`}
+                className="cifre fuoco-delegato min-h-11 w-full rounded-voce bg-transparent px-3 py-2.5 text-base font-semibold outline-none placeholder:font-normal placeholder:text-inchiostro-tenue sm:text-lg"
               />
               <span id={idUnitaRal} className="pr-3.5 pl-1 text-inchiostro-tenue">
                 €
@@ -415,9 +465,9 @@ export function SezioneInput({
               id={idComune}
               campo={campoComune}
               comuneCorrente={comuneScelto}
+              codiciSuggeriti={codiciSuggeriti}
               invalido={errori.comune !== undefined}
               descrittoDa={errori.comune ? idErroreComune : idAiutoComune}
-              attenuato={comuneIntatto}
               onCambia={(comune) => {
                 setComuneScelto(comune)
                 if (errori.comune) setErrori((p) => ({ ...p, comune: undefined }))
@@ -434,7 +484,7 @@ export function SezioneInput({
               vede il limite, e chi sceglie Trento o Bolzano ne legge la ragione
               senza dover premere niente.
             */
-            comuneScelto && !comuneScelto.calcolabile && comuneScelto.ragione ? (
+            comuneScelto && !comuneScelto.calcolabile && comuneScelto.ragione !== undefined ? (
               <Avviso id={idAiutoComune} misura="compatta">
                 <strong className="font-medium">
                   {t('input.comuneNonCalcolabile', { comune: comuneScelto.nome })}
@@ -449,9 +499,9 @@ export function SezioneInput({
           </Campo>
 
           <Regione
-            ente={comuneScelto.enteRegionale || t('input.regioneAssente')}
+            ente={comuneScelto ? comuneScelto.enteRegionale || t('input.regioneAssente') : null}
             etichetta={t('input.regioneEtichetta')}
-            aiuto={t('input.regioneAiuto')}
+            segnaposto={t('input.regioneSegnaposto')}
           />
         </div>
 
@@ -464,7 +514,14 @@ export function SezioneInput({
           D-011 non è indebolita: chiedeva che l'input non restasse senza
           spiegazione, non che la spiegazione stesse qui.
         */}
-        <div className="sm:max-w-md">
+        {/*
+          ⚠️ `sm:max-w-lg` e non `sm:max-w-md`: a 28rem i tre segmenti
+          dividevano lo spazio in tre colonne troppo strette per
+          *Indeterminato* e *Apprendistato*, che andavano a capo. La misura
+          serve al contenuto — tre parole lunghe su una riga sola — non a un
+          numero tondo.
+        */}
+        <div className="sm:max-w-lg">
           <Campo etichetta={t('input.contrattoEtichetta')}>
             <Segmenti
               nome="tipoContratto"
@@ -508,7 +565,7 @@ export function SezioneInput({
             col riempimento, perché lì il verde su carta scura vale già 7,68 e
             un rim aggiungerebbe una riga che non serve.
           */
-          className="min-h-12 w-full rounded-voce border border-bordo-azione bg-verde px-6 py-3.5 text-base font-semibold text-su-verde transition-opacity hover:opacity-90 active:opacity-75 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+          className="min-h-12 w-full rounded-voce border border-bordo-azione bg-verde px-6 py-3.5 text-base font-semibold text-su-verde transition-opacity select-none hover:opacity-90 active:opacity-75 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
         >
           {inCorso ? t('input.inCorso') : t('input.calcola')}
         </button>
