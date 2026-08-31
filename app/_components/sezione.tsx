@@ -4,6 +4,13 @@
  * Esiste per una ragione sola: ritmo. Padding, raggio e spaziatura del
  * titolo si decidono qui una volta, e le tre sezioni non possono divergere di
  * qualche pixel l'una dall'altra.
+ *
+ * ⚠️ L'intestazione non si seleziona, il contenuto sì. È la stessa regola di
+ * testata e piede: numero e titolo sono l'indice della pagina, non qualcosa
+ * che qualcuno voglia copiare, e finiscono nella selezione solo per errore
+ * quando si trascina il puntatore per prendere una cifra. Sta qui e non nella
+ * sola sezione 1 perché è questo componente a esistere affinché le tre non
+ * divergano.
  */
 
 export function Sezione({
@@ -19,7 +26,7 @@ export function Sezione({
 }) {
   return (
     <section className="rounded-sezione border border-bordo-decorativo bg-carta p-4 sm:p-8">
-      <header className="flex items-baseline gap-3">
+      <header className="flex items-baseline gap-3 select-none">
         <span
           aria-hidden
           className="cifre rounded-voce border border-bordo-decorativo px-2 py-0.5 text-xs font-medium text-inchiostro-tenue"

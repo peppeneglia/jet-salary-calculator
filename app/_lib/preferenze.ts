@@ -22,11 +22,36 @@ import type { CodiceLingua } from '../../core/types'
 
 export type Tema = 'chiaro' | 'scuro' | 'sistema'
 
-/** L'ordine è quello del selettore. */
+/**
+ * L'ordine è quello del selettore, e in tutti e due i gruppi **la prima voce è
+ * il valore predefinito**.
+ *
+ * ⚠️ Per il tema non era così: l'ordine era *chiaro · scuro · come il
+ * sistema*, con il default in fondo. Un gruppo a segmenti si legge da sinistra,
+ * e la voce accesa all'arrivo era la terza: chi guardava leggeva due opzioni
+ * prima di trovare quella su cui si trovava già. Ora *Come il sistema* apre il
+ * gruppo, e le due scelte esplicite seguono nell'ordine in cui si nominano.
+ *
+ * Per la lingua l'ordine coincideva già: italiano è la prima voce ed è il
+ * default.
+ */
 export const LINGUE: readonly CodiceLingua[] = ['it', 'en']
-export const TEMI: readonly Tema[] = ['chiaro', 'scuro', 'sistema']
+export const TEMI: readonly Tema[] = ['sistema', 'chiaro', 'scuro']
 
-/** Italiano resta il default: il calcolatore calcola imposte italiane. */
+/**
+ * Italiano, e **non** la lingua del computer di chi apre la pagina.
+ *
+ * ⚠️ Vale la pena dirlo perché è una scelta e non un'omissione: non c'è
+ * nessuna negoziazione su `Accept-Language`, e `navigator.language` non viene
+ * letto da nessuna parte. Chi arriva senza cookie riceve la pagina in italiano,
+ * chiunque sia. Il calcolatore calcola imposte italiane su comuni italiani: la
+ * lingua del prodotto è quella del dominio, e l'inglese è una traduzione che si
+ * chiede, non uno stato in cui si può finire per caso.
+ *
+ * L'effetto pratico: un revisore con il sistema operativo in inglese vede
+ * l'italiano, che è la lingua in cui il prodotto è scritto e in cui le
+ * citazioni normative sono citabili.
+ */
 export const LINGUA_PREDEFINITA: CodiceLingua = 'it'
 
 /**
@@ -36,6 +61,10 @@ export const LINGUA_PREDEFINITA: CodiceLingua = 'it'
  * `data-theme` la pagina è chiara, e diventa scura solo per chi ha già
  * dichiarato al proprio sistema operativo di preferirla così. Partire da
  * *chiaro* significherebbe ignorare quella dichiarazione.
+ *
+ * ⚠️ Ed è la sola preferenza che guarda al sistema, mentre la lingua no —
+ * un'asimmetria voluta. Il tema è una condizione di lettura di chi guarda; la
+ * lingua è una proprietà del prodotto.
  */
 export const TEMA_PREDEFINITO: Tema = 'sistema'
 

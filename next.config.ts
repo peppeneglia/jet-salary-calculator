@@ -14,6 +14,23 @@ const nextConfig: NextConfig = {
   agentRules: false,
 
   /**
+   * Il riquadro di Next in basso a sinistra, spento.
+   *
+   * In sviluppo Next disegna un indicatore che apre i propri strumenti — rotta
+   * statica o dinamica, prospetto del bundle Turbopack, log della richiesta.
+   * Serve a chi sta esaminando il framework; qui copre un angolo della pagina
+   * mentre si guarda l'interfaccia, ed è l'unico elemento a schermo che il
+   * progetto non ha disegnato.
+   *
+   * ⚠️ **Spegnerlo non nasconde gli errori:** la documentazione di Next 16 lo
+   * dice esplicitamente — *«Next.js will still surface any compile or runtime
+   * errors that were encountered»*. Si perde l'indicatore, non la diagnostica.
+   *
+   * `node_modules/next/dist/docs/01-app/03-api-reference/05-config/01-next-config-js/devIndicators.md`
+   */
+  devIndicators: false,
+
+  /**
    * ⚠️ **`X-Powered-By: Next.js` esce per impostazione predefinita.** Dice a
    * chiunque quale framework e quindi quale superficie ha davanti, senza dare
    * nulla in cambio a chi legge la pagina. Si spegne qui.
