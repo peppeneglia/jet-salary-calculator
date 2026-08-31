@@ -50,6 +50,7 @@ import {
   type ParametriRegionali,
 } from '../../core/types'
 import { nomeEnte } from '../../data/nomi-enti'
+import { tettiAddizionali } from '../../data/regime-2026'
 import { nomeComune } from './nomi-comuni'
 import datiComuni from '../../data/mef/comuni-2026.json'
 import datiRegioni from '../../data/mef/regioni-2026.json'

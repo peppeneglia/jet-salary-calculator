@@ -244,6 +244,57 @@ const l207_2024_c3: Fonte = {
   provenienza: 'verificata',
 }
 
+/** [Fonti §6.a] Il tetto comunale: la variazione «non può eccedere complessivamente 0,8 punti percentuali». */
+const dlgs360_1998_c3: Fonte = {
+  atto: 'D.Lgs. 28/09/1998 n. 360',
+  riferimento: 'art. 1 c. 3',
+  url: 'https://def.finanze.it',
+  consultataIl: '2026-08-27',
+  provenienza: 'verificata',
+}
+
+/** [Fonti §5.a] Il tetto regionale: compartecipazione allo 0,9%, maggiorabile «fino all'1,4 per cento». */
+const dlgs446_1997_art50_c3: Fonte = {
+  atto: 'D.Lgs. 15/12/1997 n. 446',
+  riferimento: 'art. 50 c. 3',
+  url: 'https://def.finanze.it',
+  consultataIl: '2026-08-27',
+  provenienza: 'verificata',
+}
+
+/**
+ * I due tetti alle addizionali — **e il motore non li applica**.
+ *
+ * ⚠️ Non è una dimenticanza, è la regola 4 di `scripts/importa-mef.mjs`:
+ * *nessun clamp, mai*. Dodici comuni superano gli 0,8 punti fino all'1,2%, e
+ * quindici enti regionali su ventuno superano l'1,4% fino al 3,33%. Troncare a
+ * questi valori sembrerebbe un controllo prudente e produrrebbe **numeri
+ * sbagliati per quasi tutto il centro-sud**.
+ *
+ * ⚠️ Allora perché stanno in `data/`, se nessuna funzione li legge?
+ *
+ * Perché sono **il metro contro cui la deroga si vede**. Senza il tetto in
+ * pagina, «Molise 3,33%» è un numero come un altro; con il tetto accanto è la
+ * domanda aperta che il progetto non ha chiuso — *quale norma consente di
+ * superarlo* — resa visibile a chi legge. Un parametro che serve a mostrare
+ * qualcosa è comunque un parametro normativo, e vale la regola generale: sta
+ * in `data/` con la propria citazione, non scritto a mano dentro una pagina.
+ *
+ * ⚠️ Fuori da `Regime` e non dentro. `Regime` è ciò che il motore riceve, e
+ * un campo che `core/` non legge, messo lì, direbbe il falso sulla catena di
+ * calcolo. Sono un export a parte perché sono un dato a parte.
+ *
+ * ⚠️ E sono tetti sul **totale**, non su un delta (T-001). L'art. 50 c. 3
+ * consente di *maggiorare l'aliquota suddetta* fino all'1,4: oggetto della
+ * maggiorazione è l'aliquota stessa, quindi il valore che l'ente delibera e che
+ * il MEF pubblica è già il totale. Sommargli lo 0,9% di compartecipazione lo
+ * conterebbe due volte, per ogni regione d'Italia e nello stesso verso.
+ */
+export const tettiAddizionali = {
+  comunale: { valore: aliquota(0.8), fonte: dlgs360_1998_c3 },
+  regionale: { valore: aliquota(1.4), fonte: dlgs446_1997_art50_c3 },
+} as const
+
 // Valori nominati
 //
 // Esportati perché servono anche a `fixtures/`, che deve poterli leggere invece
