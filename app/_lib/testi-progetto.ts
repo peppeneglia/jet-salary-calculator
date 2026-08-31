@@ -26,8 +26,7 @@
 import type { Multilingua } from '../../core/types'
 
 export const PROGETTO = {
-  torna: { it: '← Torna al calcolatore', en: '← Back to the calculator' },
-  titolo: { it: 'Che progetto è questo', en: 'What this project is' },
+  titolo: { it: 'Che progetto è Jet Salary Calculator', en: 'What Jet Salary Calculator is' },
   occhiello: {
     it: 'Un calcolatore costruito per essere spiegato, non solo usato. Da dove nasce, come è fatto, e che cosa c’entra Jet HR.',
     en: 'A calculator built to be explained, not just used. Where it comes from, how it is made, and what Jet HR has to do with it.',
@@ -141,9 +140,10 @@ export const PROGETTO = {
 
   chiusuraTitolo: { it: 'Dove continuare', en: 'Where to go next' },
   chiusuraTesto: {
-    it: 'Il meccanismo generale sta nella spiegazione; le norme una per una nell’archivio; i confini del calcolo nella pagina dei limiti.',
-    en: 'The general mechanism is on the explanation page; the rules one by one are in the archive; the limits of the calculation are on the limits page.',
+    it: 'Il meccanismo generale sta nella spiegazione; le norme una per una nell’archivio; i confini del calcolo nella pagina dei limiti. E se quello che interessa è come è costruita la macchina — stack, divisione del codice, import dei dati, verifiche — c’è una pagina apposta.',
+    en: 'The general mechanism is on the explanation page; the rules one by one are in the archive; the limits of the calculation are on the limits page. And if what you are after is how the machine is built — stack, code layout, data import, checks — there is a page for that.',
   },
+  linkTecnica: { it: 'Come è fatta tecnicamente →', en: 'How it is built, technically →' },
   linkSpiegazione: { it: 'Come si calcola il netto →', en: 'How net pay is worked out →' },
   linkNorme: { it: 'Leggi le norme →', en: 'Read the law →' },
   linkNonCopre: { it: 'Cosa non copriamo →', en: 'What we do not cover →' },

@@ -79,13 +79,7 @@ export default async function CheProgettoE() {
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6 sm:py-14">
       <div className="mb-8">
-        <Link
-          href="/"
-          className="rounded-voce text-sm font-medium text-inchiostro-tenue hover:text-inchiostro"
-        >
-          {PROGETTO.torna[lingua]}
-        </Link>
-        <h1 className="mt-4 text-3xl font-semibold tracking-tight text-inchiostro sm:text-4xl">
+        <h1 className="text-3xl font-semibold tracking-tight text-inchiostro sm:text-4xl">
           {PROGETTO.titolo[lingua]}
         </h1>
         <p className="mt-3 max-w-2xl leading-relaxed text-inchiostro-tenue">
@@ -228,6 +222,7 @@ export default async function CheProgettoE() {
           <div className="mt-5 flex flex-wrap gap-2">
             {(
               [
+                ['/come-e-fatta', 'linkTecnica'],
                 ['/spiegazione', 'linkSpiegazione'],
                 ['/norme', 'linkNorme'],
                 ['/cosa-non-copre', 'linkNonCopre'],

@@ -22,7 +22,6 @@
  */
 
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import type { CondizioneAssunzione } from '../../core/types'
 import { assunzioni } from '../../data/assunzioni'
 import { VoceAssunzione } from '../_components/assunzioni'
@@ -65,13 +64,7 @@ export default async function CosaNonCopre() {
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6 sm:py-14">
       <div className="mb-8">
-        <Link
-          href="/"
-          className="rounded-voce text-sm font-medium text-inchiostro-tenue hover:text-inchiostro"
-        >
-          {t('nonCopre.torna')}
-        </Link>
-        <h1 className="mt-4 text-3xl font-semibold tracking-tight text-inchiostro sm:text-4xl">
+        <h1 className="text-3xl font-semibold tracking-tight text-inchiostro sm:text-4xl">
           {t('nonCopre.titolo')}
         </h1>
         <p className="mt-3 max-w-2xl leading-relaxed text-inchiostro-tenue">

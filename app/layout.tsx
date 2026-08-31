@@ -153,43 +153,70 @@ async function Chiusura() {
         */}
         <div className="mt-6 grid items-start gap-x-6 gap-y-5 border-t border-su-verde/15 pt-6 sm:grid-cols-[1fr_auto]">
           {/*
-            ⚠️ Questa riga resta selezionabile, ed è una scelta. Non è
-            cromatura: dice che il numero in pagina è il netto di un anno e non
-            quello di una busta paga, cioè la sola cosa del piede che qualcuno
-            possa voler citare a qualcun altro. Un piede che non si copia va
-            bene per il marchio e per la nav, non per un chiarimento sul
-            significato della cifra.
+            ⚠️ Questa riga resta selezionabile, ed è una scelta. È la
+            descrizione di cosa fa il prodotto e di come va letto il numero:
+            la sola cosa del piede che qualcuno possa voler citare a qualcun
+            altro. Un piede che non si copia va bene per il marchio e per la
+            nav, non per la spiegazione di cosa si ha davanti.
           */}
           <p className="max-w-prose text-sm leading-relaxed text-su-verde-tenue select-text">
             {t('piede.notaAnnuale')}
           </p>
           {/*
-            ⚠️ Due link, e il secondo non è un secondo bottone (D-070).
+            ⚠️ **I due link hanno ora lo stesso bottone, e questo emenda
+            D-070.**
 
-            *Che progetto è questo* sta sotto *Cosa questo calcolatore non
-            copre* e non accanto: sono due domande di rango diverso. La prima
-            qualifica il numero che si ha appena letto ed è la ragione per cui
-            il piede esiste; la seconda risponde a *chi ha fatto questa cosa*,
-            che si chiede dopo, o non si chiede affatto.
+            D-070 li teneva di rango diverso: riempimento verde a *Cosa non
+            copre questo calcolatore*, testo sottolineato a *Che progetto è
+            Jet Salary Calculator*, perché la prima domanda qualifica il numero
+            appena letto e la seconda si chiede dopo, o non si chiede affatto.
 
-            Due riempimenti verdi identici direbbero che le due domande pesano
-            uguale, e chi arriva in fondo dovrebbe scegliere fra due bottoni
-            invece di leggerne uno. Il secondo resta testo, con l'area di tocco
-            piena — `min-h-11` — perché la gerarchia è visiva e non tattile.
+            L'argomento era buono e resta vero sul contenuto; a cadere è la sua
+            resa. Due destinazioni dello stesso piede rese con due controlli
+            diversi si leggono come due cose di natura diversa — un'azione e una
+            nota a margine — mentre sono due pagine dello stesso sito, lunghe
+            uguale e scritte con lo stesso registro. La gerarchia che D-070
+            voleva resta affidata all'ordine: la prima sta sopra.
+
+            ⚠️ E da qui sono tre, non due. *Come è fatta tecnicamente l'app*
+            sta in fondo perché è la domanda che si fa per ultima, e per la
+            stessa ragione per cui la seconda sta sotto la prima: chi arriva
+            vuole il proprio netto, chi resta vuole sapere chi glielo sta
+            dicendo, e soltanto chi resta ancora vuole sapere com'è costruito.
+            Con tre voci l'elenco diventa una tabella invece di tre blocchi
+            ricopiati: l'ordine è la gerarchia, e va letto in un posto solo.
+
+            ⚠️ **`/cifre-chiave` è stata qui, e ora non esiste più (D-079).**
+            Era in cima, con l'argomento che risponde alla domanda che viene
+            prima — *da dove esce questo numero* — ma quattro bottoni impilati
+            nell'angolo del piede non sono una gerarchia: sono un elenco, e un
+            elenco di quattro voci di pari peso non dice a nessuno da dove
+            cominciare. Le tre che restano rispondono tutte alla stessa specie
+            di domanda, sul prodotto; quella parlava dei valori di legge.
+
+            **Toglierla dal piede l'aveva lasciata orfana** — una pagina a cui
+            non arrivava nessuna voce, che è il difetto opposto a quello che
+            `nav.tsx` descrive. La risposta non è stata rimetterla nel piede: è
+            stata accorparla a `/spiegazione`, che quei valori li spiegava già
+            senza mostrarli, e che dalla testata si raggiunge. Il piede resta di
+            tre voci, e non c'è più nessuna pagina senza porta.
           */}
-          <div className="flex flex-col items-start gap-1 sm:items-end">
-            <Link
-              href="/cosa-non-copre"
-              className="inline-flex min-h-11 items-center rounded-voce bg-su-verde px-4 py-2 text-sm font-semibold text-su-verde-contro transition-opacity hover:opacity-90 active:opacity-75"
-            >
-              {t('piede.linkNonCopre')}
-            </Link>
-            <Link
-              href="/che-progetto-e"
-              className="-mx-1 inline-flex min-h-11 items-center rounded-voce px-1 text-sm font-medium text-su-verde-tenue underline decoration-su-verde-tenue underline-offset-4 transition-colors hover:text-su-verde hover:decoration-su-verde"
-            >
-              {t('piede.linkProgetto')}
-            </Link>
+          <div className="flex flex-col items-start gap-2 sm:items-end">
+            {(
+              [
+                ['/cosa-non-copre', 'piede.linkNonCopre'],
+                ['/che-progetto-e', 'piede.linkProgetto'],
+                ['/come-e-fatta', 'piede.linkTecnica'],
+              ] as const
+            ).map(([href, chiave]) => (
+              <Link
+                key={href}
+                href={href}
+                className="inline-flex min-h-11 items-center rounded-voce bg-su-verde px-4 py-2 text-sm font-semibold text-su-verde-contro transition-opacity hover:opacity-90 active:opacity-75"
+              >
+                {t(chiave)}
+              </Link>
+            ))}
           </div>
         </div>
 
