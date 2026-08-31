@@ -229,18 +229,54 @@ async function Chiusura() {
         </div>
 
         {/*
-          D-035. Il progetto adotta un registro visivo prossimo a quello di Jet
-          HR e porta il loro nome nel titolo: senza questa riga può leggersi
-          come un loro prodotto. Sta in pagina e non nell'email, perché chi apre
-          il link l'email non la legge.
-        */}
-        {/*
-          Selezionabile per la stessa ragione della riga qui sopra: è la
-          dichiarazione di non affiliazione, ed è esattamente il genere di
-          frase che qualcuno riporta altrove per intero.
+          ⚠️ La dichiarazione di non affiliazione non è più in questa riga, e
+          va detto invece che lasciato dedurre dal diff.
+
+          La riga diceva anche *«Non è un prodotto Jet HR e non è affiliato
+          all'azienda»*, ed era la resa di D-035 nel piede. È stata tolta su
+          richiesta dell'autore: la frase resta in pagina — nel riquadro
+          *Non è un prodotto Jet HR* dentro `/che-progetto-e`, che è la pagina
+          che nomina l'azienda tre volte di fila e quindi il punto in cui
+          l'equivoco si forma — e resta nelle due descrizioni `meta` che i
+          motori di ricerca e le anteprime dei link leggono. Quello che cambia
+          è che non compare più su **ogni** pagina.
+
+          ⚠️ Va portato al Decision log come emendamento a D-035, e non lo
+          scrive il codice: la convenzione del progetto è che le voci le scriva
+          l'autore.
+
+          Il nome è in grassetto perché è l'unica cosa della riga che identifica
+          qualcuno: il resto qualifica il lavoro, e senza un rilievo la firma si
+          legge come parte della qualificazione.
+
+          ⚠️ **E da qui il nome è anche l'unica via per `/chi-sono`.** Non è un
+          quinto bottone accanto agli altri quattro, ed è una distinzione di
+          natura: quelli sono pagine del prodotto — che cosa non copre, che
+          progetto è, com'è fatto, quali cifre applica — mentre questa parla di
+          una persona. Un bottone la arruolerebbe fra le altre; il nome che
+          diventa cliccabile dice *questo l'ha scritto qualcuno, ed eccolo*.
+
+          Il sottolineato serve, e non è decorazione: dentro una frase, un testo
+          che cambia soltanto di peso non si distingue da un'enfasi, e qui il
+          peso c'era già per un'altra ragione. Chi legge deve poter capire che
+          è un link senza passarci sopra il puntatore — che su un telefono non
+          esiste.
+
+          Resta selezionabile per la ragione della riga qui sopra: è la
+          rivendicazione di paternità, ed è esattamente il genere di frase che
+          qualcuno riporta altrove per intero.
         */}
         <div className="mt-5 border-t border-su-verde/15 pt-5 text-sm text-su-verde-tenue">
-          <p className="leading-relaxed select-text">{t('piede.indipendente')}</p>
+          <p className="leading-relaxed select-text">
+            {t('piede.indipendenteApertura')}{' '}
+            <Link
+              href="/chi-sono"
+              className="rounded-voce font-medium text-su-verde underline decoration-su-verde/40 underline-offset-2 transition-colors hover:decoration-su-verde"
+            >
+              Giuseppe Neglia
+            </Link>
+            . {t('piede.indipendenteChiusura')}
+          </p>
         </div>
       </footer>
     </div>
