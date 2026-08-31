@@ -92,9 +92,12 @@ export type Multilingua = Readonly<Record<CodiceLingua, string>>
  */
 export type IdTesto =
   // RAL
+  //
+  // ⚠️ Solo l'etichetta. La RAL non applica una norma — è ciò che l'utente
+  // ha dichiarato — e non ha una spiegazione propria: quella che c'era
+  // ripeteva la nota sulle mensilità che la sezione 2 già mostra accanto alle
+  // tre divisioni. Vedi `Passo.regola` e `Passo.spiegazione`.
   | 'ral.etichetta'
-  | 'ral.regola'
-  | 'ral.spiegazione'
   // Contributi
   | 'contributi.etichetta'
   | 'contributi.regola'
@@ -285,9 +288,26 @@ export interface Input {
 // Fonti
 
 /**
- * La distinzione tra parametro verificato e parametro importato è essa stessa
- * una decisione di prodotto (Architettura, S-011): Milano e Lombardia sono
- * verificate sulle delibere, il resto è importato dal MEF a una data dichiarata.
+ * Da dove arriva il valore: letto su un atto, o preso da un elenco pubblicato.
+ *
+ * ⚠️ **Non è una scala di affidabilità, ed è così dal 31/08.** Questo commento
+ * diceva che «Milano e Lombardia sono verificate sulle delibere, il resto è
+ * importato», e sbagliava due volte: Milano non è mai stata verificata a mano —
+ * anche quando era scritta in `caso-base.ts` portava `provenienza: 'importata'`
+ * — e soprattutto la frase faceva di `'importata'` un ripiego. Gli elenchi del
+ * Dipartimento delle Finanze sono **la** fonte ufficiale delle addizionali,
+ * quella su cui si calcolano le ritenute in busta paga.
+ *
+ * Che cosa distingue davvero le due, allora: `'verificata'` dice che qualcuno
+ * ha letto **l'atto**, quindi la citazione può portare articolo e comma;
+ * `'importata'` dice che il valore viene da un elenco pubblicato, quindi la
+ * citazione porta l'elenco e la sua **data di estrazione** — che serve perché
+ * quegli elenchi si aggiornano di continuo e non hanno un numero di versione
+ * (D-005). È una differenza di *che cosa si può citare*, non di quanto ci si
+ * possa fidare.
+ *
+ * ⚠️ Per un valore usato senza fonte confermata c'è un campo apposta, ed è
+ * `Fonte.nonVerificato`: quello sì è una riserva, e va usato per quello.
  */
 export type Provenienza = 'verificata' | 'importata'
 
@@ -841,10 +861,22 @@ export type Esito =
 export interface Passo {
   readonly id: string
   readonly etichetta: string
-  /** La regola applicata, in linguaggio normativo. */
-  readonly regola: string
-  /** Lo stesso, in linguaggio da mostrare all'utente. */
-  readonly spiegazione: string
+  /**
+   * La regola applicata, in linguaggio normativo.
+   *
+   * ⚠️ Facoltativa, e non per comodità: **non ogni passo applica una
+   * norma**. La RAL è il valore che l'utente ha dichiarato, e la riga che
+   * portava qui — *«Punto di partenza dichiarato dall'utente»* — non era una
+   * regola: era la descrizione di un campo di input, scritta nel posto
+   * riservato agli articoli di legge. Un passo che non ha una norma da citare
+   * non deve inventarne una, e il tipo ora glielo consente.
+   */
+  readonly regola?: string
+  /**
+   * Lo stesso, in linguaggio da mostrare all'utente. Facoltativa per la stessa
+   * ragione: un passo che non ha niente da aggiungere non aggiunge niente.
+   */
+  readonly spiegazione?: string
   /**
    * Opzionale: la portano le voci del breakdown, non i passi che espongono una
    * grandezza intermedia o l'esito di un gate.

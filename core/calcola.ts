@@ -150,6 +150,25 @@ const applicaScaglioni = (base: number, scaglioni: readonly Scaglione[]): number
   return totale
 }
 
+/*
+ * ── Le due funzioni che escono da qui, e perché — D-077 ────────────────────
+ *
+ * `trovaFascia` e `valutaFormula` sono esportate. Sono le uniche due, e non è
+ * un allentamento dell'incapsulamento: è la conseguenza di aver messo in
+ * pagina il **grafico** di una detrazione.
+ *
+ * La pagina `/spiegazione` disegna la curva dell'art. 13 e quella della
+ * detrazione da cuneo. Per disegnarle serve valutare la formula in una
+ * cinquantina di punti — e una seconda implementazione di
+ * `base + quota × (riferimento − reddito) / ampiezza`, con o senza il
+ * troncamento alla quarta cifra, sarebbe **due copie della stessa regola**: la
+ * curva mostrata e il numero calcolato potrebbero divergere senza che nessun
+ * test se ne accorga, perché nessun test guarda un `path` SVG.
+ *
+ * Restano pure e senza stato, e continuano a non sapere niente di React: la
+ * verifica di CLAUDE.md §3 — *`core/` non importa da `app/`* — non si muove.
+ */
+
 /**
  * Estremo inferiore escluso, superiore incluso.
  *
@@ -160,7 +179,7 @@ const applicaScaglioni = (base: number, scaglioni: readonly Scaglione[]): number
  * non la detrazione. Usare operatori diversi da quelli della norma, sulle
  * soglie, eroga due benefici o nessuno.
  */
-const trovaFascia = <T extends { readonly redditoDa: number; readonly redditoA: number | null }>(
+export const trovaFascia = <T extends { readonly redditoDa: number; readonly redditoA: number | null }>(
   fasce: readonly T[],
   reddito: number,
 ): T | undefined =>
@@ -173,7 +192,7 @@ const trovaFascia = <T extends { readonly redditoDa: number; readonly redditoA: 
  * prevede; la detrazione da cuneo vive fuori dal TUIR e non porta una clausola
  * equivalente, quindi lì il rapporto non si tronca.
  */
-const valutaFormula = (formula: FormulaDetrazione, reddito: number, troncamento?: number): number => {
+export const valutaFormula = (formula: FormulaDetrazione, reddito: number, troncamento?: number): number => {
   if (formula.forma === 'costante') return formula.importo
   const rapporto = (formula.riferimento - reddito) / formula.ampiezza
   const usato = troncamento === undefined ? rapporto : tronca(rapporto, troncamento)
@@ -318,9 +337,12 @@ export function calcolaNetto(
   passi.push({
     id: 'ral',
     etichetta: t('ral.etichetta'),
-    // Nessuna `fonti`: la RAL è un input, non l'applicazione di una norma.
-    regola: t('ral.regola'),
-    spiegazione: t('ral.spiegazione'),
+    /*
+      Nessuna `fonti`, nessuna `regola`, nessuna `spiegazione`: la RAL è un
+      input, non l'applicazione di una norma, e non ha nulla da spiegare che
+      la pagina non dica già. È il passo che apre la catena, e il suo valore
+      è tutto ciò che porta.
+    */
     esito: esitoNeutro(ral, ral),
   })
 

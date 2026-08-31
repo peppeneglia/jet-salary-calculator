@@ -86,8 +86,6 @@ const lingua: Lingua = {
     'deduzione-regionale.spiegazione.non-spetta': 'Sopra la soglia non spetta affatto.',
     'deduzione-regionale.ragione.non-spetta': 'Il reddito imponibile ({rc}) supera {soglia}: la deduzione non spetta.',
     'ral.etichetta': 'RAL',
-    'ral.regola': 'Punto di partenza.',
-    'ral.spiegazione': 'La RAL comprende le mensilità aggiuntive.',
     'contributi.etichetta': 'Contributi',
     'contributi.regola': 'Aliquota a carico del lavoratore.',
     'contributi.spiegazione.ordinaria': 'Contribuzione, non imposta.',
