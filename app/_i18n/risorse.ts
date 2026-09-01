@@ -154,6 +154,25 @@ const it = {
     tabellaEffetto: 'Effetto sul netto',
     tabellaProgressivo: 'Netto progressivo',
     tabellaNetto: 'Netto annuo',
+    /*
+      Dice cosa fare, non cosa manca: su uno schermo stretto la tabella e il
+      flusso restano più larghi dello schermo per costruzione, e la barra di
+      scorrimento compare solo mentre si scorre — cioè dopo.
+    */
+    scorriColonne: 'Scorri per vedere tutte le colonne',
+    /*
+      ⚠️ **Le forme brevi delle due addizionali, e servono al nome che le
+      segue.** L'etichetta è *tipo · ente*, e l'ente può essere lungo — il
+      record è *Salorno sulla Strada del Vino .Salurn an der Weinstraße*, 44
+      caratteri. Su una riga stretta a perdersi era proprio il nome del comune,
+      cioè la parte che dice a chi legge che quella voce è la sua; il tipo,
+      ripetuto due righe più su, si capisce anche abbreviato.
+
+      Uguali nelle due lingue di proposito: il nome dell'istituto resta in
+      italiano anche in inglese (D-041), quindi la sua abbreviazione pure.
+    */
+    addRegBreve: 'Add. reg.',
+    addComBreve: 'Add. com.',
 
     spiegazioneTitolo: 'Voce per voce',
     spiegazioneOcchiello:
@@ -167,6 +186,7 @@ const it = {
     sankeyNetto: 'Netto',
     sankeyDescrizione:
       'Da {{lordo}} lordi escono prima i contributi, che lasciano {{rc}} di reddito complessivo. Su quello si calcolano le imposte, e alla fine restano {{netto}}.',
+    scorriFlusso: 'Scorri per vedere tutto il flusso',
 
     fallbackRegionale: 'Perché restano le aliquote dell’anno prima (Regione)',
     fallbackComunale: 'Perché restano le aliquote dell’anno prima (Comune)',
@@ -422,6 +442,9 @@ const en: Risorse = {
     tabellaEffetto: 'Effect on net pay',
     tabellaProgressivo: 'Running net',
     tabellaNetto: 'Net pay for the year',
+    scorriColonne: 'Scroll to see every column',
+    addRegBreve: 'Add. reg.',
+    addComBreve: 'Add. com.',
 
     spiegazioneTitolo: 'Item by item',
     spiegazioneOcchiello:
@@ -435,6 +458,7 @@ const en: Risorse = {
     sankeyNetto: 'Net',
     sankeyDescrizione:
       'Out of {{lordo}} gross, contributions come out first, leaving {{rc}} of total income. Taxes are worked out on that, and {{netto}} is what remains.',
+    scorriFlusso: 'Scroll to see the whole flow',
 
     fallbackRegionale: 'Why last year’s rates still apply (Region)',
     fallbackComunale: 'Why last year’s rates still apply (Municipality)',

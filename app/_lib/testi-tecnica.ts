@@ -227,7 +227,13 @@ export const TECNICA = {
     en: 'It is not a static site and could not be one: the catalogue of municipalities has to stay on the server, the security policy carries a different value on every request, and language and theme are read from cookies. None of those three survives a page generated once and cached.',
   },
   deployRepoLink: { it: 'Apri il repo su GitHub', en: 'Open the repository on GitHub' },
-  deploySitoLink: { it: 'Apri il sito su Vercel', en: 'Open the site on Vercel' },
+  /*
+    ⚠️ Non è più *apri il sito*, e la ragione sta in `CopiaLink`: chi legge
+    questa pagina il sito ce l'ha già aperto davanti. Quello che non ha è
+    l'indirizzo da mandare a qualcun altro.
+  */
+  deploySitoCopia: { it: 'Copia link del sito', en: 'Copy the site link' },
+  deploySitoCopiato: { it: 'Copiato', en: 'Copied' },
 
   chiusuraTitolo: { it: 'Dove continuare', en: 'Where to go next' },
   chiusuraTesto: {
@@ -249,7 +255,7 @@ export const TECNICA = {
 export const URL_REPO = 'https://github.com/peppeneglia/jet-salary-calculator'
 
 /** Il sito pubblicato, che è l'altra metà della coppia «dove sta» e «dove gira». */
-export const URL_SITO = 'https://jet-salary-calculator.vercel.app'
+export const URL_SITO = 'https://jet-salary-calculator.vercel.app/'
 
 /**
  * Perché ciascun pacchetto è entrato.

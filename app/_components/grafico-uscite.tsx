@@ -20,7 +20,7 @@
 
 import { useTraduzione } from '../_i18n/provider'
 import { formato } from '../_lib/formato'
-import { tintaUscita, type Ripartizione } from '../_lib/uscite'
+import { etichettaBreve, tintaUscita, type Ripartizione } from '../_lib/uscite'
 
 export function GraficoUscite({ dati }: { dati: Ripartizione }) {
   const { t, lingua } = useTraduzione()
@@ -87,20 +87,59 @@ export function GraficoUscite({ dati }: { dati: Ripartizione }) {
         ))}
       </div>
 
+      {/*
+        ⚠️ **`min-w-0` sulla riga, e senza traboccava.** Un elemento di griglia
+        ha `min-width: auto`, cioè non si restringe sotto la propria dimensione
+        minima: la riga restava larga quanto le serviva e usciva dalla colonna
+        invece di far troncare l'etichetta. Misurato a 375px prima della
+        correzione: la percentuale finiva a 395px, cioè venti pixel fuori dalla
+        finestra. `truncate` sull'etichetta non poteva farci niente da solo,
+        perché il permesso di stringersi manca un livello più su.
+      */}
       <ul className="mt-3 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
         {segmenti.map((s) => (
-          <li key={s.chiave} className="flex items-baseline gap-2 text-sm">
+          <li key={s.chiave} className="flex min-w-0 items-baseline gap-2 text-sm">
             <span
               aria-hidden
               className={`h-2.5 w-2.5 shrink-0 translate-y-px rounded-full ${s.tinta}`}
             />
-            <span className="min-w-0 flex-1 truncate text-inchiostro-tenue">{s.etichetta}</span>
+            {/*
+              ⚠️ **Su schermo stretto il tipo si abbrevia, così il nome
+              dell'ente resta leggibile.** *Addizionale comunale · Salorno
+              sulla Strada del Vino* troncato a una riga di telefono diventa
+              *Addizionale comunale · Salorno sul…*: si perde esattamente la
+              parte che dice a chi legge che quella voce è la sua, e si tiene
+              quella che è già scritta due righe più su. Con *Add. com.* davanti
+              il nome del comune ci sta quasi sempre per intero.
+            */}
+            <span className="min-w-0 flex-1 truncate text-inchiostro-tenue sm:hidden">
+              {etichettaBreve(s.chiave, s.etichetta, t)}
+            </span>
+            <span className="hidden min-w-0 flex-1 truncate text-inchiostro-tenue sm:block">
+              {s.etichetta}
+            </span>
             <span
               className={`cifre font-semibold ${s.forte ? 'text-verde-testo' : 'text-inchiostro'}`}
             >
               {inEuro(s.importo)}
             </span>
-            <span className="cifre w-14 text-right text-xs text-inchiostro-tenue">
+            {/*
+              ⚠️ **La percentuale sparisce su schermo stretto, e l'importo no.**
+              Sono sessantaquattro pixel per riga spesi su un numero
+              **derivato** — importo diviso totale — mentre l'euro accanto è il
+              dato. Su un telefono quei pixel li prende l'etichetta, che
+              altrimenti si tronca a due parole: fra sapere *quanto* e sapere
+              *di che voce*, la seconda viene prima.
+
+              Resta però a chi ascolta, in una copia `sr-only`: questa lista è
+              l'equivalente testuale della barra, che è `aria-hidden`, e una
+              barra senza proporzioni non ha molto da dire. Due elementi e non
+              uno con le varianti perché `sr-only` e `w-14` scrivono entrambi
+              `width`, e quale dei due vinca dipenderebbe dall'ordine con cui
+              il generatore emette le utility.
+            */}
+            <span className="sr-only sm:hidden">{inPercentuale(quota(s.importo))}</span>
+            <span className="cifre hidden w-14 text-right text-xs text-inchiostro-tenue sm:inline-block">
               {inPercentuale(quota(s.importo))}
             </span>
           </li>

@@ -167,6 +167,7 @@ function Segmenti<T extends string | number>({
   valore,
   etichettaDi,
   onCambia,
+  etichetteLunghe = false,
 }: {
   /**
    * L'attributo `name` dei radio. Una chiave stabile, non l'etichetta
@@ -177,10 +178,33 @@ function Segmenti<T extends string | number>({
   valore: T
   etichettaDi: (o: T) => string
   onCambia: (o: T) => void
+  /**
+   * Le etichette sono parole e non numeri, quindi su schermo stretto la riga
+   * non ci sta e il gruppo si impila.
+   *
+   * ⚠️ **Era la causa dello scorrimento orizzontale dell'intera pagina, ed è
+   * stata misurata.** I tre segmenti del contratto non si stringono — per
+   * `whitespace-nowrap`, che ha una sua ragione qui sotto — quindi la loro
+   * larghezza minima è quella delle tre parole: a 375px la riga arrivava a
+   * **480px**, cioè 105 fuori dalla finestra, e con lei usciva tutto il resto.
+   * Non è un caso limite: *Tempo indeterminato* accanto a *Tempo determinato*
+   * non sta su nessun telefono, e in inglese va peggio.
+   *
+   * Impilare è l'unica delle due uscite che non paga un prezzo altrove.
+   * Lasciarli andare a capo dentro il segmento riaprirebbe esattamente il
+   * difetto che `whitespace-nowrap` ha chiuso; stringere il testo li renderebbe
+   * illeggibili. Impilati restano tre bersagli larghi uguali, alti una riga, e
+   * la domanda si legge come una domanda sola — che è la proprietà che quella
+   * decisione difendeva.
+   *
+   * Non vale per le mensilità: tre numeri di due cifre stanno ovunque, e
+   * impilarli darebbe tre bersagli da trecento pixel per scegliere fra 12 e 13.
+   */
+  etichetteLunghe?: boolean
 }) {
   return (
     /* Niente `role="radiogroup"`: il gruppo è il `<fieldset>` di `Campo`. */
-    <div className="flex gap-2">
+    <div className={`flex gap-2 ${etichetteLunghe ? 'flex-col sm:flex-row' : ''}`}>
       {opzioni.map((o) => {
         const scelto = o === valore
         return (
@@ -580,6 +604,7 @@ export function SezioneInput({
               valore={tipoContratto}
               etichettaDi={(x) => etichettaContratto(x, t)}
               onCambia={setTipoContratto}
+              etichetteLunghe
             />
           </Campo>
         </div>

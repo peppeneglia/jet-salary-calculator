@@ -41,7 +41,7 @@
  * tavolozza ammette.
  */
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import type { EnteInMappa } from '../_lib/cifre'
 import { Fonti } from './fonte'
 
@@ -101,6 +101,9 @@ export function MappaEnti({
    */
   const [sotto, setSotto] = useState<string | undefined>(undefined)
   const [geo, setGeo] = useState<Geometrie | null>(null)
+  /** L'elenco a comparsa dello schermo stretto. Vedi il riquadro più sotto. */
+  const [elencoAperto, setElencoAperto] = useState(false)
+  const id = useId()
 
   /*
     ⚠️ Il corpo dell'effetto rialza la bandiera, e non è ridondante: in
@@ -141,7 +144,124 @@ export function MappaEnti({
         per tutti. Chi la sagoma la sa riconoscere non perde niente: la mappa
         è due centimetri più in basso.
       */}
-      <div role="group" aria-label={etichette.scegli} className="mb-5 flex flex-wrap gap-1.5">
+      {/*
+        ⚠️ **Su schermo stretto le ventun pastiglie non sono una scelta: sono
+        un muro.** In riga stanno in due o tre, quindi diventano otto file di
+        nomi in ordine sparso che occupano mezzo schermo prima che la sezione
+        cominci — e sopra ci si passa scorrendo, senza mai usarle. La forma a
+        nuvola funziona quando le opzioni si abbracciano con lo sguardo; a
+        ventuno, su 375 pixel, non si abbracciano.
+
+        Quindi lo stesso dato in due forme: **un campo che si apre** sotto i
+        640px, **la nuvola** sopra. Non è una rinuncia, è la forma che la
+        larghezza consente: il campo chiuso dice già qual è l'ente corrente e
+        quanto chiede, cioè la risposta, e aperto dà i ventuno in colonna —
+        dove un elenco si legge invece di guardarsi.
+
+        ⚠️ **Le due forme sono nel documento tutte e due, e si scambiano in
+        CSS.** Sceglierne una a runtime da una media query in JavaScript
+        significherebbe rendere sul server la forma sbagliata e correggerla
+        dopo l'idratazione, cioè uno scarto visibile su ogni caricamento.
+        `display: none` toglie l'altra anche dall'albero di accessibilità, così
+        chi ascolta non si sente elencare ventun enti due volte.
+      */}
+      <div className="mb-5 sm:hidden">
+        <p
+          id={`${id}-etichetta`}
+          className="mb-1.5 text-xs font-medium text-inchiostro-nota select-none"
+        >
+          {etichette.scegli}
+        </p>
+
+        {/*
+          Escape chiude, ed è l'unica scorciatoia che serve: l'elenco sta nel
+          flusso e spinge in giù la mappa invece di coprirla, quindi non c'è un
+          «fuori» da cui uscire con un clic.
+        */}
+        <div onKeyDown={(e) => e.key === 'Escape' && setElencoAperto(false)}>
+          <button
+            type="button"
+            id={`${id}-campo`}
+            aria-expanded={elencoAperto}
+            aria-controls={`${id}-elenco`}
+            /* Nome accessibile: l'etichetta più il valore, come per un campo. */
+            aria-labelledby={`${id}-etichetta ${id}-campo`}
+            onClick={() => setElencoAperto((v) => !v)}
+            className="flex min-h-11 w-full items-center gap-2 rounded-voce border border-bordo-controllo bg-carta px-3 py-2 text-left text-sm transition-colors hover:border-bordo-controllo-forte"
+          >
+            <span
+              aria-hidden
+              className="h-2.5 w-2.5 shrink-0 rounded-[2px] bg-inchiostro"
+              style={{ opacity: corrente.tono }}
+            />
+            <span className="min-w-0 flex-1 truncate font-medium text-inchiostro">
+              {corrente.nome}
+            </span>
+            <span className="cifre shrink-0 text-inchiostro-tenue">{corrente.aliquotaMassima}</span>
+            <svg
+              aria-hidden
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`h-4 w-4 shrink-0 text-inchiostro-tenue transition-transform ${
+                elencoAperto ? 'rotate-180' : ''
+              }`}
+            >
+              <path d="M5 8l5 5 5-5" />
+            </svg>
+          </button>
+
+          {elencoAperto ? (
+            /*
+              `max-h` più scorrimento verticale: ventun voci a 44px sono quasi
+              mille pixel, cioè più di due schermate. La lista scorre dentro di
+              sé e la pagina resta dov'è.
+            */
+            <ul
+              id={`${id}-elenco`}
+              className="mt-1.5 max-h-72 overflow-y-auto rounded-blocco border border-bordo-decorativo bg-carta py-1"
+            >
+              {enti.map((e) => {
+                const attivo = e.nome === scelto
+                return (
+                  <li key={e.nome}>
+                    <button
+                      type="button"
+                      aria-pressed={attivo}
+                      onClick={() => {
+                        setScelto(e.nome)
+                        setElencoAperto(false)
+                      }}
+                      className={`flex min-h-11 w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
+                        attivo ? 'bg-fondo font-medium text-inchiostro' : 'text-inchiostro-tenue'
+                      }`}
+                    >
+                      <span
+                        aria-hidden
+                        className="h-2.5 w-2.5 shrink-0 rounded-[2px] bg-inchiostro"
+                        style={{ opacity: e.tono }}
+                      />
+                      <span className="min-w-0 flex-1 truncate">{e.nome}</span>
+                      <span className="cifre shrink-0 text-xs text-inchiostro-nota">
+                        {e.aliquotaMassima}
+                      </span>
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          ) : null}
+        </div>
+      </div>
+
+      <div
+        role="group"
+        aria-label={etichette.scegli}
+        className="mb-5 hidden flex-wrap gap-1.5 sm:flex"
+      >
         {enti.map((e) => {
           const attivo = e.nome === scelto
           return (

@@ -21,12 +21,20 @@
  * ⚠️ La tabella scorre dentro il proprio contenitore. Cinque colonne di cifre
  * non stanno su un telefono, e il rimedio non è togliere una colonna: è
  * lasciare che quella scorra invece di far scorrere la pagina.
+ *
+ * ⚠️ **E che scorra bisogna dirlo**, perché la barra del sistema compare solo
+ * mentre si scorre: chi non prova a trascinare non scopre che sotto il bordo
+ * destro ci sono altre due colonne. Lo dice `Scorrevole`. Su schermo stretto
+ * la tabella si stringe anche da sé — corpo minore e meno respiro nelle
+ * celle — così lo scorrimento che resta è il meno possibile invece di essere
+ * tutto quello che serviva su un foglio pensato per il desktop.
  */
 
 import type { Passo } from '../../core/types'
 import { useTraduzione } from '../_i18n/provider'
 import { formato } from '../_lib/formato'
-import { righeTabella, type Ripartizione, type RigaTabella } from '../_lib/uscite'
+import { etichettaBreve, righeTabella, type Ripartizione, type RigaTabella } from '../_lib/uscite'
+import { Scorrevole } from './scorrevole'
 
 /** La cella di un valore che il passo non espone: un trattino, non uno zero. */
 const VUOTO = <span className="text-inchiostro-nota">—</span>
@@ -74,24 +82,42 @@ export function TabellaNumeri({
   const netti = progressivi(righe, dati.lordo)
 
   return (
-    <div className="overflow-x-auto rounded-blocco border border-bordo-decorativo">
-      <table className="w-full min-w-[38rem] border-collapse text-sm">
+    <Scorrevole
+      etichetta={t('dettaglio.tabellaTitolo')}
+      indicazione={t('dettaglio.scorriColonne')}
+    >
+      <table className="w-full min-w-[28rem] border-collapse text-xs sm:min-w-[38rem] sm:text-sm">
         <caption className="sr-only">{t('dettaglio.tabellaTitolo')}</caption>
         <thead>
           <tr className="border-b border-bordo-decorativo bg-fondo text-left">
-            <th scope="col" className="px-3 py-2 font-medium text-inchiostro-nota select-none">
+            <th
+              scope="col"
+              className="px-2 py-2 font-medium text-inchiostro-nota select-none sm:px-3"
+            >
               {t('dettaglio.tabellaVoce')}
             </th>
-            <th scope="col" className="px-3 py-2 text-right font-medium text-inchiostro-nota select-none">
+            <th
+              scope="col"
+              className="px-2 py-2 text-right font-medium text-inchiostro-nota select-none sm:px-3"
+            >
               {t('dettaglio.tabellaBase')}
             </th>
-            <th scope="col" className="px-3 py-2 text-right font-medium text-inchiostro-nota select-none">
+            <th
+              scope="col"
+              className="px-2 py-2 text-right font-medium text-inchiostro-nota select-none sm:px-3"
+            >
               {t('dettaglio.tabellaValore')}
             </th>
-            <th scope="col" className="px-3 py-2 text-right font-medium text-inchiostro-nota select-none">
+            <th
+              scope="col"
+              className="px-2 py-2 text-right font-medium text-inchiostro-nota select-none sm:px-3"
+            >
               {t('dettaglio.tabellaEffetto')}
             </th>
-            <th scope="col" className="px-3 py-2 text-right font-medium text-inchiostro-nota select-none">
+            <th
+              scope="col"
+              className="px-2 py-2 text-right font-medium text-inchiostro-nota select-none sm:px-3"
+            >
               {t('dettaglio.tabellaProgressivo')}
             </th>
           </tr>
@@ -160,7 +186,7 @@ export function TabellaNumeri({
               >
                 <th
                   scope="row"
-                  className={`px-3 py-2 text-left ${
+                  className={`px-2 py-2 text-left sm:px-3 ${
                     passaggio
                       ? 'font-normal text-inchiostro-tenue'
                       : primoLivello
@@ -170,10 +196,17 @@ export function TabellaNumeri({
                   /* Il rientro dice l'annidamento senza aggiungere una colonna. */
                   style={livello > 0 ? { paddingLeft: `${0.75 + livello * 1}rem` } : undefined}
                 >
-                  {passo.etichetta}
+                  {/* Il tipo abbreviato su schermo stretto: vedi il riquadro
+                      in `grafico-uscite.tsx`, la ragione è la stessa e qui
+                      pesa di più, perché questa colonna decide la larghezza
+                      della tabella e quindi quanto bisogna scorrere. */}
+                  <span className="sm:hidden">
+                    {etichettaBreve(passo.id, passo.etichetta, t)}
+                  </span>
+                  <span className="hidden sm:inline">{passo.etichetta}</span>
                 </th>
 
-                <td className="cifre px-3 py-2 text-right text-inchiostro-tenue">
+                <td className="cifre px-2 py-2 text-right text-inchiostro-tenue sm:px-3">
                   {esito.stato === 'applicato'
                     ? inEuro(esito.entra)
                     : esito.stato === 'verifica'
@@ -181,9 +214,9 @@ export function TabellaNumeri({
                       : VUOTO}
                 </td>
 
-                <td className="cifre px-3 py-2 text-right text-inchiostro-tenue">{valore}</td>
+                <td className="cifre px-2 py-2 text-right text-inchiostro-tenue sm:px-3">{valore}</td>
 
-                <td className="cifre px-3 py-2 text-right">
+                <td className="cifre px-2 py-2 text-right sm:px-3">
                   {muove ? (
                     <span
                       className={`font-semibold ${
@@ -199,7 +232,7 @@ export function TabellaNumeri({
                   )}
                 </td>
 
-                <td className="cifre px-3 py-2 text-right">
+                <td className="cifre px-2 py-2 text-right sm:px-3">
                   {progressivo === null || progressivo === undefined ? (
                     VUOTO
                   ) : (
@@ -213,16 +246,16 @@ export function TabellaNumeri({
 
         <tfoot>
           <tr className="border-t-2 border-bordo-decorativo-forte bg-verde-velo">
-            <th scope="row" className="px-3 py-2.5 text-left font-semibold text-inchiostro">
+            <th scope="row" className="px-2 py-2.5 text-left font-semibold text-inchiostro sm:px-3">
               {t('dettaglio.tabellaNetto')}
             </th>
             <td colSpan={3} />
-            <td className="cifre px-3 py-2.5 text-right text-base font-semibold text-verde-testo">
+            <td className="cifre px-2 py-2.5 text-right text-sm font-semibold text-verde-testo sm:px-3 sm:text-base">
               {inEuro(dati.netto)}
             </td>
           </tr>
         </tfoot>
       </table>
-    </div>
+    </Scorrevole>
   )
 }

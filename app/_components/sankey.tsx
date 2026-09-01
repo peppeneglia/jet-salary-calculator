@@ -28,7 +28,13 @@
 
 import { useTraduzione } from '../_i18n/provider'
 import { formato } from '../_lib/formato'
-import { riempimentoUscita, type Ripartizione, type VoceRipartizione } from '../_lib/uscite'
+import {
+  etichettaBreve,
+  riempimentoUscita,
+  type Ripartizione,
+  type VoceRipartizione,
+} from '../_lib/uscite'
+import { Scorrevole } from './scorrevole'
 
 /* Geometria, in unità del viewBox. Il disegno scala, i rapporti no. */
 const LARGHEZZA = 900
@@ -38,6 +44,16 @@ const ALTEZZA_FLUSSO = 420
 const STACCO = 14
 const MARGINE_ALTO = 22
 const MARGINE_BASSO = 12
+/**
+ * Larghezza media di un carattere a corpo 12, in unità del viewBox.
+ *
+ * Serve a sapere **quanti caratteri ci stanno** a destra di una foglia. È una
+ * stima, e va bene che lo sia: sbagliarla di poco sposta di un carattere il
+ * punto in cui il nome si tronca, mentre non averla lascia il nome uscire
+ * dal disegno — che l'SVG ritaglia, quindi senza nemmeno i puntini a dire che
+ * manca qualcosa.
+ */
+const PASSO_CARATTERE = 6.3
 
 /** Una banda fra due nodi: stessa altezza a sinistra e a destra, curva in mezzo. */
 function nastro(x1: number, y1: number, x2: number, y2: number, spessore: number): string {
@@ -177,8 +193,21 @@ export function Sankey({ dati }: { dati: Ripartizione }) {
         un flusso a tre colonne con le etichette non sta sotto i 380px, e
         comprimerlo lo renderebbe illeggibile per guadagnare una figura che
         nessuno può leggere.
+
+        ⚠️ **Qui la larghezza non si riduce su telefono, a differenza della
+        tabella, e la ragione è la differenza fra le due figure.** Una tabella
+        stretta resta leggibile riga per riga; un flusso stretto perde
+        esattamente la cosa che ha da dire, cioè i rapporti fra le bande. Quindi
+        resta largo e si dichiara scorrevole — `Scorrevole` mette la sfumatura
+        sul bordo e la riga che dice cosa fare, perché la barra del sistema
+        arriva solo dopo il primo trascinamento.
       */}
-      <div className="mt-2 overflow-x-auto">
+      <Scorrevole
+        cornice={false}
+        className="mt-2"
+        etichetta={t('dettaglio.sankeyTitolo')}
+        indicazione={t('dettaglio.scorriFlusso')}
+      >
         <svg
           aria-hidden
           viewBox={`0 0 ${LARGHEZZA} ${altezza}`}
@@ -253,13 +282,25 @@ export function Sankey({ dati }: { dati: Ripartizione }) {
 
           {/* Le foglie, ciascuna con il nome alla propria destra */}
           {[...foglieContributi, ...foglieAggiunte].map((f) => (
-            <NodoFoglia key={f.voce.id} foglia={f} x={X[1]} importo={inEuro(f.voce.importo)} />
+            <NodoFoglia
+              key={f.voce.id}
+              foglia={f}
+              x={X[1]}
+              importo={inEuro(f.voce.importo)}
+              etichetta={etichettaBreve(f.voce.id, f.voce.etichetta, t)}
+            />
           ))}
           {foglieImposte.map((f) => (
-            <NodoFoglia key={f.voce.id} foglia={f} x={X[2]} importo={inEuro(f.voce.importo)} />
+            <NodoFoglia
+              key={f.voce.id}
+              foglia={f}
+              x={X[2]}
+              importo={inEuro(f.voce.importo)}
+              etichetta={etichettaBreve(f.voce.id, f.voce.etichetta, t)}
+            />
           ))}
         </svg>
-      </div>
+      </Scorrevole>
 
       <p className="mt-2 text-xs leading-relaxed text-inchiostro-tenue">
         {t('dettaglio.sankeyDescrizione', {
@@ -306,13 +347,40 @@ function Nodo({
   )
 }
 
-function NodoFoglia({ foglia, x, importo }: { foglia: Foglia; x: number; importo: string }) {
+function NodoFoglia({
+  foglia,
+  x,
+  importo,
+  etichetta,
+}: {
+  foglia: Foglia
+  x: number
+  importo: string
+  etichetta: string
+}) {
   /*
     L'etichetta sta a destra del nodo e verticalmente al suo centro. Una foglia
     sottile — una voce che vale poche decine di euro — resta comunque
     etichettata: è il rettangolo a essere piccolo, non il testo.
   */
   const centro = foglia.y + foglia.h / 2
+
+  /*
+    ⚠️ **Il nome si tronca se non ci sta, e qui il vincolo non è lo schermo:
+    è il viewBox.** Il disegno è largo 900 unità sempre, su qualunque
+    dispositivo, e le foglie della terza colonna cominciano a 680: restano 220
+    unità per nome e importo insieme. *Addizionale comunale · Salorno sulla
+    Strada del Vino .Salurn an der Weinstraße* ne vuole quasi il quadruplo, e
+    quello che avanza l'SVG **lo ritaglia in silenzio** — senza puntini, senza
+    barra, senza alcun segno che lì mancasse del testo.
+
+    Per questo qui il nome breve si usa sempre e non solo su telefono: a
+    determinarlo non è la larghezza della finestra, che qui non conta, ma la
+    geometria della figura, che è la stessa ovunque.
+  */
+  const inizio = x + NODO + 8
+  const budget = Math.max(8, Math.floor((LARGHEZZA - inizio) / PASSO_CARATTERE) - importo.length - 1)
+  const nome = etichetta.length > budget ? `${etichetta.slice(0, budget - 1).trimEnd()}…` : etichetta
   return (
     <g>
       <rect
@@ -323,8 +391,8 @@ function NodoFoglia({ foglia, x, importo }: { foglia: Foglia; x: number; importo
         rx={2}
         fill={foglia.tinta}
       />
-      <text x={x + NODO + 8} y={centro + 4} className="fill-inchiostro text-[12px]">
-        {foglia.voce.etichetta}
+      <text x={inizio} y={centro + 4} className="fill-inchiostro text-[12px]">
+        {nome}
         <tspan className="fill-inchiostro-tenue"> {importo}</tspan>
       </text>
     </g>

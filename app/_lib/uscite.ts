@@ -34,6 +34,46 @@ export interface VoceRipartizione {
   readonly aggiunge: boolean
 }
 
+/**
+ * Le due voci il cui nome si può accorciare, con la chiave del testo breve.
+ *
+ * ⚠️ **Si indicizza per `id` e non cercando la stringa, ed è la differenza che
+ * conta.** L'`id` lo scrive `core/` e non cambia con la lingua né con una
+ * revisione di prosa; riconoscere *«Addizionale comunale»* nel testo funziona
+ * finché qualcuno non riscrive quella riga di `data/testi.ts`, e da quel
+ * momento smetterebbe di accorciare **in silenzio**, cioè nel modo peggiore.
+ */
+export const NOME_BREVE = {
+  'addizionale-regionale': 'dettaglio.addRegBreve',
+  'addizionale-comunale': 'dettaglio.addComBreve',
+} as const
+
+type ChiaveBreve = (typeof NOME_BREVE)[keyof typeof NOME_BREVE]
+
+/** Il separatore fra il tipo di voce e il nome dell'ente, in `data/testi.ts`. */
+const SEPARATORE = ' · '
+
+/**
+ * L'etichetta con il tipo abbreviato e il nome dell'ente intero.
+ *
+ * *Addizionale comunale · Salorno sulla Strada del Vino* diventa *Add. com. ·
+ * Salorno sulla Strada del Vino*: si accorcia la parte che si ripete, non
+ * quella che distingue una riga dall'altra.
+ *
+ * Per ogni altra voce restituisce l'etichetta com'è — non c'è un elenco di
+ * abbreviazioni da inventare, ci sono due nomi che si ripetono.
+ */
+export const etichettaBreve = (
+  id: string,
+  etichetta: string,
+  t: (chiave: ChiaveBreve) => string,
+): string => {
+  const chiave = (NOME_BREVE as Readonly<Record<string, ChiaveBreve | undefined>>)[id]
+  if (chiave === undefined) return etichetta
+  const taglio = etichetta.indexOf(SEPARATORE)
+  return taglio === -1 ? t(chiave) : t(chiave) + etichetta.slice(taglio)
+}
+
 export interface Ripartizione {
   readonly lordo: number
   readonly netto: number

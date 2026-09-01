@@ -32,6 +32,7 @@ import Link from 'next/link'
 import pacchetto from '../../package.json'
 import type { CodiceLingua, Multilingua } from '../../core/types'
 import { traduzione } from '../_i18n/server'
+import { CopiaLink } from '../_components/copia-link'
 import { COMANDI, PERCHE_PACCHETTO, TECNICA, URL_REPO, URL_SITO } from '../_lib/testi-tecnica'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -297,20 +298,24 @@ export default async function ComeEFatta() {
             qualcuno togliesse il linter dallo script, la pagina mostrerebbe la
             riga nuova invece di continuare a promettere la vecchia.
 
-            Le righe scorrono per conto proprio sotto i 380px: un comando non si
-            manda a capo senza diventare illeggibile, e non può portare con sé
-            tutta la pagina.
+            ⚠️ **Su schermo stretto il corpo scende invece di far scorrere.**
+            Un comando non si manda a capo senza diventare illeggibile, quindi
+            l'unica alternativa allo scorrimento è rimpicciolirlo: il più lungo
+            — `npm run build` con i suoi due passaggi — a corpo normale usciva
+            di una trentina di pixel, e chi non provava a trascinare vedeva la
+            riga tagliata a metà. Il contenitore resta scorrevole come rete,
+            perché la riga la porta `package.json` e domani può allungarsi.
           */}
           <ul className="mt-5 space-y-3">
             {script.map(([nome, riga]) => (
               <li
                 key={nome}
-                className="rounded-blocco border border-bordo-decorativo bg-fondo p-4 sm:p-5"
+                className="rounded-blocco border border-bordo-decorativo bg-fondo p-3 sm:p-5"
               >
                 <div className="overflow-x-auto">
-                  <p className="whitespace-nowrap">
+                  <p className="text-xs whitespace-nowrap sm:text-base">
                     <Mono>{`npm run ${nome}`}</Mono>
-                    <span aria-hidden className="mx-2 text-inchiostro-nota">
+                    <span aria-hidden className="mx-1 text-inchiostro-nota sm:mx-2">
                       →
                     </span>
                     <span className="font-mono text-[0.9em] text-inchiostro-tenue">{riga}</span>
@@ -323,7 +328,7 @@ export default async function ComeEFatta() {
                 ) : null}
               </li>
             ))}
-            <li className="rounded-blocco border border-bordo-decorativo bg-fondo p-4 sm:p-5">
+            <li className="rounded-blocco border border-bordo-decorativo bg-fondo p-3 sm:p-5">
               <p className="max-w-2xl text-sm leading-relaxed text-inchiostro-tenue">
                 <Mono>npx tsc --noEmit</Mono>
                 <span aria-hidden className="mx-2 text-inchiostro-nota">
@@ -410,30 +415,30 @@ export default async function ComeEFatta() {
             portano fuori, e chi li segue non deve perdere la pagina che stava
             leggendo.
 
-            ⚠️ **Sono due, e prima era uno.** La sezione si intitola *dove sta
-            il codice e dove gira*, e dava da aprire solo la prima metà: il
-            repository. L'indirizzo pubblico del sito era nominato nel testo e
-            non raggiungibile, che su una pagina che spiega il deploy è la metà
-            che manca — e per chi legge il repo su GitHub è anche il link che
-            serve di più.
+            ⚠️ **I due indirizzi non sono la stessa specie di cosa, e non
+            possono avere lo stesso controllo.** Il repository sta altrove:
+            *aprilo* è il gesto giusto, e il link porta fuori. Il sito invece è
+            **questa pagina** — un bottone che dice *apri il sito* a chi il
+            sito ce l'ha già davanti offre l'unico gesto che non serve a
+            niente. Quello che manca a chi legge non è arrivarci: è
+            **portarsi via l'indirizzo**, per mandarlo a qualcuno. Quindi da un
+            lato un link, dall'altro una copia — e l'indirizzo scritto in
+            chiaro, che è anche il ripiego quando la copia non è disponibile.
           */}
-          <div className="mt-6 flex flex-wrap gap-2">
-            {(
-              [
-                [URL_REPO, TECNICA.deployRepoLink],
-                [URL_SITO, TECNICA.deploySitoLink],
-              ] as const
-            ).map(([href, etichetta]) => (
-              <a
-                key={href}
-                href={href}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="inline-flex min-h-11 items-center rounded-voce border border-bordo-controllo bg-carta px-4 py-2 text-sm font-medium text-inchiostro transition-colors hover:border-bordo-controllo-forte"
-              >
-                {etichetta[lingua]}
-              </a>
-            ))}
+          <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2">
+            <a
+              href={URL_REPO}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="inline-flex min-h-11 items-center rounded-voce border border-bordo-controllo bg-carta px-4 py-2 text-sm font-medium text-inchiostro transition-colors hover:border-bordo-controllo-forte"
+            >
+              {TECNICA.deployRepoLink[lingua]}
+            </a>
+            <CopiaLink
+              url={URL_SITO}
+              etichetta={TECNICA.deploySitoCopia[lingua]}
+              conferma={TECNICA.deploySitoCopiato[lingua]}
+            />
           </div>
         </section>
 
