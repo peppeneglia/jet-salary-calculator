@@ -11,7 +11,13 @@ import {
 } from '../_lib/api'
 import { perLaPagina } from '../_lib/arrotonda'
 import { messaggioErrore } from '../_lib/errori'
-import { moduloRicordato, type ModuloRicordato } from '../_lib/sessione'
+import {
+  dimenticaModulo,
+  moduloRicordato,
+  scordaModuloCorrente,
+  segnaModuloCorrente,
+  type ModuloRicordato,
+} from '../_lib/sessione'
 import { Avviso } from './avviso'
 import { Sezione } from './sezione'
 import { SezioneDettaglio } from './sezione-dettaglio'
@@ -208,7 +214,24 @@ export function Calcolatore({
    */
   const ripresoAvviato = useRef(false)
   useEffect(() => {
-    if (ripresoAvviato.current || ripreso === null) return
+    if (ripreso === null) return
+
+    /*
+      ⚠️ **Ripreso una volta, si cancella: il ritorno è un'eccezione, non uno
+      stato.** Lasciarlo scritto lo farebbe ricomparire a ogni ricaricamento
+      della pagina per tutta la durata della scheda — cioè il difetto che la
+      regola di `_lib/sessione.ts` esiste per chiudere. Per riaverlo bisogna
+      premere di nuovo una citazione.
+
+      E si ri-annota come modulo corrente, perché adesso è quello che sta in
+      pagina: senza, seguendo una **seconda** fonte non ci sarebbe più niente
+      da scrivere e il ritorno troverebbe il modulo vuoto. Sta fuori dalla
+      guardia perché è idempotente, e in sviluppo React monta due volte.
+    */
+    segnaModuloCorrente(ripreso)
+    dimenticaModulo()
+
+    if (ripresoAvviato.current) return
     ripresoAvviato.current = true
 
     const richiesta: RichiestaCalcolo = {
@@ -221,6 +244,18 @@ export function Calcolatore({
     ultimaRichiesta.current = richiesta
     void chiediEApplica(richiesta)
   }, [ripreso, lingua, chiediEApplica])
+
+  /*
+    ⚠️ **Lasciando il calcolatore, il modulo corrente si scorda.**
+
+    `segnaModuloCorrente` tiene in memoria che cosa c'è in pagina, e serve a
+    sapere che cosa scrivere se qualcuno preme una citazione. Ma la memoria è
+    di modulo, non di componente: senza questa pulizia sopravvivrebbe alla
+    navigazione, e una citazione premuta su `/spiegazione` — che ne mostra
+    anche lei — salverebbe un calcolo che chi legge si era già lasciato alle
+    spalle, per ritrovarselo davanti al ritorno.
+  */
+  useEffect(() => () => scordaModuloCorrente(), [])
 
   const calcola = useCallback(
     async (richiesta: RichiestaCalcolo) => {

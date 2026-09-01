@@ -24,6 +24,7 @@ import type { Fonte } from '../../core/types'
 import { useTraduzione } from '../_i18n/provider'
 import { formato } from '../_lib/formato'
 import { ancoraFonte, indirizzoNorma } from '../_lib/norme'
+import { ricordaPerLaFonte } from '../_lib/sessione'
 
 /**
  * ⚠️ **La citazione porta all'archivio, non fuori dal sito.**
@@ -56,8 +57,24 @@ function Citazione({ fonte }: { fonte: Fonte }) {
         {ancora === undefined ? (
           testo
         ) : (
+          /*
+            ⚠️ **È questo click, e nessun altro, a far sopravvivere il calcolo
+            al cambio di pagina.**
+
+            La memoria di sessione non nasce dal calcolo ma dal gesto di andare
+            a verificarlo: `ricordaPerLaFonte` scrive il modulo che il
+            calcolatore ha in pagina, e il calcolatore lo riprende **una volta
+            sola** al ritorno. Chi ricarica, o chi esce dal calcolatore da un
+            link qualsiasi, non ha scritto niente e ritrova il modulo vuoto —
+            che è quello che ha chiesto.
+
+            Fuori dal calcolatore la chiamata non fa nulla: `/spiegazione`
+            mostra citazioni anche lei, e lì non c'è alcun calcolo da
+            conservare. Vedi `_lib/sessione.ts`.
+          */
           <Link
             href={indirizzoNorma(ancora)}
+            onClick={ricordaPerLaFonte}
             className="underline decoration-bordo-decorativo-forte underline-offset-2 hover:decoration-inchiostro"
           >
             {testo}

@@ -6,7 +6,7 @@ import { useTraduzione } from '../_i18n/provider'
 import type { Errore, RichiestaCalcolo } from '../_lib/api'
 import type { ComuneSelezionabile } from '../_lib/comuni'
 import { messaggioErrore } from '../_lib/errori'
-import { ricordaModulo, type ModuloRicordato } from '../_lib/sessione'
+import { segnaModuloCorrente, type ModuloRicordato } from '../_lib/sessione'
 import { etichettaContratto } from '../_lib/testi'
 import { leggiRal, validaComune } from '../_lib/validazione'
 import { Avviso } from './avviso'
@@ -407,15 +407,20 @@ export function SezioneInput({
     setErrori({})
 
     /*
-      ⚠️ Si ricorda **qui e non in `calcola`**, perché qui il modulo è
+      ⚠️ **Qui non si scrive niente su disco: si annota che cosa c'è in
+      pagina.** A scrivere è il link di una citazione, ed è la regola che
+      `_lib/sessione.ts` esiste per tenere — un calcolo non deve sopravvivere a
+      un ricaricamento, un calcolo lasciato per andare a leggere una norma sì.
+
+      ⚠️ Si annota **qui e non in `calcola`**, perché qui il modulo è
       completo. `RichiestaCalcolo` porta il codice catastale e non il comune con
       nome e provincia: ricostruendolo da lì, tornando da `/norme` il campo
-      mostrerebbe `F205` finché l'elenco dei comuni non arriva. E si ricorda
+      mostrerebbe `F205` finché l'elenco dei comuni non arriva. E si annota
       dopo la validazione, non prima: un modulo storpiato non merita di
       sopravvivere a un cambio di pagina.
     */
     if (comuneScelto !== null) {
-      ricordaModulo({ ral, comune: comuneScelto, tipoContratto, mensilita })
+      segnaModuloCorrente({ ral, comune: comuneScelto, tipoContratto, mensilita })
     }
 
     onCalcola({
