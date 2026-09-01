@@ -401,6 +401,53 @@ body {
 }
 
 /*
+ * ── Contenitori che scorrono in orizzontale ────────────────────────────────
+ *
+ * La sfumatura che dice *il contenuto continua di là*, per il componente
+ * `Scorrevole`. Vedi quel file per il perché delle due scelte che contano;
+ * qui sta solo il come.
+ *
+ * ⚠️ **È una maschera e non un velo colorato.** Un rettangolo sfumato sopra il
+ * contenuto va dipinto del colore che ha dietro, e dietro ci sono righe di
+ * tinte diverse in due temi. `mask-image` dissolve il contenuto stesso: non ha
+ * un colore, quindi non può sbagliarlo.
+ *
+ * ⚠️ **Su ogni lato una regola, e la terza non è ridondante.** Le proprietà
+ * `mask-image` non si sommano: quando si può scorrere in entrambe le direzioni
+ * serve una sfumatura sola con quattro tappe, altrimenti l'ultima regola
+ * vincerebbe e un lato resterebbe netto.
+ *
+ * `-webkit-` accanto alla forma senza prefisso: Safari serve ancora la
+ * proprietà prefissata, e senza la maschera semplicemente non compare.
+ */
+.scorrevole-pista[data-destra='si'] {
+  -webkit-mask-image: linear-gradient(to left, transparent 0, #000 2.5rem);
+  mask-image: linear-gradient(to left, transparent 0, #000 2.5rem);
+}
+
+.scorrevole-pista[data-sinistra='si'] {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 2.5rem);
+  mask-image: linear-gradient(to right, transparent 0, #000 2.5rem);
+}
+
+.scorrevole-pista[data-sinistra='si'][data-destra='si'] {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 2.5rem,
+    #000 calc(100% - 2.5rem),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 2.5rem,
+    #000 calc(100% - 2.5rem),
+    transparent 100%
+  );
+}
+
+/*
  * ── Cursore ────────────────────────────────────────────────────────────────
  *
  * Tre forme — freccia, mano, cursore di testo — disegnate in SVG e incorporate
